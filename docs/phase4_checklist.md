@@ -44,18 +44,20 @@
 ---
 
 ### Phase 4C: API Gateway, WebSocket & Scenarios
-- [ ] **Task 3.1**: REST Endpoints for Fleet, Missions, Drift, and Impact Metrics
-  - [ ] `GET /api/v1/debris/{id}/drift` & `GET /api/v1/debris/clusters`
-  - [ ] `GET /api/v1/fleet/units` & `POST /api/v1/fleet/units/{id}/command`
-  - [ ] `GET /api/v1/missions`, `POST /api/v1/missions/plan`, `POST /api/v1/missions/{id}/approve`
-  - [ ] `GET /api/v1/analytics/impact`
-- [ ] **Task 3.2**: Real-Time Telemetry & WebSocket Event Broadcasting
-  - [ ] WebSocket channels for `cleanup_telemetry`, `debris_drift_updated`, `mission_status_changed`
-- [ ] **Task 3.3**: Rich Seed Dataset & 3 Turnkey Demo Scenarios
-  - [ ] Arabian Sea / Indian Ocean realistic debris clusters & autonomous drone fleet
-  - [ ] Scenario A: Ghost Net Crisis near Lakshadweep MPA
-  - [ ] Scenario B: Dark Vessel + Diesel Spill Anomaly
-  - [ ] Scenario C: Eco-Corridor Voyage Optimization
+- [x] **Task 3.1**: REST Endpoints for Fleet, Missions, Drift, and Impact Metrics
+  - [x] `GET /api/v1/debris/{id}/drift` & `GET /api/v1/debris/clusters`
+  - [x] `GET /api/v1/fleet/units` & `POST /api/v1/fleet/units/{id}/command`
+  - [x] `GET /api/v1/missions`, `POST /api/v1/missions/plan`, `POST /api/v1/missions/{id}/approve`
+  - [x] `GET /api/v1/analytics/impact`
+- [x] **Task 3.2**: Real-Time Telemetry & WebSocket Event Broadcasting
+  - [x] WebSocket channels for `cleanup_telemetry`, `debris_drift_updated`, `mission_status_changed`
+  - [x] Background `fleet_simulation_loop` in lifespan with 10s state advancements and coordinate updates
+- [x] **Task 3.3**: Rich Seed Dataset & 3 Turnkey Demo Scenarios
+  - [x] Arabian Sea / Indian Ocean realistic debris clusters & autonomous drone fleet
+  - [x] Scenario A: Ghost Net Crisis near Lakshadweep MPA (`POST /api/v1/simulation/load-scenario/ghost_net_mpa`)
+  - [x] Scenario B: Dark Vessel + Diesel Spill Anomaly (`POST /api/v1/simulation/load-scenario/dark_vessel_spill`)
+  - [x] Scenario C: Eco-Corridor Voyage Optimization (`POST /api/v1/simulation/load-scenario/eco_corridor_voyage`)
+  - [x] Turnkey scenario registry endpoint (`GET /api/v1/simulation/scenarios`)
 
 ---
 
