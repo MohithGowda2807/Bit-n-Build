@@ -48,6 +48,10 @@ export const MissionPathLayer: React.FC<MissionPathLayerProps> = ({
           ];
         }
 
+        waypoints = waypoints.filter(
+          w => w && w.latitude != null && w.longitude != null && !isNaN(w.latitude) && !isNaN(w.longitude)
+        );
+
         if (waypoints.length < 2) return null;
 
         const positions = waypoints.map(w => [w.latitude, w.longitude] as [number, number]);

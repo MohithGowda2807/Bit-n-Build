@@ -114,14 +114,19 @@ export const EnvironmentPage: React.FC = () => {
           <StormLayer storms={storms} />
 
           {/* Vessel markers */}
-          {vessels.map(v => (
-            <CircleMarker key={v.id} center={[v.latitude, v.longitude]} radius={v.id === selectedId ? 6 : 4.5}
-              pathOptions={{ color: '#0e1012', weight: 2, fillColor: '#a0aaba', fillOpacity: 1 }}
-              eventHandlers={{ click: () => setSelectedId(v.id) }}>
-              <Tooltip direction="top" offset={[0, -6]}>{v.name}</Tooltip>
-            </CircleMarker>
-          ))}
-          {selected && <CircleMarker center={[selected.latitude, selected.longitude]} radius={12} interactive={false} pathOptions={{ color: '#007afc', weight: 1.5, fill: false }} />}
+          {vessels.map(v => {
+            if (v.latitude == null || v.longitude == null || isNaN(v.latitude) || isNaN(v.longitude)) return null;
+            return (
+              <CircleMarker key={v.id} center={[v.latitude, v.longitude]} radius={v.id === selectedId ? 6 : 4.5}
+                pathOptions={{ color: '#0e1012', weight: 2, fillColor: '#a0aaba', fillOpacity: 1 }}
+                eventHandlers={{ click: () => setSelectedId(v.id) }}>
+                <Tooltip direction="top" offset={[0, -6]}>{v.name}</Tooltip>
+              </CircleMarker>
+            );
+          })}
+          {selected && selected.latitude != null && selected.longitude != null && !isNaN(selected.latitude) && !isNaN(selected.longitude) && (
+            <CircleMarker center={[selected.latitude, selected.longitude]} radius={12} interactive={false} pathOptions={{ color: '#007afc', weight: 1.5, fill: false }} />
+          )}
         </BaseMap>
 
         {/* 3. Left Collapsible Atmospheric Studio */}

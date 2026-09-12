@@ -84,37 +84,48 @@ export const SurveillanceMap: React.FC<Props> = ({
         ) : null
       ))}
 
-      {layers.gaps && gaps.map(g => (
-        <React.Fragment key={`gap-${g.id}`}>
-          <CircleMarker center={[g.last_latitude, g.last_longitude]} radius={3} pathOptions={{ color: '#e2a33a', fillColor: '#e2a33a', fillOpacity: 1, weight: 0 }}>
-            <Tooltip>AIS lost · {Math.round(g.duration_seconds / 60)} min dark</Tooltip>
-          </CircleMarker>
-          {g.reappearance_latitude !== null && g.reappearance_longitude !== null ? (
-            <CircleMarker center={[g.reappearance_latitude, g.reappearance_longitude]} radius={3} pathOptions={{ color: '#e2a33a', fillColor: '#e2a33a', fillOpacity: 1, weight: 0 }}>
-              <Tooltip>Reappeared{g.estimated_distance_km ? ` · ${g.estimated_distance_km.toFixed(1)} km away` : ''}</Tooltip>
+      {layers.gaps && gaps.map(g => {
+        if (g.last_latitude == null || g.last_longitude == null || isNaN(g.last_latitude) || isNaN(g.last_longitude)) {
+          return null;
+        }
+        return (
+          <React.Fragment key={`gap-${g.id}`}>
+            <CircleMarker center={[g.last_latitude, g.last_longitude]} radius={3} pathOptions={{ color: '#e2a33a', fillColor: '#e2a33a', fillOpacity: 1, weight: 0 }}>
+              <Tooltip>AIS lost · {Math.round(g.duration_seconds / 60)} min dark</Tooltip>
             </CircleMarker>
-          ) : (
-            <CircleMarker center={[g.last_latitude, g.last_longitude]} radius={22} pathOptions={{ color: '#e2a33a', weight: 1, dashArray: '3 5', fillColor: '#e2a33a', fillOpacity: 0.06 }} />
-          )}
-        </React.Fragment>
-      ))}
+            {g.reappearance_latitude !== null && g.reappearance_longitude !== null && !isNaN(g.reappearance_latitude) && !isNaN(g.reappearance_longitude) ? (
+              <CircleMarker center={[g.reappearance_latitude, g.reappearance_longitude]} radius={3} pathOptions={{ color: '#e2a33a', fillColor: '#e2a33a', fillOpacity: 1, weight: 0 }}>
+                <Tooltip>Reappeared{g.estimated_distance_km ? ` · ${g.estimated_distance_km.toFixed(1)} km away` : ''}</Tooltip>
+              </CircleMarker>
+            ) : (
+              <CircleMarker center={[g.last_latitude, g.last_longitude]} radius={22} pathOptions={{ color: '#e2a33a', weight: 1, dashArray: '3 5', fillColor: '#e2a33a', fillOpacity: 0.06 }} />
+            )}
+          </React.Fragment>
+        );
+      })}
 
       {layers.vessels && vessels.map(v => {
+        const pos = positionOf(v);
+        if (!pos || pos[0] == null || pos[1] == null || isNaN(pos[0]) || isNaN(pos[1])) return null;
         const risk = riskByVessel.get(v.id);
         const fill = risk ? riskColor(risk.score) : '#a0aaba';
         const isSelected = v.id === selectedId;
         return (
-          <CircleMarker key={v.id} center={positionOf(v)} radius={isSelected ? 6 : 4.5}
+          <CircleMarker key={v.id} center={pos} radius={isSelected ? 6 : 4.5}
             pathOptions={{ color: '#0e1012', weight: 2, fillColor: fill, fillOpacity: 1 }}
             eventHandlers={{ click: () => onSelect(v) }}>
             <Tooltip direction="top" offset={[0, -6]}>{v.name}{risk ? ` · ${Math.round(risk.score)}` : ''}</Tooltip>
           </CircleMarker>
         );
       })}
-      {layers.vessels && selected && (
-        <CircleMarker center={positionOf(selected)} radius={12} interactive={false}
-          pathOptions={{ color: '#007afc', weight: 1.5, fill: false }} />
-      )}
+      {layers.vessels && selected && (() => {
+        const pos = positionOf(selected);
+        if (!pos || pos[0] == null || pos[1] == null || isNaN(pos[0]) || isNaN(pos[1])) return null;
+        return (
+          <CircleMarker center={pos} radius={12} interactive={false}
+            pathOptions={{ color: '#007afc', weight: 1.5, fill: false }} />
+        );
+      })()}
     </MapContainer>
   );
 };

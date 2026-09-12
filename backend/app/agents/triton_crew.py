@@ -35,7 +35,7 @@ SURVEILLANCE_TO_FINDING_RISK = {"LOW": "low", "MODERATE": "low", "ELEVATED": "me
 
 # Optional CrewAI imports
 try:
-    from crewai import Agent as CrewAgent, Task as CrewTask, Crew as CrewAI_Crew, Process
+    from crewai import Agent as CrewAgent, Task as CrewTask, Crew as CrewAI_Crew, Process  # type: ignore
     CREWAI_AVAILABLE = True
 except ImportError:
     CREWAI_AVAILABLE = False

@@ -16,8 +16,10 @@ def _dump(value) -> str:
 
 
 def build_tools(toolkit: SurveillanceToolkit) -> List:
-    """Build the tool set bound to one toolkit (and therefore one database session)."""
-    from crewai.tools import tool
+    try:
+        from crewai.tools import tool  # type: ignore
+    except ImportError:
+        return []
 
     @tool("search_vessels")
     def search_vessels(query: str) -> str:
@@ -85,9 +87,9 @@ def build_tools(toolkit: SurveillanceToolkit) -> List:
         return _dump(toolkit.get_debris_drift_forecast(debris_id, hours))
 
     @tool("list_cleanup_fleet")
-    def list_cleanup_fleet() -> str:
+    def list_cleanup_fleet(limit: int = 50) -> str:
         """List all autonomous surface vessels (ASVs) and cleanup drones with live battery, payload, and operational status."""
-        return _dump(toolkit.list_cleanup_fleet())
+        return _dump(toolkit.list_cleanup_fleet()[:limit])
 
     @tool("plan_cleanup_mission_tool")
     def plan_cleanup_mission_tool(debris_id: int) -> str:

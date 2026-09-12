@@ -87,6 +87,9 @@ export const FleetLayer: React.FC<FleetLayerProps> = ({
   return (
     <>
       {units.map((unit) => {
+        if (unit.latitude == null || unit.longitude == null || isNaN(unit.latitude) || isNaN(unit.longitude)) {
+          return null;
+        }
         const isSelected = unit.id === selectedUnitId;
         const icon = createFleetIcon(unit, isSelected);
 

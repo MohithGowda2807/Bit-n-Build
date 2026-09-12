@@ -81,12 +81,15 @@ export const DebrisLayer: React.FC<DebrisLayerProps> = ({
     <>
       {/* Clusters halos */}
       {clusters.map((cluster) => {
-        const isCrit = cluster.risk_level === 'critical';
+        const lat = cluster.center_lat ?? (cluster as any).centroid_lat;
+        const lon = cluster.center_lon ?? (cluster as any).centroid_lon;
+        if (lat == null || lon == null || isNaN(lat) || isNaN(lon)) return null;
+        const isCrit = cluster.risk_level === 'critical' || (cluster as any).max_severity > 80;
         const color = isCrit ? '#ef4444' : '#f97316';
         return (
           <Circle
             key={cluster.cluster_id}
-            center={[cluster.center_lat, cluster.center_lon]}
+            center={[lat, lon]}
             radius={25000} // 25 km halo
             pathOptions={{
               color: color,
@@ -98,7 +101,7 @@ export const DebrisLayer: React.FC<DebrisLayerProps> = ({
           >
             <Tooltip direction="top" offset={[0, -10]}>
               <div className="font-mono text-xs font-bold text-amber-300">
-                ⚠️ {cluster.cluster_id} ({cluster.total_mass_kg.toLocaleString()} kg, {cluster.member_count} patches)
+                ⚠️ {cluster.cluster_id} ({(cluster.total_mass_kg || 0).toLocaleString()} kg, {cluster.member_count} patches)
               </div>
             </Tooltip>
           </Circle>
@@ -107,6 +110,9 @@ export const DebrisLayer: React.FC<DebrisLayerProps> = ({
 
       {/* Individual debris items and drift projections */}
       {debrisList.map((debris) => {
+        if (debris.latitude == null || debris.longitude == null || isNaN(debris.latitude) || isNaN(debris.longitude)) {
+          return null;
+        }
         const isSelected = debris.id === selectedDebrisId;
         const icon = createDebrisIcon(debris.debris_type, debris.severity, isSelected);
         const heading = debris.drift_heading_deg ?? 80;
