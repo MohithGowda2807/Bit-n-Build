@@ -127,29 +127,29 @@ export const FleetLayer: React.FC<FleetLayerProps> = ({
               </Tooltip>
 
               <Popup>
-                <div className="p-2 font-mono text-xs max-w-xs text-slate-800">
-                  <div className="font-bold text-sm text-cyan-700 uppercase flex items-center justify-between">
+                <div className="p-3 font-mono text-xs max-w-xs text-slate-100 bg-slate-900 border border-slate-700/80 rounded-xl space-y-2">
+                  <div className="font-bold text-sm text-cyan-400 uppercase flex items-center justify-between border-b border-slate-800 pb-1.5">
                     <span>{getUnitEmoji(unit.unit_type)} {unit.unit_name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-800 border border-cyan-300">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-500/40">
                       {unit.unit_type.replace('_', ' ')}
                     </span>
                   </div>
-                  <div className="mt-2 space-y-1">
+                  <div className="mt-2 space-y-1 text-slate-200 text-[11px]">
                     <div>
-                      <span className="font-semibold">Status:</span>{' '}
+                      <span className="text-slate-400 font-semibold">Status:</span>{' '}
                       <span className="uppercase font-bold" style={{ color: getStatusColor(unit.status) }}>
                         {unit.status}
                       </span>
                     </div>
-                    <div><span className="font-semibold">Battery:</span> {Math.round(unit.battery_pct)}%</div>
-                    <div><span className="font-semibold">Payload:</span> {unit.current_load_kg} / {unit.capacity_kg} kg</div>
-                    <div><span className="font-semibold">Velocity:</span> {unit.speed_knots} kn @ {unit.heading_deg}°</div>
-                    <div><span className="font-semibold">Coordinates:</span> {unit.latitude.toFixed(3)}°N, {unit.longitude.toFixed(3)}°E</div>
+                    <div><span className="text-slate-400 font-semibold">Battery:</span> <span className="text-white font-bold">{Math.round(unit.battery_pct)}%</span></div>
+                    <div><span className="text-slate-400 font-semibold">Payload:</span> <span className="text-white font-bold">{unit.current_load_kg} / {unit.capacity_kg} kg</span></div>
+                    <div><span className="text-slate-400 font-semibold">Velocity:</span> <span className="text-white font-bold">{unit.speed_knots} kn @ {unit.heading_deg}°</span></div>
+                    <div><span className="text-slate-400 font-semibold">Coordinates:</span> <span className="text-slate-300">{unit.latitude.toFixed(3)}°N, {unit.longitude.toFixed(3)}°E</span></div>
                   </div>
 
                   <button
                     onClick={() => onSelectUnit?.(unit)}
-                    className="mt-3 w-full bg-slate-900 hover:bg-slate-800 text-white py-1 px-2 rounded text-xs font-semibold uppercase tracking-wider"
+                    className="mt-3 w-full bg-slate-800 hover:bg-slate-700 text-cyan-300 py-1.5 px-2 rounded-lg text-xs font-semibold uppercase tracking-wider border border-slate-700 cursor-pointer transition"
                   >
                     Select Unit
                   </button>

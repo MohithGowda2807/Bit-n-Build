@@ -146,6 +146,7 @@ interface OceanMapProps {
   onSelectVessel?: (vessel: Vessel) => void;
   selectedDebris?: Debris | null;
   onSelectDebris?: (debris: Debris) => void;
+  onOpenPlanner?: (debris: Debris) => void;
   selectedFleetUnit?: CleanupUnit | null;
   onSelectFleetUnit?: (unit: CleanupUnit) => void;
   selectedMission?: Mission | null;
@@ -197,6 +198,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
   onSelectVessel,
   selectedDebris,
   onSelectDebris,
+  onOpenPlanner,
   selectedFleetUnit,
   onSelectFleetUnit,
   selectedMission,
@@ -400,11 +402,11 @@ export const OceanMap: React.FC<OceanMapProps> = ({
             }}
           >
             <Popup className="font-mono text-xs">
-              <div className="p-1">
-                <div className="font-bold text-slate-900">{port.name}</div>
-                <div className="text-slate-600">{port.country}</div>
-                <div className="text-cyan-700 mt-1 font-semibold">Congestion: {port.congestion_level}%</div>
-                <div className="text-slate-500">Capacity: {port.capacity.toLocaleString()} berths</div>
+              <div className="p-3 text-slate-100 bg-slate-900 border border-slate-700/80 rounded-xl space-y-1">
+                <div className="font-bold text-white text-sm">{port.name}</div>
+                <div className="text-slate-300 text-xs">{port.country}</div>
+                <div className="text-amber-400 mt-1 font-semibold text-xs">Congestion: {port.congestion_level}%</div>
+                <div className="text-slate-400 text-xs">Capacity: {port.capacity.toLocaleString()} berths</div>
               </div>
             </Popup>
             <Tooltip direction="top" offset={[0, -10]}>{port.name}</Tooltip>
@@ -427,6 +429,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
             clusters={debrisClusters}
             selectedDebrisId={selectedDebris?.id}
             onSelectDebris={onSelectDebris}
+            onOpenPlanner={onOpenPlanner}
             showDriftVectors={true}
           />
         )}
@@ -479,27 +482,27 @@ export const OceanMap: React.FC<OceanMapProps> = ({
               }}
             >
               <Popup className="font-mono text-xs">
-                <div className="p-1 space-y-1">
-                  <div className="font-bold text-slate-900 flex items-center justify-between">
+                <div className="p-3 space-y-2 text-slate-100 bg-slate-900 border border-slate-700/80 rounded-xl">
+                  <div className="font-bold text-white text-sm flex items-center justify-between border-b border-slate-800 pb-1.5">
                     <span>{vessel.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">{vessel.vessel_type}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700 font-normal">{vessel.vessel_type}</span>
                   </div>
-                  <div className="text-slate-600 text-[11px]">ID: {vessel.vessel_identifier} | MMSI: {vessel.mmsi || 'N/A'}</div>
-                  <div className="grid grid-cols-2 gap-1 text-[11px] pt-1 border-t border-slate-200">
-                    <div>Speed: <span className="font-semibold text-emerald-600">{vessel.speed_knots || vessel.cruise_speed_knots} kts</span></div>
-                    <div>Heading: <span className="font-semibold">{vessel.heading}°</span></div>
-                    <div>Draft: <span className="font-semibold">{vessel.draft_m}m</span></div>
-                    <div>Status: <span className="font-semibold uppercase text-cyan-700">{vessel.status}</span></div>
+                  <div className="text-slate-400 text-[11px]">ID: <span className="text-slate-200 font-semibold">{vessel.vessel_identifier}</span> | MMSI: <span className="text-slate-200">{vessel.mmsi || 'N/A'}</span></div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px] pt-1 border-t border-slate-800 text-slate-300">
+                    <div>Speed: <span className="font-semibold text-emerald-400">{vessel.speed_knots || vessel.cruise_speed_knots} kts</span></div>
+                    <div>Heading: <span className="font-semibold text-white">{vessel.heading}°</span></div>
+                    <div>Draft: <span className="font-semibold text-white">{vessel.draft_m}m</span></div>
+                    <div>Status: <span className="font-semibold uppercase text-cyan-400">{vessel.status}</span></div>
                   </div>
                   {vessel.destination && (
-                    <div className="text-[10px] text-slate-500 pt-1">
-                      Destination: <span className="font-semibold text-slate-800">{vessel.destination}</span>
+                    <div className="text-[10px] text-slate-400 pt-1 border-t border-slate-800/80">
+                      Destination: <span className="font-semibold text-slate-200">{vessel.destination}</span>
                     </div>
                   )}
                   <div className="pt-1">
                     <button
                       onClick={() => onSelectVessel && onSelectVessel(vessel)}
-                      className="w-full text-center py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[11px] font-semibold"
+                      className="w-full text-center py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition cursor-pointer"
                     >
                       {isSelected ? 'Viewing Track History' : 'Select & View Track'}
                     </button>

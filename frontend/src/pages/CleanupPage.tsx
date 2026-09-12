@@ -60,10 +60,18 @@ export const CleanupPage: React.FC = () => {
     const onScenario = () => {
       loadData();
     };
+    const onOpenPlannerEvent = (e: any) => {
+      if (e.detail) {
+        setSelectedDebris(e.detail);
+      }
+      setIsPlannerOpen(true);
+    };
     window.addEventListener('triton:scenario-activated', onScenario);
+    window.addEventListener('triton:open-mission-planner', onOpenPlannerEvent);
     return () => {
       clearInterval(interval);
       window.removeEventListener('triton:scenario-activated', onScenario);
+      window.removeEventListener('triton:open-mission-planner', onOpenPlannerEvent);
     };
   }, []);
 
@@ -87,6 +95,10 @@ export const CleanupPage: React.FC = () => {
           debrisClusters={clusters}
           selectedDebris={selectedDebris}
           onSelectDebris={setSelectedDebris}
+          onOpenPlanner={(d) => {
+            setSelectedDebris(d);
+            setIsPlannerOpen(true);
+          }}
           selectedFleetUnit={selectedFleetUnit}
           onSelectFleetUnit={setSelectedFleetUnit}
           selectedMission={selectedMission}

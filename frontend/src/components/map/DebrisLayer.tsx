@@ -8,6 +8,7 @@ interface DebrisLayerProps {
   clusters?: DebrisCluster[];
   selectedDebrisId?: number | null;
   onSelectDebris?: (debris: Debris) => void;
+  onOpenPlanner?: (debris: Debris) => void;
   showDriftVectors?: boolean;
 }
 
@@ -75,6 +76,7 @@ export const DebrisLayer: React.FC<DebrisLayerProps> = ({
   clusters = [],
   selectedDebrisId,
   onSelectDebris,
+  onOpenPlanner,
   showDriftVectors = true
 }) => {
   return (
@@ -178,30 +180,87 @@ export const DebrisLayer: React.FC<DebrisLayerProps> = ({
                 </div>
               </Tooltip>
               <Popup>
-                <div className="p-2 font-mono text-xs max-w-xs text-slate-800">
-                  <div className="font-bold text-sm text-red-600 uppercase flex items-center gap-1">
-                    <span>⚠️</span> {debris.debris_type.replace('_', ' ')}
+                <div className="p-3.5 font-mono text-xs max-w-[280px] text-slate-100 bg-slate-900 border border-cyan-500/40 rounded-xl shadow-2xl space-y-2">
+                  <div className="font-bold text-sm text-amber-400 uppercase flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span className="flex items-center gap-1.5">
+                      <span>⚠️</span> {debris.debris_type.replace(/_/g, ' ')}
+                    </span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border ${
+                      debris.clean_up_priority === 'urgent'
+                        ? 'bg-red-500/20 text-red-300 border-red-500/50'
+                        : debris.clean_up_priority === 'high'
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
+                    }`}>
+                      {debris.clean_up_priority}
+                    </span>
                   </div>
-                  <div className="mt-1"><span className="font-semibold">ID:</span> #{debris.id}</div>
-                  <div><span className="font-semibold">Priority:</span> <span className="uppercase font-bold text-red-600">{debris.clean_up_priority}</span></div>
-                  <div><span className="font-semibold">Severity:</span> {debris.severity}/100</div>
-                  <div><span className="font-semibold">Mass:</span> {debris.estimated_mass_kg?.toLocaleString() ?? '1,200'} kg</div>
+
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] pt-1">
+                    <div>
+                      <span className="text-slate-400">ID:</span>{' '}
+                      <span className="font-bold text-white">#{debris.id}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Severity:</span>{' '}
+                      <span className={`font-bold ${debris.severity >= 80 ? 'text-red-400' : 'text-amber-400'}`}>
+                        {debris.severity}/100
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Mass:</span>{' '}
+                      <span className="font-bold text-cyan-300">
+                        {debris.estimated_mass_kg?.toLocaleString() ?? Math.round(debris.estimated_size_m2)} kg
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Drift:</span>{' '}
+                      <span className="font-bold text-slate-200">
+                        {debris.drift_speed_knots ?? 1.4} kn
+                      </span>
+                    </div>
+                  </div>
+
                   {debris.target_species_threatened && (
-                    <div className="text-red-700 font-semibold mt-1">
-                      Threat: {debris.target_species_threatened}
+                    <div className="text-rose-300 text-[11px] font-medium bg-rose-950/40 p-2 rounded-lg border border-rose-500/40 flex items-start gap-1.5">
+                      <span>🚨</span>
+                      <div>
+                        <span className="font-bold text-rose-200">Threat:</span> {debris.target_species_threatened}
+                      </div>
                     </div>
                   )}
+
                   {debris.nearest_mpa_distance_nm && (
-                    <div className="text-emerald-700">
-                      Nearest MPA: {debris.nearest_mpa_distance_nm} NM
+                    <div className="text-emerald-300 text-[11px] bg-emerald-950/40 p-1.5 rounded-lg border border-emerald-500/30 flex items-center gap-1.5">
+                      <span>🛡️</span>
+                      <div>
+                        <span className="font-semibold text-emerald-200">Nearest MPA:</span> {debris.nearest_mpa_distance_nm} NM
+                      </div>
                     </div>
                   )}
-                  <div className="text-[11px] text-slate-600 mt-1 italic">{debris.description}</div>
+
+                  {debris.description && (
+                    <div className="text-[11px] text-slate-300 italic bg-slate-950/70 p-2 rounded-lg border border-slate-800">
+                      "{debris.description}"
+                    </div>
+                  )}
+
                   <button
-                    onClick={() => onSelectDebris?.(debris)}
-                    className="mt-2 w-full bg-cyan-700 hover:bg-cyan-600 text-white py-1 px-2 rounded text-xs font-semibold uppercase tracking-wider"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onSelectDebris?.(debris);
+                      if (onOpenPlanner) {
+                        onOpenPlanner(debris);
+                      } else {
+                        window.dispatchEvent(new CustomEvent('triton:open-mission-planner', { detail: debris }));
+                      }
+                    }}
+                    className="mt-3 w-full bg-gradient-to-r from-cyan-600 via-cyan-500 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition shadow-lg shadow-cyan-950/50 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                   >
-                    Open Mission Studio
+                    <span>⚡</span>
+                    <span>Open Mission Studio</span>
                   </button>
                 </div>
               </Popup>
