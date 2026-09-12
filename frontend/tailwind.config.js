@@ -10,6 +10,11 @@ export default {
         // OceanSentinel system (design/DESIGN.md)
         os: {
           void: '#0e1012',
+          deep: '#0a0d14',
+          card: '#121620',
+          'card-hover': '#181e2c',
+          surface: '#161c28',
+          border: '#1f293d',
           panel: '#15171b',
           raised: '#1c1f24',
           overlay: '#23262d',

@@ -43,6 +43,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
   const [streaming, setStreaming] = useState(telemetry.connected);
 
   const [basemap, setBasemap] = useState<Basemap>('night');
+  const [leftPanelOpen, setLeftPanelOpen] = useState<boolean>(true);
   const [layers, setLayers] = useState<LayerState>({ vessels: true, trails: true, zones: true, gaps: true });
 
   const [selectedId, setSelectedId] = useState<number | null>(initialSelectedId);
@@ -191,8 +192,28 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
         replayPositions={replay ? replayPositions : undefined}
       />
 
+      {/* Left panel collapse toggle */}
+      <div className="absolute left-4 top-4 z-[1001] flex items-center gap-2">
+        <button
+          onClick={() => setLeftPanelOpen(!leftPanelOpen)}
+          className="bg-os-card/90 backdrop-blur-md border border-os-border/90 rounded-xl px-3 py-1.5 text-xs font-mono text-slate-200 hover:text-white hover:border-blue-500 transition shadow-lg flex items-center gap-1.5 cursor-pointer"
+          title={leftPanelOpen ? "Hide sidebar panels" : "Show sidebar panels"}
+        >
+          <span>{leftPanelOpen ? "◀" : "▶"}</span>
+          <span className="font-semibold">{leftPanelOpen ? "Hide Feeds" : "Watchlist & Feeds"}</span>
+          {openCases.length > 0 && (
+            <span className="bg-red-500/20 text-red-300 font-bold px-1.5 py-0.5 rounded-full text-[10px]">
+              {openCases.length}
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* Layer chips and scenario runner */}
-      <div className="absolute left-[352px] top-4 z-[1000] flex items-center gap-2 os-reveal">
+      <div
+        className="absolute top-4 z-[1000] flex items-center gap-2 os-reveal transition-all duration-300"
+        style={{ left: leftPanelOpen ? 352 : 180 }}
+      >
         <FilterPill active={layers.vessels} onClick={() => toggleLayer('vessels')}>Vessels</FilterPill>
         <FilterPill active={layers.trails} onClick={() => toggleLayer('trails')}>Trails</FilterPill>
         <FilterPill active={layers.zones} onClick={() => toggleLayer('zones')}>Zones</FilterPill>
@@ -201,7 +222,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
         <select
           value={scenario}
           onChange={e => setScenario(e.target.value)}
-          className="os-mono text-xs bg-os-raised text-os-fog border border-os-pewter rounded-input px-2.5 py-1.5 focus:outline-none"
+          className="os-mono text-xs bg-os-card text-white border border-os-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500"
         >
           {(scenarios.length ? scenarios.map(s => s.name) : [scenario]).map(name => (
             <option key={name} value={name}>{prettyScenario(name)}</option>
@@ -220,12 +241,16 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
         ))}
       </div>
 
-      <div className="absolute left-4 top-4 z-[1000] flex flex-col gap-4">
-        <Watchlist risks={risks} vessels={vessels} openCases={openCases} selectedId={selectedId} onSelect={setSelectedId} />
-      </div>
-      <div className="absolute left-4 bottom-4 z-[1000]">
-        <EventsPanel events={events} vessels={vessels} streaming={streaming} onSelectVessel={setSelectedId} />
-      </div>
+      {leftPanelOpen && (
+        <>
+          <div className="absolute left-4 top-14 z-[1000] flex flex-col gap-4">
+            <Watchlist risks={risks} vessels={vessels} openCases={openCases} selectedId={selectedId} onSelect={setSelectedId} />
+          </div>
+          <div className="absolute left-4 bottom-4 z-[1000]">
+            <EventsPanel events={events} vessels={vessels} streaming={streaming} onSelectVessel={setSelectedId} />
+          </div>
+        </>
+      )}
 
       {panel === 'analyst' ? (
         <div className="absolute right-4 top-4 bottom-4 z-[1000]">
@@ -249,7 +274,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
       )}
 
       {replay && (
-        <div className="absolute bottom-4 z-[1000]" style={{ left: 352, right: rightInset }}>
+        <div className="absolute bottom-4 z-[1000]" style={{ left: leftPanelOpen ? 352 : 24, right: rightInset }}>
           <ReplayBar replay={replay} startLabel="start" endLabel="end" onClose={exitReplay} />
         </div>
       )}

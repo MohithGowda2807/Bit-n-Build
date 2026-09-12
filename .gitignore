@@ -62,3 +62,13 @@ test_oceansentinel.db
 
 # Assembled design canvas (generated from design/command-center/*.dc.html)
 design/command-center/oceansentinel-command-center.html
+
+# Internal Reference & Hackathon Guide files (MUST NOT BE COMMITTED)
+Complete Marine Project.md
+Complete Marine Roadmap.docx
+maritime-hackathon-guide.pdf
+*.docx
+*.pdf
+*_extracted.txt
+phase2_*.txt
+*.clean.txt

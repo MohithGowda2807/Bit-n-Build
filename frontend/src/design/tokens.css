@@ -2,18 +2,22 @@
 :root {
   /* Surfaces */
   --os-void: #0e1012;
+  --os-deep: #0a0d14;
+  --os-card: #121620;
+  --os-surface: #161c28;
+  --os-border: #1f293d;
   --os-panel: #15171b;
   --os-raised: #1c1f24;
   --os-overlay: #23262d;
 
   /* Text and strokes */
   --os-white: #ffffff;
-  --os-fog: #a0aaba;
-  --os-ash: #8b96aa;
-  --os-slate: #566171;
-  --os-steel: #333943;
-  --os-pewter: #444d5a;
-  --os-silver: #bbc2ce;
+  --os-fog: #cbd5e1;
+  --os-ash: #94a3b8;
+  --os-slate: #94a3b8;
+  --os-steel: #64748b;
+  --os-pewter: #475569;
+  --os-silver: #e2e8f0;
 
   /* Interactive: the one blue */
   --os-signal: #007afc;
@@ -49,10 +53,11 @@
 }
 
 .os-eyebrow {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 1.1px;
   text-transform: uppercase;
+  color: #cbd5e1;
 }
 
 @keyframes os-reveal {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import L from 'leaflet';
 import {
   MapContainer,
   TileLayer,
@@ -10,8 +11,8 @@ import {
   useMap,
   useMapEvents
 } from 'react-leaflet';
-import L from 'leaflet';
-import { Vessel, Port, MarineZone, RouteDetail, Coordinate, Debris, VesselTrack } from '../types';
+import { Vessel, Port, MarineZone, RouteDetail, Coordinate, Debris, VesselTrack, Storm } from '../types';
+import { StormLayer } from './map/StormLayer';
 
 // Custom SVG Icons for high-tech maritime visualization
 const createCustomIcon = (color: string, label: string, size = 28, glowColor?: string) => {
@@ -58,16 +59,36 @@ const debrisMediumIcon = createCustomIcon('#eab308', '♻️', 22, '#ca8a04');
 interface MapEventsHandlerProps {
   mapSelectionMode: 'origin' | 'destination' | null;
   onSelectCoordinate: (coord: Coordinate) => void;
+  ports?: Port[];
+  onSelectPort?: (port: Port) => void;
 }
 
-const MapEventsHandler: React.FC<MapEventsHandlerProps> = ({ mapSelectionMode, onSelectCoordinate }) => {
+const MapEventsHandler: React.FC<MapEventsHandlerProps> = ({ mapSelectionMode, onSelectCoordinate, ports = [], onSelectPort }) => {
   useMapEvents({
     click(e) {
       if (mapSelectionMode) {
-        onSelectCoordinate({
-          latitude: parseFloat(e.latlng.lat.toFixed(4)),
-          longitude: parseFloat(e.latlng.lng.toFixed(4))
-        });
+        if (ports && ports.length > 0) {
+          // Snap to nearest port worldwide
+          let nearest = ports[0];
+          let minDist = Math.hypot(e.latlng.lat - nearest.latitude, e.latlng.lng - nearest.longitude);
+          for (let i = 1; i < ports.length; i++) {
+            const d = Math.hypot(e.latlng.lat - ports[i].latitude, e.latlng.lng - ports[i].longitude);
+            if (d < minDist) {
+              minDist = d;
+              nearest = ports[i];
+            }
+          }
+          onSelectCoordinate({
+            latitude: nearest.latitude,
+            longitude: nearest.longitude
+          });
+          if (onSelectPort) onSelectPort(nearest);
+        } else {
+          onSelectCoordinate({
+            latitude: parseFloat(e.latlng.lat.toFixed(4)),
+            longitude: parseFloat(e.latlng.lng.toFixed(4))
+          });
+        }
       }
     }
   });
@@ -103,12 +124,14 @@ interface OceanMapProps {
   onSelectAlternative: (index: number | null) => void;
   mapSelectionMode: 'origin' | 'destination' | null;
   onSelectCoordinate: (coord: Coordinate) => void;
+  onSelectPort?: (port: Port) => void;
   replayPosition: [number, number] | null;
   /** Chart keeps the light OpenStreetMap look; Night is the dark basemap the surveillance view uses. */
   basemap?: Basemap;
   onBasemapChange?: (basemap: Basemap) => void;
   /** Hide the Phase 1 layer bar when a page supplies its own chips. */
   showLayerBar?: boolean;
+  storms?: Storm[];
 }
 
 export type Basemap = 'chart' | 'night';
@@ -143,10 +166,12 @@ export const OceanMap: React.FC<OceanMapProps> = ({
   onSelectAlternative,
   mapSelectionMode,
   onSelectCoordinate,
+  onSelectPort,
   replayPosition,
   basemap: basemapProp,
   onBasemapChange,
-  showLayerBar = true
+  showLayerBar = true,
+  storms = []
 }) => {
   const [basemapState, setBasemapState] = useState<Basemap>('chart');
   const basemap = basemapProp ?? basemapState;
@@ -160,6 +185,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
   const [showDebris, setShowDebris] = useState(true);
   const [showZones, setShowZones] = useState(true);
   const [showPorts, setShowPorts] = useState(true);
+  const [showStorms, setShowStorms] = useState(true);
 
   // Convert GeoJSON coords [lon, lat] -> Leaflet [lat, lon]
   const recommendedPolyline = activeRoute
@@ -223,6 +249,14 @@ export const OceanMap: React.FC<OceanMapProps> = ({
         >
           ⚓ Ports
         </button>
+        <button
+          onClick={() => setShowStorms(!showStorms)}
+          className={`px-2 py-1 rounded transition-colors ${
+            showStorms ? 'bg-red-600/30 text-red-300 border border-red-500/50' : 'bg-slate-800 text-slate-500'
+          }`}
+        >
+          🌀 Storms ({storms.length})
+        </button>
       </div>
       )}
 
@@ -236,6 +270,8 @@ export const OceanMap: React.FC<OceanMapProps> = ({
         <MapEventsHandler
           mapSelectionMode={mapSelectionMode}
           onSelectCoordinate={onSelectCoordinate}
+          ports={ports}
+          onSelectPort={onSelectPort}
         />
         <RouteBoundsController coords={activeRoute ? activeRoute.geometry.coordinates : null} />
 
@@ -246,6 +282,9 @@ export const OceanMap: React.FC<OceanMapProps> = ({
           url={tiles.url}
           opacity={tiles.opacity}
         />
+
+        {/* Active Storm Systems (Phase 2) */}
+        {showStorms && <StormLayer storms={storms} />}
 
         {/* Marine Protected Areas & Restricted Zones Polygons */}
         {showZones && zones.map(zone => {
@@ -292,6 +331,17 @@ export const OceanMap: React.FC<OceanMapProps> = ({
             key={`port-${port.id}`}
             position={[port.latitude, port.longitude]}
             icon={portIcon}
+            eventHandlers={{
+              click: () => {
+                if (mapSelectionMode) {
+                  onSelectCoordinate({
+                    latitude: port.latitude,
+                    longitude: port.longitude
+                  });
+                  if (onSelectPort) onSelectPort(port);
+                }
+              }
+            }}
           >
             <Popup className="font-mono text-xs">
               <div className="p-1">

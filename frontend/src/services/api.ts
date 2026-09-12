@@ -169,3 +169,97 @@ export async function createVoyage(vessel_id: number, route_id: number): Promise
   if (!res.ok) throw new Error('Failed to create voyage');
   return res.json();
 }
+
+// --- Phase 2 Environmental Intelligence & Dynamic Routing APIs ---
+
+export async function fetchActiveStorms(): Promise<import('../types').Storm[]> {
+  const res = await fetch(`${API_BASE}/api/v1/storms/active`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function injectStormScenario(scenario_preset: string = 'bay_of_bengal_cyclone'): Promise<import('../types').Storm[]> {
+  const res = await fetch(`${API_BASE}/api/v1/simulation/scenarios/inject-storm`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scenario_preset })
+  });
+  if (!res.ok) throw new Error('Failed to inject storm scenario');
+  return res.json();
+}
+
+export async function resetEnvironment(): Promise<{ message: string; storms_cleared: number }> {
+  const res = await fetch(`${API_BASE}/api/v1/simulation/scenarios/reset-environment`, {
+    method: 'POST'
+  });
+  if (!res.ok) throw new Error('Failed to reset environment');
+  return res.json();
+}
+
+export async function getOperatingMode(): Promise<string> {
+  const res = await fetch(`${API_BASE}/api/v1/simulation/mode`);
+  if (!res.ok) return 'autonomous';
+  const data = await res.json();
+  return data.mode || 'autonomous';
+}
+
+export async function setOperatingMode(mode: string): Promise<string> {
+  const res = await fetch(`${API_BASE}/api/v1/simulation/mode`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode })
+  });
+  if (!res.ok) throw new Error('Failed to set operating mode');
+  const data = await res.json();
+  return data.mode;
+}
+
+export async function triggerCommandCycle(): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/simulation/cycle`, {
+    method: 'POST'
+  });
+  if (!res.ok) throw new Error('Failed to trigger commander cycle');
+  return res.json();
+}
+
+export async function fetchAgentDecisions(limit: number = 20): Promise<import('../types').AgentDecision[]> {
+  const res = await fetch(`${API_BASE}/api/v1/simulation/decisions?limit=${limit}`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function recalculateVoyageRoute(
+  voyage_id: number,
+  reason: string = 'ENVIRONMENTAL_HAZARD',
+  mode: string = 'autonomous',
+  candidate_profile: string = 'safest'
+): Promise<import('../types').RecalculateRouteResponse> {
+  const res = await fetch(`${API_BASE}/api/v1/routes/recalculate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ voyage_id, reason, mode, candidate_profile })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Route recalculation failed');
+  }
+  return res.json();
+}
+
+export async function fetchVoyageRouteVersions(voyage_id: number): Promise<import('../types').RouteVersion[]> {
+  const res = await fetch(`${API_BASE}/api/v1/routes/voyages/${voyage_id}/versions`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function fetchVoyageHealth(voyage_id: number): Promise<import('../types').VoyageHealth> {
+  const res = await fetch(`${API_BASE}/api/v1/risk/voyage/${voyage_id}`);
+  if (!res.ok) throw new Error('Failed to fetch voyage health');
+  return res.json();
+}
+
+export async function fetchRouteWeather(route_id: number): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/weather/route/${route_id}`);
+  if (!res.ok) throw new Error('Failed to fetch route weather');
+  return res.json();
+}

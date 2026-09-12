@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone
 
 import pytest
+pytest.importorskip("crewai", reason="CrewAI is not available or supported in this Python environment")
 
 from app.agents.crew import (
     LLMNotConfiguredError, ask_maritime_ai, build_assistant_crew, build_surveillance_crew,
