@@ -33,13 +33,13 @@
 ---
 
 ### Phase 4B: Agents & Multi-Agent Orchestration
-- [ ] **Task 2.1**: Marine Preservation Agent & Autonomous Cleanup Tools
-  - [ ] Register `analyze_debris_hazards_tool`, `predict_debris_drift_tool`, `plan_cleanup_mission_tool`, `dispatch_cleanup_fleet_tool`
-  - [ ] Implement Marine Preservation & Cleanup Agent in `triton_crew.py`
-- [ ] **Task 2.2**: Unified Maritime Commander Tri-Domain Integration
-  - [ ] Cross-domain event bus (Logistics, Surveillance, Preservation)
-  - [ ] Correlation of dark vessel spills with debris/slick hazards
-  - [ ] Rich structured agent trace generation
+- [x] **Task 2.1**: Marine Preservation Agent & Autonomous Cleanup Tools
+  - [x] Register `analyze_debris_hazards_tool`, `predict_debris_drift_tool`, `plan_cleanup_mission_tool`, `dispatch_cleanup_fleet_tool`
+  - [x] Implement Marine Preservation & Cleanup Agent in `triton_crew.py`
+- [x] **Task 2.2**: Unified Maritime Commander Tri-Domain Integration
+  - [x] Cross-domain event bus (Logistics, Surveillance, Preservation)
+  - [x] Correlation of dark vessel spills with debris/slick hazards
+  - [x] Rich structured agent trace generation
 
 ---
 
