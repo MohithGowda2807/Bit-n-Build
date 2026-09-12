@@ -1,0 +1,77 @@
+/* OceanSentinel design tokens. Source of truth: design/DESIGN.md (Mapbox base, Checkly borrowings). */
+:root {
+  /* Surfaces */
+  --os-void: #0e1012;
+  --os-panel: #15171b;
+  --os-raised: #1c1f24;
+  --os-overlay: #23262d;
+
+  /* Text and strokes */
+  --os-white: #ffffff;
+  --os-fog: #a0aaba;
+  --os-ash: #8b96aa;
+  --os-slate: #566171;
+  --os-steel: #333943;
+  --os-pewter: #444d5a;
+  --os-silver: #bbc2ce;
+
+  /* Interactive: the one blue */
+  --os-signal: #007afc;
+  --os-signal-hover: #3d9bff;
+  --os-signal-deep: #0062ca;
+
+  /* Semantic risk: used only on risk */
+  --os-risk-low: #a0aaba;
+  --os-risk-moderate: #e2a33a;
+  --os-risk-elevated: #f0873a;
+  --os-risk-high: #f2643e;
+  --os-risk-critical: #f0483e;
+  --os-clear: #2fae6e;
+
+  /* Type */
+  --os-font-sans: 'Plus Jakarta Sans', 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+  --os-font-mono: 'JetBrains Mono', 'Consolas', 'SFMono-Regular', Menlo, monospace;
+
+  /* Shape */
+  --os-radius-badge: 4px;
+  --os-radius-input: 6px;
+  --os-radius-row: 12px;
+  --os-radius-panel: 24px;
+  --os-radius-pill: 100px;
+
+  /* Motion */
+  --os-reveal: 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.os-mono {
+  font-family: var(--os-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.os-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+@keyframes os-reveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.os-reveal {
+  animation-name: os-reveal;
+  animation-duration: 240ms;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation-fill-mode: none; /* a pending animation must never leave the panel invisible */
+}
+
+@keyframes os-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.os-live-dot {
+  animation: os-pulse 2s ease-in-out infinite;
+}

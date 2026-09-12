@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; background: #0e1012; font-family: 'Plus Jakarta Sans', 'DM Sans', 'Segoe UI', system-ui, sans-serif; color: #a0aaba; }
+    a { color: #007afc; } a:hover { color: #3d9bff; }
+    .mono { font-family: 'JetBrains Mono', 'Consolas', 'SFMono-Regular', monospace; font-variant-numeric: tabular-nums; }
+    .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 900px; background: #0e1012; position: relative; overflow: hidden; display: flex; flex-direction: column; font-family: 'Plus Jakarta Sans', 'DM Sans', 'Segoe UI', system-ui, sans-serif; color: #a0aaba;">
+
+  <div style="height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18M3 12h18"></path><circle cx="12" cy="12" r="3" fill="#007afc" stroke="none"></circle></svg>
+      <div style="display: flex; flex-direction: column; gap: 1px;">
+        <span style="font-size: 15px; font-weight: 700; color: #ffffff; letter-spacing: -0.01em;">OceanSentinel</span>
+        <span class="eyebrow" style="color: #566171;">Surveillance · Eastern Arabian Sea</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 4px;">
+      <span style="font-size: 14px; font-weight: 500; color: #a0aaba; padding: 8px 16px; border-radius: 100px;">Logistics</span>
+      <span style="font-size: 14px; font-weight: 500; color: #a0aaba; padding: 8px 16px; border-radius: 100px;">Environment</span>
+      <span style="font-size: 14px; font-weight: 500; color: #ffffff; padding: 8px 16px; border-radius: 100px; background: #007afc;">Surveillance</span>
+      <span style="font-size: 14px; font-weight: 500; color: #a0aaba; padding: 8px 16px; border-radius: 100px;">Cleanup</span>
+      <span style="font-size: 14px; font-weight: 500; color: #a0aaba; padding: 8px 16px; border-radius: 100px;">Agents</span>
+    </div>
+    <span class="eyebrow" style="display: flex; align-items: center; gap: 6px; padding: 4px 7px; border-radius: 4px; background: #2fae6e; color: #ffffff;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #ffffff;"></span>Live</span>
+  </div>
+
+  <div style="flex: 1; position: relative; background-color: #10141a; background-image: radial-gradient(ellipse at 55% 40%, #171c24 0%, #10141a 55%, #0e1012 100%); overflow: hidden;">
+    <svg style="position: absolute; left: 0; top: 0;" width="1440" height="844" viewBox="0 0 1440 844" fill="none">
+      <path d="M0 0 H520 C480 120 430 190 400 300 C370 420 330 520 300 620 C270 700 240 780 220 844 H0 Z" fill="#1a1f27"></path>
+      <path d="M1240 0 H1440 V420 C1400 380 1360 330 1330 260 C1300 180 1270 90 1240 0 Z" fill="#1a1f27"></path>
+      <path d="M0 211 H1440 M0 422 H1440 M0 633 H1440 M360 0 V844 M720 0 V844 M1080 0 V844" stroke="#1c1f24" stroke-width="1"></path>
+      <rect x="640" y="300" width="210" height="190" rx="2" stroke="#f0483e" stroke-width="1" fill="rgba(240,72,62,0.08)"></rect>
+      <circle cx="420" cy="180" r="4" fill="#a0aaba" stroke="#0e1012" stroke-width="2"></circle>
+      <circle cx="540" cy="760" r="4" fill="#f0873a" stroke="#0e1012" stroke-width="2"></circle>
+      <path d="M430 700 L560 560 L655 470 L675 448 L640 430 L695 412 L660 392 L700 378" stroke="#ffffff" stroke-width="1.5"></path>
+      <path d="M700 378 L770 440" stroke="#e2a33a" stroke-width="1.5" stroke-dasharray="4 6"></path>
+      <path d="M770 440 L784 462 L900 560" stroke="#ffffff" stroke-width="1.5"></path>
+      <circle cx="900" cy="560" r="6" fill="#f0483e" stroke="#0e1012" stroke-width="2"></circle>
+      <circle cx="900" cy="560" r="12" stroke="#007afc" stroke-width="1.5"></circle>
+      <path d="M1000 300 L900 420 L820 452 L790 470" stroke="#8b96aa" stroke-width="1.5" stroke-opacity="0.8"></path>
+      <circle cx="790" cy="470" r="4" fill="#a0aaba" stroke="#0e1012" stroke-width="2"></circle>
+    </svg>
+    <span style="position: absolute; left: 918px; top: 552px; font-size: 13px; font-weight: 500; color: #ffffff;">FV Night Hauler</span>
+
+    <!-- Analyst panel -->
+    <div style="position: absolute; right: 16px; top: 16px; bottom: 16px; width: 440px; background: #15171b; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden;">
+      <div style="padding: 24px 24px 16px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-size: 18px; font-weight: 500; color: #ffffff;">Ask the analyst</span>
+          <span style="font-size: 12px; color: #8b96aa;">Answers only from surveillance data. Never invents observations.</span>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 20 20" stroke="#8b96aa" stroke-width="1.5"><path d="M5 5l10 10M15 5L5 15"></path></svg>
+      </div>
+
+      <div style="flex: 1; padding: 0 24px; display: flex; flex-direction: column; gap: 20px; overflow: hidden;">
+        <!-- user -->
+        <div style="display: flex; justify-content: flex-end;">
+          <span style="max-width: 320px; font-size: 15px; font-weight: 500; line-height: 1.5; color: #a0aaba; padding: 12px 16px; border-radius: 12px 12px 4px 12px; background: #23262d;">Why is Night Hauler high risk, and who did it meet?</span>
+        </div>
+        <!-- assistant -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-size: 15px; line-height: 1.6; color: #a0aaba;">FV Night Hauler (vessel <span class="mono" style="color: #ffffff;">11</span>, MMSI <span class="mono" style="color: #ffffff;">419000801</span>) is rated <span class="eyebrow" style="padding: 3px 6px; border-radius: 4px; background: rgba(240,72,62,0.12); color: #f0483e; vertical-align: middle;">Critical</span> with a score of <span class="mono" style="color: #ffffff;">100</span>, computed at <span class="mono" style="color: #ffffff;">10:30</span>.</span>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 12px; background: #1c1f24;">
+            <div style="display: flex; gap: 12px;"><span class="mono" style="font-size: 13px; color: #f0483e; width: 28px;">35</span><span style="font-size: 14px; color: #a0aaba;">Fishing-like movement inside a prohibited zone</span></div>
+            <div style="display: flex; gap: 12px;"><span class="mono" style="font-size: 13px; color: #f2643e; width: 28px;">30</span><span style="font-size: 14px; color: #a0aaba;">190 minutes in Silent Bank Seasonal Closure</span></div>
+            <div style="display: flex; gap: 12px;"><span class="mono" style="font-size: 13px; color: #f0873a; width: 28px;">23</span><span style="font-size: 14px; color: #a0aaba;">AIS gap of 60 minutes</span></div>
+            <div style="display: flex; gap: 12px;"><span class="mono" style="font-size: 13px; color: #e2a33a; width: 28px;">13</span><span style="font-size: 14px; color: #a0aaba;">Possible transshipment</span></div>
+          </div>
+          <span style="font-size: 15px; line-height: 1.6; color: #a0aaba;">It met <span style="color: #ffffff; font-weight: 500;">MV Grey Broker</span> (vessel <span class="mono" style="color: #ffffff;">12</span>, cargo) from <span class="mono" style="color: #ffffff;">10:20</span> to <span class="mono" style="color: #ffffff;">10:50</span>, closest <span class="mono" style="color: #ffffff;">0.78 km</span>, confidence <span class="mono" style="color: #ffffff;">0.68</span>. These are suspicion indicators for human review; equipment failure or an authorized transfer would explain parts of the pattern.</span>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="eyebrow" style="padding: 4px 7px; border-radius: 4px; background: #0062ca; color: #ffffff;">Groq</span>
+            <span class="mono" style="font-size: 11px; color: #566171;">get_risk · get_evidence · get_events · 6.2 s</span>
+            <span style="font-size: 13px; font-weight: 500; color: #007afc; margin-left: auto;">Show on map →</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">Which vessels entered closures today?</span>
+          <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">AIS gaps over 30 minutes</span>
+          <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">Open cases</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 16px; border-radius: 6px; background: #1c1f24; border: 1px solid #444d5a;">
+          <span style="flex: 1; font-size: 15px; color: #566171;">Ask about a vessel, zone, gap or case…</span>
+          <span style="width: 36px; height: 36px; border-radius: 100px; background: #007afc; display: flex; align-items: center; justify-content: center;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#ffffff" stroke-width="1.5"><path d="M8 13V3M3 8l5-5 5 5"></path></svg></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

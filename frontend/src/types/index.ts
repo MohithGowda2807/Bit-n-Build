@@ -4,6 +4,8 @@ export interface Vessel {
   name: string;
   mmsi?: string;
   callsign?: string;
+  imo_number?: string | null;
+  flag?: string | null;
   vessel_type: string;
   length_m: number;
   width_m: number;

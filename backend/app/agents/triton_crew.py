@@ -11,6 +11,8 @@ from app.models.debris import Debris
 from app.models.marine_zone import MarineZone
 from app.services.weather.service import weather_service
 from app.services.ocean.service import ocean_service
+from app.agents.toolkit import SurveillanceToolkit
+from app.agents.crew import AgentRunError, LLMNotConfiguredError, ask_maritime_ai, llm_configured
 from app.schemas.agent import (
     OrchestratorRequest,
     OrchestratorResponse,
@@ -20,6 +22,10 @@ from app.schemas.agent import (
 )
 
 logger = logging.getLogger("oceansentinel.agents")
+
+RISK_ORDER = ["low", "medium", "high", "critical"]
+QUESTION_WORDS = ("why", "which", "what", "how", "who", "where", "when", "show", "list", "explain", "is ", "are ", "does ", "do ")
+SURVEILLANCE_TO_FINDING_RISK = {"LOW": "low", "MODERATE": "low", "ELEVATED": "medium", "HIGH": "high", "CRITICAL": "critical"}
 
 # Optional CrewAI imports
 try:
@@ -200,6 +206,7 @@ class TritonAgentFramework:
             recommendations.append(f"Monitored Vessel: {vessel.name} ({vessel.vessel_identifier}) at ({vessel.latitude:.3f}, {vessel.longitude:.3f})")
 
         compliance_summary = compliance_finding.details.get("compliance_report_summary", compliance_finding.summary)
+        assistant_answer, assistant_provider = self._ask_assistant(request)
         elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
         return OrchestratorResponse(
@@ -213,8 +220,27 @@ class TritonAgentFramework:
             requires_human_approval=requires_human_approval,
             approval_status=approval_status,
             proposed_action=proposed_action,
+            assistant_answer=assistant_answer,
+            assistant_provider=assistant_provider,
             execution_time_ms=elapsed_ms
         )
+
+    @staticmethod
+    def _looks_like_question(query: str) -> bool:
+        text = query.strip().lower()
+        return text.endswith("?") or text.startswith(QUESTION_WORDS)
+
+    def _ask_assistant(self, request: OrchestratorRequest):
+        """Fall through to the Phase 3 LLM assistant for operator questions when a provider is configured."""
+        wanted = request.use_assistant if request.use_assistant is not None else self._looks_like_question(request.query)
+        if not wanted or not llm_configured():
+            return None, None
+        try:
+            result = ask_maritime_ai(request.query)
+            return result.text, result.provider
+        except (LLMNotConfiguredError, AgentRunError) as exc:
+            logger.warning("Assistant fallthrough unavailable: %s", exc)
+            return None, None
 
     def _run_vessel_watch_agent(self, vessel: Optional[Vessel], db: Session, query: str) -> AgentFinding:
         if not vessel:
@@ -241,21 +267,33 @@ class TritonAgentFramework:
         else:
             summary = f"AIS telemetry verified nominal. Vessel {vessel.name} operating at {vessel.speed_knots} kts, heading {vessel.heading:.1f}°."
 
+        details = {
+            "vessel_id": vessel.id,
+            "vessel_name": vessel.name,
+            "mmsi": vessel.mmsi or "N/A",
+            "speed_knots": vessel.speed_knots,
+            "heading": vessel.heading,
+            "status": vessel.status,
+            "track_points_analyzed": len(recent_tracks)
+        }
+
+        # Phase 3 surveillance: the deterministic risk engine outranks the kinematic heuristics above.
+        surveillance = SurveillanceToolkit(lambda: db).get_risk(vessel.id)
+        if "error" not in surveillance:
+            details["surveillance"] = surveillance
+            level = SURVEILLANCE_TO_FINDING_RISK.get(surveillance["level"], "low")
+            if RISK_ORDER.index(level) > RISK_ORDER.index(risk):
+                risk = level
+            top = surveillance["factors"][0]["explanation"] if surveillance["factors"] else "no contributing factors"
+            summary += f" Surveillance risk {surveillance['score']:.0f}/100 ({surveillance['level']}): {top}."
+
         return AgentFinding(
             agent_name="Vessel Watch Agent",
             role="Vessel Watch & AIS Sentinel",
             status="completed",
             summary=summary,
             risk_level=risk,
-            details={
-                "vessel_id": vessel.id,
-                "vessel_name": vessel.name,
-                "mmsi": vessel.mmsi or "N/A",
-                "speed_knots": vessel.speed_knots,
-                "heading": vessel.heading,
-                "status": vessel.status,
-                "track_points_analyzed": len(recent_tracks)
-            }
+            details=details
         )
 
     def _run_route_planner_agent(self, vessel: Optional[Vessel], weather: Any, ocean: Any, query: str) -> AgentFinding:

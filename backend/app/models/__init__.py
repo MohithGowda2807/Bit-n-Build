@@ -8,17 +8,18 @@ from app.models.port import Port
 from app.models.marine_zone import MarineZone
 from app.models.route import Route, RouteSegment
 from app.models.voyage import Voyage
+from app.models.ais_position import AISPosition
+from app.models.dark_period import DarkPeriod
+from app.models.fishing_zone import FishingZone
+from app.models.marine_protected_area import MarineProtectedArea
+from app.models.surveillance_event import SurveillanceEvent
+from app.models.vessel_risk_score import VesselRiskScore
+from app.models.evidence import Evidence
+from app.models.investigation_case import InvestigationCase
 
 __all__ = [
-    "Vessel",
-    "Track",
-    "Debris",
-    "Alert",
-    "Mission",
-    "Incident",
-    "Port",
-    "MarineZone",
-    "Route",
-    "RouteSegment",
-    "Voyage",
+    "Vessel", "Track", "Debris", "Alert", "Mission", "Incident",
+    "Port", "MarineZone", "Route", "RouteSegment", "Voyage",
+    "AISPosition", "DarkPeriod", "FishingZone", "MarineProtectedArea",
+    "SurveillanceEvent", "VesselRiskScore", "Evidence", "InvestigationCase",
 ]

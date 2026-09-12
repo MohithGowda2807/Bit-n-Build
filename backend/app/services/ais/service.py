@@ -43,6 +43,8 @@ class AISService:
         now = datetime.datetime.utcnow()
 
         for vessel in vessels:
+            if (vessel.vessel_identifier or "").startswith("MMSI-"):
+                continue  # Phase 3 scenario vessel: driven by scripted AIS, not by this kinematic model
             if vessel.status in ["docked", "anchored", "maintenance"]:
                 # Station-keeping small GPS jitter
                 jitter_lat = (random.random() - 0.5) * 0.0001

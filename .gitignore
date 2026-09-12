@@ -58,3 +58,7 @@ Desktop.ini
 .vscode/
 *.sublime-project
 *.sublime-workspace
+test_oceansentinel.db
+
+# Assembled design canvas (generated from design/command-center/*.dc.html)
+design/command-center/oceansentinel-command-center.html
