@@ -30,7 +30,7 @@ def agent_failed(exc: Exception) -> HTTPException:
 def llm_unavailable() -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail={"code": "LLM_NOT_CONFIGURED", "message": "Set GEMINI_API_KEY to enable the agent layer."},
+        detail={"code": "LLM_NOT_CONFIGURED", "message": "No LLM provider is configured. Set GEMINI_API_KEY, GROQ_API_KEY or OPENROUTER_API_KEY in backend/.env."},
     )
 
 

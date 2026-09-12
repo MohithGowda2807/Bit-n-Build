@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
@@ -47,7 +48,7 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(Path(__file__).resolve().parents[1] / ".env"),  # backend/.env regardless of cwd
         env_file_encoding="utf-8",
         extra="ignore"
     )

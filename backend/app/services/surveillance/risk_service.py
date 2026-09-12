@@ -31,7 +31,7 @@ def _minutes(seconds: Optional[float]) -> int:
 def describe_event(event: SurveillanceEvent) -> str:
     p = event.payload
     if event.event_type == "AIS_GAP_DETECTED":
-        return f"AIS gap of {_minutes(p.get('duration_seconds'))} minutes starting {event.timestamp.isoformat()}"
+        return f"AIS gap of {_minutes(p.get('duration_seconds'))} minutes starting {event.timestamp.strftime('%H:%M')}"
     if event.event_type == "ZONE_ENTRY":
         return f"Entered {event.zone_name} ({p.get('zone_type')})"
     if event.event_type == "ZONE_EXIT":

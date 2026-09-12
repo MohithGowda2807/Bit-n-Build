@@ -92,3 +92,15 @@ def test_dismiss_requires_a_known_reason(db):
     case = db.query(InvestigationCase).one()
     with pytest.raises(ValueError):
         service.dismiss_case(case.id, reason="BECAUSE", actor="x")
+
+
+def test_evidence_descriptions_use_clock_times_not_iso_strings(db):
+    from app.models.evidence import Evidence
+
+    _prepare(db, "AIS_GAP")
+    RiskService(db).assess_all()
+    gap = db.query(Evidence).filter_by(evidence_type="AIS_GAP").first()
+    assert gap is not None
+    assert "T" not in gap.description.split("starting")[-1]
+    assert gap.description.startswith("AIS gap of 60 minutes starting ")
+    assert len(gap.description.split("starting ")[-1]) == 5  # HH:MM

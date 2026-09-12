@@ -79,6 +79,8 @@ USER / OPERATOR
 - **CrewAI agents**: a four-agent investigation crew and a natural-language assistant, restricted to deterministic tools, running on Gemini with automatic fallback to Groq and OpenRouter.
 - Run a scenario: `POST /api/v1/simulation/run {"scenario": "DARK_FISHING_COMPOSITE"}`, then open `GET /api/v1/investigations`.
 
+- **Frontend**: a Mapbox-inspired dark system (see [design/DESIGN.md](./design/DESIGN.md)). Surveillance view with a Night/Chart basemap, watchlist, live events, vessel evidence panel, investigation case screen, replay and the analyst chat; the Phase 1 Command Center lives under Logistics.
+
 Details in [docs/surveillance.md](./docs/surveillance.md).
 
 ---
@@ -137,6 +139,12 @@ Run the automated backend test suite:
 ```bash
 cd backend
 uv run pytest -q
+```
+
+Frontend unit tests:
+```bash
+cd frontend
+npm test
 ```
 
 Tests include:

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CommandCenter } from './pages/CommandCenter';
 import { SurveillancePage } from './pages/SurveillancePage';
+import { CasePage } from './pages/CasePage';
 import { TopBar, Domain } from './components/shell/TopBar';
 import { telemetry } from './services/telemetry';
 
@@ -25,13 +26,19 @@ function useTelemetryLive(): boolean {
 
 export function App() {
   const [domain, setDomain] = useState<Domain>('surveillance');
+  const [caseId, setCaseId] = useState<number | null>(null);
+  const [focusVessel, setFocusVessel] = useState<number | null>(null);
   const live = useTelemetryLive();
 
   return (
     <div className="h-screen flex flex-col bg-os-void text-os-fog">
       <TopBar domain={domain} onDomainChange={setDomain} subtitle={SUBTITLES[domain]} live={live} />
       {domain === 'surveillance' ? (
-        <SurveillancePage />
+        caseId !== null ? (
+          <CasePage caseId={caseId} onBack={() => setCaseId(null)} onShowOnMap={v => { setFocusVessel(v); setCaseId(null); }} />
+        ) : (
+          <SurveillancePage initialSelectedId={focusVessel} onOpenCase={setCaseId} />
+        )
       ) : (
         <div className="flex-1 min-h-0 overflow-auto">
           <CommandCenter />

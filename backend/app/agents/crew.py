@@ -116,7 +116,8 @@ def build_surveillance_crew(vessel_id: int, llm=None, tools: Optional[List] = No
         description=f"Write the investigation summary for vessel {vessel_id} using the specialists' findings and get_evidence. "
                     "Sections: Headline (one sentence), Risk (score and level), Evidence (numbered, strongest first), "
                     "Benign explanations to rule out, Recommended action (MONITOR, ESCALATE or NEED MORE DATA) with reason.",
-        expected_output="A structured plain-text case summary with the five sections above.",
+        expected_output="A structured plain-text case summary with the five sections above, times as HH:MM, "
+                        "distances to one decimal, no markdown tables.",
         agent=lead,
         context=[ais_task, fishing_task, anomaly_task],
     )
@@ -140,8 +141,10 @@ def build_assistant_crew(question: str, llm=None, tools: Optional[List] = None):
     )
     task = Task(
         description=f"Operator question: {question}\nUse the tools to gather facts, then answer concisely. "
-                    "Cite vessel ids, names, scores and timestamps exactly as the tools returned them.",
-        expected_output="A concise plain-text answer grounded in tool output, with vessel ids and numbers.",
+                    "Cite vessel ids, names and scores exactly as the tools returned them. Write times as HH:MM "
+                    "(drop dates and seconds unless asked about a date), distances to one decimal, durations in "
+                    "minutes. Short paragraphs or a short numbered list; no headings, no tables.",
+        expected_output="A concise plain-text answer grounded in tool output, with vessel ids, HH:MM times and rounded numbers.",
         agent=assistant,
     )
     return Crew(agents=[assistant], tasks=[task], process=Process.sequential,

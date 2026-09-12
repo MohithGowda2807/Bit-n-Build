@@ -4,16 +4,18 @@ import { LayerState, SurveillanceMap } from '../components/surveillance/Surveill
 import { Watchlist } from '../components/surveillance/Watchlist';
 import { EventsPanel, FeedEvent } from '../components/surveillance/EventsPanel';
 import { VesselPanel } from '../components/surveillance/VesselPanel';
-import { FilterPill, Mono, PrimaryPill } from '../components/ui/primitives';
+import { AnalystPanel } from '../components/surveillance/AnalystPanel';
+import { ReplayBar, ReplayState } from '../components/surveillance/ReplayBar';
+import { FilterPill, Mono, OutlinePill, PrimaryPill } from '../components/ui/primitives';
 import { fetchVessels } from '../services/api';
 import {
   fetchAisGaps, fetchFishingZones, fetchInvestigations, fetchProtectedAreas, fetchRiskList, fetchScenarios,
-  fetchSurveillanceEvents, fetchVesselAisTrack, fetchVesselRisk, runScenario,
+  fetchSurveillanceEvents, fetchVesselAisTrack, fetchVesselRisk, runScenario, startReplay,
 } from '../services/surveillance';
 import { telemetry } from '../services/telemetry';
 import { Vessel } from '../types';
 import {
-  DarkPeriod, FishingZone, InvestigationCase, LiveSurveillanceEvent, ProtectedArea, ScenarioInfo, VesselRisk, VesselRiskSummary,
+  DarkPeriod, FishingZone, InvestigationCase, LiveSurveillanceEvent, ProtectedArea, ReplayStep, ScenarioInfo, VesselRisk, VesselRiskSummary,
 } from '../types/surveillance';
 import { splitTrackAtGaps, TrackSegment } from '../design/track';
 
@@ -23,7 +25,12 @@ function prettyScenario(name: string): string {
   return name.toLowerCase().replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
 }
 
-export const SurveillancePage: React.FC = () => {
+interface Props {
+  initialSelectedId?: number | null;
+  onOpenCase: (caseId: number) => void;
+}
+
+export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, onOpenCase }) => {
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [fishingZones, setFishingZones] = useState<FishingZone[]>([]);
   const [protectedAreas, setProtectedAreas] = useState<ProtectedArea[]>([]);
@@ -38,7 +45,11 @@ export const SurveillancePage: React.FC = () => {
   const [basemap, setBasemap] = useState<Basemap>('night');
   const [layers, setLayers] = useState<LayerState>({ vessels: true, trails: true, zones: true, gaps: true });
 
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(initialSelectedId);
+  const [panel, setPanel] = useState<'vessel' | 'analyst'>('vessel');
+  const [analystQuestion, setAnalystQuestion] = useState<string | undefined>(undefined);
+  const [replay, setReplay] = useState<ReplayState | null>(null);
+  const [replayPositions, setReplayPositions] = useState<Map<number, [number, number]>>(new Map());
   const [risk, setRisk] = useState<VesselRisk | null>(null);
   const [segments, setSegments] = useState<TrackSegment[]>([]);
   const [gaps, setGaps] = useState<DarkPeriod[]>([]);
@@ -113,8 +124,20 @@ export const SurveillancePage: React.FC = () => {
         return Array.from(map.values());
       });
     });
-    return () => { offOpen(); offClose(); offEvent(); offTelemetry(); };
-  }, []);
+    const offStep = telemetry.subscribe('replay_step', (step: ReplayStep) => {
+      setReplay(r => r ? { ...r, simTime: step.sim_time, step: step.step, totalSteps: step.total_steps, progress: step.progress } : r);
+      setReplayPositions(prev => {
+        const next = new Map(prev);
+        for (const v of step.vessels) if (v.vessel_id) next.set(v.vessel_id, [v.latitude, v.longitude]);
+        return next;
+      });
+    });
+    const offDone = telemetry.subscribe('replay_complete', () => {
+      setReplay(r => r ? { ...r, done: true, progress: 1 } : r);
+      loadFleet().catch(() => {});
+    });
+    return () => { offOpen(); offClose(); offEvent(); offTelemetry(); offStep(); offDone(); };
+  }, [loadFleet]);
 
   const onRunScenario = async () => {
     setRunning(true);
@@ -131,7 +154,26 @@ export const SurveillancePage: React.FC = () => {
     }
   };
 
+  const onReplay = async () => {
+    setRunning(true);
+    try {
+      const started = await startReplay(scenario, 0.4);
+      setReplayPositions(new Map());
+      setReplay({ scenario, simTime: null, step: 0, totalSteps: started.steps, progress: 0, done: false, darkWindows: [] });
+      const r = await loadFleet();
+      const top = r[0];
+      if (top) { setSelectedId(top.vessel_id); setPanel('vessel'); loadDetail(top.vessel_id).catch(() => {}); }
+    } catch {
+      setReplay({ scenario, simTime: null, step: 0, totalSteps: 0, progress: 0, done: true, darkWindows: [] });
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const exitReplay = () => { setReplay(null); setReplayPositions(new Map()); };
+
   const toggleLayer = (k: keyof LayerState) => setLayers(l => ({ ...l, [k]: !l[k] }));
+  const rightInset = panel === 'analyst' ? 472 : selected ? 408 : 16;
 
   return (
     <div className="relative flex-1 min-h-0">
@@ -146,6 +188,7 @@ export const SurveillancePage: React.FC = () => {
         segments={segments}
         gaps={gaps}
         layers={layers}
+        replayPositions={replay ? replayPositions : undefined}
       />
 
       {/* Layer chips and scenario runner */}
@@ -167,10 +210,11 @@ export const SurveillancePage: React.FC = () => {
         <PrimaryPill className="!py-1.5 !px-4 text-[13px]" onClick={onRunScenario} disabled={running}>
           {running ? 'Running…' : 'Run scenario'}
         </PrimaryPill>
+        <OutlinePill className="!py-1.5 !px-4 text-[13px]" onClick={onReplay} disabled={running || (!!replay && !replay.done)}>Replay</OutlinePill>
       </div>
 
       {/* Basemap: Chart keeps the light chart look, Night is the surveillance default. */}
-      <div className="absolute bottom-4 z-[1000] flex gap-2" style={{ right: selected ? 408 : 16 }}>
+      <div className="absolute z-[1000] flex gap-2" style={{ right: rightInset, bottom: replay ? 88 : 16 }}>
         {(['night', 'chart'] as Basemap[]).map(b => (
           <FilterPill key={b} active={basemap === b} onClick={() => setBasemap(b)}>{b === 'night' ? 'Night' : 'Chart'}</FilterPill>
         ))}
@@ -183,7 +227,11 @@ export const SurveillancePage: React.FC = () => {
         <EventsPanel events={events} vessels={vessels} streaming={streaming} onSelectVessel={setSelectedId} />
       </div>
 
-      {selected && (
+      {panel === 'analyst' ? (
+        <div className="absolute right-4 top-4 bottom-4 z-[1000]">
+          <AnalystPanel initialQuestion={analystQuestion} onClose={() => setPanel('vessel')} />
+        </div>
+      ) : selected && (
         <div className="absolute right-4 top-4 bottom-4 z-[1000]">
           <VesselPanel
             vessel={selected}
@@ -191,9 +239,18 @@ export const SurveillancePage: React.FC = () => {
             openCase={openCases.find(c => c.vessel_id === selected.id) ?? null}
             loading={detailLoading}
             onClose={() => setSelectedId(null)}
-            onOpenCase={() => {}}
-            onAsk={() => {}}
+            onOpenCase={() => { const c = openCases.find(x => x.vessel_id === selected.id); if (c) onOpenCase(c.id); }}
+            onAsk={() => {
+              setAnalystQuestion(`Why is ${selected.name} (vessel ${selected.id}) rated ${risk ? risk.level.toLowerCase() : 'as it is'}, and who did it meet?`);
+              setPanel('analyst');
+            }}
           />
+        </div>
+      )}
+
+      {replay && (
+        <div className="absolute bottom-4 z-[1000]" style={{ left: 352, right: rightInset }}>
+          <ReplayBar replay={replay} startLabel="start" endLabel="end" onClose={exitReplay} />
         </div>
       )}
 
