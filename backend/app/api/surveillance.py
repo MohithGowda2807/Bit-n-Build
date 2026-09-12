@@ -9,6 +9,8 @@ from app.models.surveillance_event import SurveillanceEvent
 from app.models.vessel_risk_score import VesselRiskScore
 from app.schemas.surveillance import SurveillanceEventResponse, VesselRiskSummary
 
+from app.security import require
+
 router = APIRouter(prefix="/api/v1/surveillance", tags=["Surveillance"])
 
 
@@ -44,7 +46,7 @@ def list_vessel_risk(min_score: float = 0.0, level: Optional[str] = None, db: Se
     ]
 
 
-@router.post("/run-cycle")
+@router.post("/run-cycle", dependencies=[Depends(require("ADMIN"))])
 def run_cycle(db: Session = Depends(get_db)):
     """One surveillance cycle over stored AIS: detect events, reassess risk, open or update cases."""
     return run_surveillance_cycle(db).as_dict()

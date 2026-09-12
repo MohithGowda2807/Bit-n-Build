@@ -16,6 +16,7 @@ from app.services.surveillance.pipeline import SurveillancePipeline
 from app.services.surveillance.risk_service import RiskService
 from app.services.surveillance.reset import reset_all_simulation_data, reset_scenario
 from app.utils_time import utcnow
+from app.security import require
 
 router = APIRouter(prefix="/api/v1/simulation", tags=["Simulation"])
 
@@ -32,7 +33,7 @@ def list_scenarios():
     ]
 
 
-@router.post("/run", response_model=SimulationRunResponse)
+@router.post("/run", response_model=SimulationRunResponse, dependencies=[Depends(require("OPERATOR"))])
 def run_scenario(payload: SimulationRunRequest, db: Session = Depends(get_db)):
     if payload.scenario not in SCENARIOS:
         raise HTTPException(
@@ -64,14 +65,14 @@ def run_scenario(payload: SimulationRunRequest, db: Session = Depends(get_db)):
     )
 
 
-@router.post("/reset")
+@router.post("/reset", dependencies=[Depends(require("ADMIN"))])
 def reset_simulation(db: Session = Depends(get_db)):
     """Remove every simulated vessel and its surveillance data. Phase 1 seed vessels are kept."""
     summary = reset_all_simulation_data(db)
     return {"vessels_removed": summary.vessels_removed}
 
 
-@router.post("/replay", response_model=ReplayStartResponse)
+@router.post("/replay", response_model=ReplayStartResponse, dependencies=[Depends(require("OPERATOR"))])
 async def start_replay(payload: ReplayRequest, db: Session = Depends(get_db)):
     """Animate a scenario over the WebSocket feed: one replay_step per scripted report time, then replay_complete."""
     if payload.scenario not in SCENARIOS:

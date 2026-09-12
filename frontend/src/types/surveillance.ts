@@ -124,7 +124,7 @@ export interface InvestigationCase {
 export interface InvestigationCaseDetail extends InvestigationCase {
   vessel: { id: number; name: string; vessel_type: string; mmsi: string | null; flag: string | null };
   evidence_snapshot: Record<string, any>[];
-  audit_log: { timestamp: string; action: string; actor: string; note: string | null }[];
+  audit_log: { timestamp: string; action: string; actor: string; role?: string | null; note: string | null }[];
 }
 
 export interface ScenarioInfo {

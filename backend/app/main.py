@@ -33,6 +33,7 @@ from app.api import (
     fishing,
     investigations,
     assistant,
+    auth,
 )
 
 logging.basicConfig(
@@ -156,6 +157,7 @@ app.include_router(surveillance.router)
 app.include_router(fishing.router)
 app.include_router(investigations.router)
 app.include_router(assistant.router)
+app.include_router(auth.router)
 
 
 @app.get("/")

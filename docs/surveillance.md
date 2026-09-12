@@ -64,9 +64,23 @@ Every tracked vessel gets one `vessel_behavior_profiles` row: average speed, spe
 
 The last `BASELINE_CURRENT_HOURS` (6) of the track are scored against the profile: speed z-score (full 60 points at 3 sd, with a 1 kn floor on the spread), turning rate against the usual rate (20 points at 3x) and new AIS gaps for a vessel with none in its history (20 points). A score above 40 emits a `BEHAVIOR_DEVIATION` event with a plain-language explanation; the latest comparison is always kept on the profile and served by `GET /api/v1/vessels/{id}/baseline`.
 
+## Access control
+
+Roles are VIEWER < ANALYST < OPERATOR < ADMIN (spec sections 92-93). The caller sends `X-Role` and `X-User` headers; a missing role means VIEWER and an unknown one is a 400. Guards live in `backend/app/security.py` and every guarded route declares its minimum:
+
+| Minimum role | Unlocks |
+|--------------|---------|
+| VIEWER | Map data: vessels, tracks, risk, events, zones, baselines |
+| ANALYST | Investigations (read), case narrative, the analyst assistant |
+| OPERATOR | Assign, escalate, resolve, dismiss; run and replay scenarios |
+| ADMIN | Reset the simulation, force a surveillance cycle |
+
+A refused call answers 403 with code `FORBIDDEN`, the required role and the caller's role. Case audit entries record the actor name and role. `GET /api/v1/auth/me` returns the caller's role and a permissions map the UI mirrors; the top bar's role picker sets the headers for the browser. Token-based authentication replaces the header at the same seam.
+
 ## API
 
 ```
+GET  /api/v1/auth/roles               GET /api/v1/auth/me
 GET  /api/v1/vessels?mmsi=            GET /api/v1/vessels/{id}/track?hours=   GET /api/v1/vessels/{id}/risk
 GET  /api/v1/vessels/{id}/baseline
 GET  /api/v1/ais/gaps                 GET /api/v1/ais/gaps/{id}

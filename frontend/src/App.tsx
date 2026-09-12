@@ -7,6 +7,8 @@ import { SurveillancePage } from './pages/SurveillancePage';
 import { CasePage } from './pages/CasePage';
 import { TopBar, Domain } from './components/shell/TopBar';
 import { telemetry } from './services/telemetry';
+import { session } from './services/session';
+import { Role, can } from './design/roles';
 
 const SUBTITLES: Record<Domain, string> = {
   logistics: 'Logistics · Route optimization',
@@ -31,16 +33,23 @@ export function App() {
   const [domain, setDomain] = useState<Domain>('surveillance');
   const [caseId, setCaseId] = useState<number | null>(null);
   const [focusVessel, setFocusVessel] = useState<number | null>(null);
+  const [role, setRole] = useState<Role>(session.role);
   const live = useTelemetryLive();
+
+  const changeRole = (next: Role) => {
+    session.setRole(next);
+    setRole(next);
+    if (!can(next, 'view_cases')) setCaseId(null);
+  };
 
   return (
     <div className="h-screen flex flex-col bg-os-void text-os-fog">
-      <TopBar domain={domain} onDomainChange={setDomain} subtitle={SUBTITLES[domain]} live={live} />
+      <TopBar domain={domain} onDomainChange={setDomain} subtitle={SUBTITLES[domain]} live={live} role={role} onRoleChange={changeRole} />
       {domain === 'surveillance' ? (
         caseId !== null ? (
-          <CasePage caseId={caseId} onBack={() => setCaseId(null)} onShowOnMap={v => { setFocusVessel(v); setCaseId(null); }} />
+          <CasePage caseId={caseId} role={role} onBack={() => setCaseId(null)} onShowOnMap={v => { setFocusVessel(v); setCaseId(null); }} />
         ) : (
-          <SurveillancePage initialSelectedId={focusVessel} onOpenCase={setCaseId} />
+          <SurveillancePage initialSelectedId={focusVessel} role={role} onOpenCase={setCaseId} />
         )
       ) : domain === 'logistics' ? (
         <LogisticsPage />

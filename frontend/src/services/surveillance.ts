@@ -3,18 +3,23 @@ import {
   ReplayStart, ScenarioInfo, SimulationRunResult, SurveillanceEvent, VesselBaseline, VesselRisk, VesselRiskSummary,
 } from '../types/surveillance';
 
+import { session } from './session';
+
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`);
-  if (!res.ok) throw new Error(`${path} failed with ${res.status}`);
+  const res = await fetch(`${API_BASE}${path}`, { headers: session.headers() });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}));
+    throw new Error(detail?.detail?.message || `${path} failed with ${res.status}`);
+  }
   return res.json();
 }
 
 async function postJson<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...session.headers() },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (!res.ok) {
@@ -84,7 +89,7 @@ export type { Evidence };
 
 /** Phase 1 alerts: PATCH /api/v1/alerts/{id}/ack */
 export async function acknowledgeAlert(alertId: number): Promise<{ acknowledged: boolean }> {
-  const res = await fetch(`${API_BASE}/api/v1/alerts/${alertId}/ack`, { method: 'PATCH' });
+  const res = await fetch(`${API_BASE}/api/v1/alerts/${alertId}/ack`, { method: 'PATCH', headers: session.headers() });
   if (!res.ok) throw new Error(`acknowledge failed with ${res.status}`);
   return res.json();
 }

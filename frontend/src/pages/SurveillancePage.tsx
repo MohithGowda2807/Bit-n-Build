@@ -14,6 +14,7 @@ import {
   fetchSurveillanceEvents, fetchVesselAisTrack, fetchVesselBaseline, fetchVesselRisk, runScenario, startReplay,
 } from '../services/surveillance';
 import { telemetry } from '../services/telemetry';
+import { session } from '../services/session';
 import { Vessel } from '../types';
 import {
   DarkPeriod, FishingZone, InvestigationCase, LiveSurveillanceEvent, ProtectedArea, ReplayStep, ScenarioInfo, VesselBaseline, VesselRisk, VesselRiskSummary,
@@ -21,6 +22,7 @@ import {
 import { splitTrackAtGaps, TrackSegment } from '../design/track';
 import { darkSpans, timeProgress } from '../design/replay';
 import { formatClock } from '../design/format';
+import { Role, can, requiredRole, ROLE_LABEL } from '../design/roles';
 
 const OPEN_STATUSES = new Set(['OPEN', 'UNDER_REVIEW', 'ESCALATED']);
 
@@ -30,10 +32,13 @@ function prettyScenario(name: string): string {
 
 interface Props {
   initialSelectedId?: number | null;
+  role: Role;
   onOpenCase: (caseId: number) => void;
 }
 
-export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, onOpenCase }) => {
+export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, role, onOpenCase }) => {
+  const mayRun = can(role, 'run_scenarios');
+  const mayViewCases = can(role, 'view_cases');
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [fishingZones, setFishingZones] = useState<FishingZone[]>([]);
   const [protectedAreas, setProtectedAreas] = useState<ProtectedArea[]>([]);
@@ -65,7 +70,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
 
   const loadFleet = useCallback(async () => {
     const [v, r, c, e] = await Promise.all([
-      fetchVessels(), fetchRiskList(), fetchInvestigations(), fetchSurveillanceEvents(40),
+      fetchVessels(), fetchRiskList(), fetchInvestigations().catch(() => [] as InvestigationCase[]), fetchSurveillanceEvents(40),
     ]);
     setVessels(v);
     setRisks(r);
@@ -96,11 +101,15 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
   }, []);
 
   useEffect(() => {
-    loadFleet().catch(() => {});
     fetchFishingZones().then(setFishingZones).catch(() => {});
     fetchProtectedAreas().then(setProtectedAreas).catch(() => {});
     fetchScenarios().then(setScenarios).catch(() => {});
-  }, [loadFleet]);
+  }, []);
+
+  // Reload on a role change too: what the API returns (cases especially) depends on it.
+  useEffect(() => {
+    loadFleet().catch(() => {});
+  }, [loadFleet, role]);
 
   useEffect(() => {
     if (selectedId === null) { setRisk(null); setBaseline(null); setSegments([]); setGaps([]); return; }
@@ -119,7 +128,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
       }, ...prev].slice(0, 60));
       if (live.event_type === 'HIGH_RISK_VESSEL' || live.event_type === 'CASE_CREATED') {
         fetchRiskList().then(setRisks).catch(() => {});
-        fetchInvestigations().then(setCases).catch(() => {});
+        if (can(session.role, 'view_cases')) fetchInvestigations().then(setCases).catch(() => {});
       }
     });
     const offTelemetry = telemetry.subscribe('vessel_telemetry', (data: { vessels?: Partial<Vessel>[] }) => {
@@ -220,10 +229,13 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
             <option key={name} value={name}>{prettyScenario(name)}</option>
           ))}
         </select>
-        <PrimaryPill className="!py-1.5 !px-4 text-[13px]" onClick={onRunScenario} disabled={running}>
+        <PrimaryPill className="!py-1.5 !px-4 text-[13px]" onClick={onRunScenario} disabled={running || !mayRun}
+          title={mayRun ? undefined : `Requires the ${ROLE_LABEL[requiredRole('run_scenarios')]} role`}>
           {running ? 'Running…' : 'Run scenario'}
         </PrimaryPill>
-        <OutlinePill className="!py-1.5 !px-4 text-[13px]" onClick={onReplay} disabled={running || (!!replay && !replay.done)}>Replay</OutlinePill>
+        <OutlinePill className="!py-1.5 !px-4 text-[13px]" onClick={onReplay} disabled={running || !mayRun || (!!replay && !replay.done)}
+          title={mayRun ? undefined : `Requires the ${ROLE_LABEL[requiredRole('run_scenarios')]} role`}>Replay</OutlinePill>
+        {!mayRun && <Mono className="text-[11px] text-os-slate ml-1">{ROLE_LABEL[role]}s can watch, not run</Mono>}
       </div>
 
       {/* Basemap: Chart keeps the light chart look, Night is the surveillance default. */}
@@ -254,6 +266,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
             vessel={selected}
             risk={risk}
             baseline={baseline}
+            canViewCases={mayViewCases}
             openCase={openCases.find(c => c.vessel_id === selected.id) ?? null}
             loading={detailLoading}
             onClose={() => setSelectedId(null)}

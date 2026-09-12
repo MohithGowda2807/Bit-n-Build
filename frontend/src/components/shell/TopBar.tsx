@@ -1,4 +1,5 @@
 import React from 'react';
+import { ROLES, ROLE_LABEL, Role } from '../../design/roles';
 
 export type Domain = 'logistics' | 'environment' | 'surveillance' | 'cleanup' | 'agents';
 
@@ -17,9 +18,11 @@ interface TopBarProps {
   live: boolean;
   counters?: { label: string; value: number | string; tone?: 'critical' }[];
   action?: React.ReactNode;
+  role: Role;
+  onRoleChange: (role: Role) => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ domain, onDomainChange, subtitle, live, counters = [], action }) => (
+export const TopBar: React.FC<TopBarProps> = ({ domain, onDomainChange, subtitle, live, counters = [], action, role, onRoleChange }) => (
   <header className="h-14 flex items-center justify-between px-5 bg-os-void shrink-0">
     <div className="flex items-center gap-3">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1.5" aria-hidden="true">
@@ -57,6 +60,16 @@ export const TopBar: React.FC<TopBarProps> = ({ domain, onDomainChange, subtitle
           ))}
         </div>
       )}
+      <label className="flex items-center gap-2" title="Role sent with every request; the API enforces it">
+        <span className="os-eyebrow text-os-slate">Role</span>
+        <select
+          value={role}
+          onChange={e => onRoleChange(e.target.value as Role)}
+          className="os-mono text-xs bg-os-raised text-os-fog border border-os-pewter rounded-input px-2 py-1 focus:outline-none focus:border-os-silver"
+        >
+          {ROLES.map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
+        </select>
+      </label>
       <span
         className={`os-eyebrow flex items-center gap-1.5 px-[7px] py-1 rounded-badge text-white ${
           live ? 'bg-os-clear' : 'bg-os-steel'

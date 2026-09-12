@@ -157,35 +157,38 @@ class RiskService:
             raise LookupError(f"Investigation case {case_id} not found")
         return case
 
-    def assign_case(self, case_id: int, assignee: str, actor: str) -> InvestigationCase:
+    def assign_case(self, case_id: int, assignee: str, actor: str, role: Optional[str] = None) -> InvestigationCase:
         case = self._case(case_id)
         case.assigned_to = assignee
         if case.status == "OPEN":
             case.status = "UNDER_REVIEW"
-        case.add_audit("CASE_ASSIGNED", actor, assignee)
+        case.add_audit("CASE_ASSIGNED", actor, assignee, role)
         self.db.commit()
         return case
 
-    def escalate_case(self, case_id: int, actor: str, note: Optional[str] = None) -> InvestigationCase:
+    def escalate_case(self, case_id: int, actor: str, note: Optional[str] = None,
+                      role: Optional[str] = None) -> InvestigationCase:
         case = self._case(case_id)
         case.status = "ESCALATED"
-        case.add_audit("CASE_ESCALATED", actor, note)
+        case.add_audit("CASE_ESCALATED", actor, note, role)
         self.db.commit()
         return case
 
-    def resolve_case(self, case_id: int, actor: str, note: Optional[str] = None) -> InvestigationCase:
+    def resolve_case(self, case_id: int, actor: str, note: Optional[str] = None,
+                     role: Optional[str] = None) -> InvestigationCase:
         case = self._case(case_id)
         case.status = "RESOLVED"
-        case.add_audit("CASE_RESOLVED", actor, note)
+        case.add_audit("CASE_RESOLVED", actor, note, role)
         self.db.commit()
         return case
 
-    def dismiss_case(self, case_id: int, reason: str, actor: str, note: Optional[str] = None) -> InvestigationCase:
+    def dismiss_case(self, case_id: int, reason: str, actor: str, note: Optional[str] = None,
+                     role: Optional[str] = None) -> InvestigationCase:
         if reason not in DISMISS_REASONS:
             raise ValueError(f"Unknown dismissal reason '{reason}'. Choose from {DISMISS_REASONS}")
         case = self._case(case_id)
         case.status = "DISMISSED"
         case.dismissed_reason = reason
-        case.add_audit("CASE_DISMISSED", actor, note or reason)
+        case.add_audit("CASE_DISMISSED", actor, note or reason, role)
         self.db.commit()
         return case

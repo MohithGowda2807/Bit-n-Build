@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.agents.crew import AgentRunError, LLMNotConfiguredError, ask_maritime_ai, llm_configured
 from app.agents.crew_tools import TOOL_NAMES
 from app.agents.providers import provider_catalogue
 from app.config import settings
+from app.security import require
 
 router = APIRouter(prefix="/api/v1/assistant", tags=["Assistant"])
 
@@ -40,7 +41,7 @@ def assistant_status():
             "providers": provider_catalogue(), "tools": TOOL_NAMES}
 
 
-@router.post("/ask", response_model=AskResponse)
+@router.post("/ask", response_model=AskResponse, dependencies=[Depends(require("ANALYST"))])
 def ask(payload: AskRequest):
     if not llm_configured():
         raise llm_unavailable()

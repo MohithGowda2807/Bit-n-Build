@@ -82,6 +82,7 @@ USER / OPERATOR
 - **Behavior baseline**: a profile of each vessel's normal speed, turning and AIS reporting, learned from history or supplied by the provider, with deviations scored and explained.
 - **Explainable risk**: weighted 0-100 score over five factors with per-factor explanations, evidence rows, and configurable alert and case thresholds.
 - **Investigation cases** with assign, escalate, resolve, and dismiss workflow, frozen evidence snapshots, and an audit log.
+- **Roles**: VIEWER, ANALYST, OPERATOR and ADMIN enforced per route from an `X-Role` header, with a role picker in the top bar and actor and role recorded on every case action.
 - **CrewAI agents**: a four-agent investigation crew and a natural-language assistant, restricted to deterministic tools, running on Groq, Gemini and OpenRouter with automatic provider fallback.
 - Run a scenario: `POST /api/v1/simulation/run {"scenario": "DARK_FISHING_COMPOSITE"}`, then open `GET /api/v1/investigations`.
 

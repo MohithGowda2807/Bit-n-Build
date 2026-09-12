@@ -44,7 +44,7 @@ class InvestigationCase(Base):
     def is_open(self) -> bool:
         return self.status not in CLOSED_STATUSES
 
-    def add_audit(self, action: str, actor: str, note: Optional[str] = None) -> None:
+    def add_audit(self, action: str, actor: str, note: Optional[str] = None, role: Optional[str] = None) -> None:
         entries = self.audit_log
-        entries.append({"timestamp": utcnow().isoformat(), "action": action, "actor": actor, "note": note})
+        entries.append({"timestamp": utcnow().isoformat(), "action": action, "actor": actor, "role": role, "note": note})
         self.audit_json = json.dumps(entries)

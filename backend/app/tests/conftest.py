@@ -33,9 +33,9 @@ def db():
 
 @pytest.fixture(scope="module")
 def client():
-    """TestClient with the app lifespan running, so startup seeding happens."""
+    """TestClient with the app lifespan running, so startup seeding happens. Calls run as ADMIN."""
     from fastapi.testclient import TestClient
     from app.main import app
 
-    with TestClient(app) as test_client:
+    with TestClient(app, headers={"X-Role": "ADMIN", "X-User": "test.admin"}) as test_client:
         yield test_client

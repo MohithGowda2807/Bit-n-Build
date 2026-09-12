@@ -9,6 +9,7 @@ interface Props {
   vessel: Vessel;
   risk: VesselRisk | null;
   baseline: VesselBaseline | null;
+  canViewCases: boolean;
   openCase: InvestigationCase | null;
   loading: boolean;
   onClose: () => void;
@@ -21,7 +22,7 @@ const CloseIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" stroke="currentColor" strokeWidth="1.5" fill="none" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" /></svg>
 );
 
-export const VesselPanel: React.FC<Props> = ({ vessel, risk, baseline, openCase, loading, onClose, onOpenCase, onAsk, onTimeline }) => {
+export const VesselPanel: React.FC<Props> = ({ vessel, risk, baseline, canViewCases, openCase, loading, onClose, onOpenCase, onAsk, onTimeline }) => {
   const factors = risk?.factors ?? [];
   const deviation = baseline?.deviation ?? null;
   return (
@@ -83,7 +84,8 @@ export const VesselPanel: React.FC<Props> = ({ vessel, risk, baseline, openCase,
 
       <div className="flex flex-col gap-3">
         <div className="flex gap-2">
-          <PrimaryPill className="flex-1" onClick={onOpenCase} disabled={!openCase && !(risk && risk.score > 80)}>
+          <PrimaryPill className="flex-1" onClick={onOpenCase} disabled={!canViewCases || (!openCase && !(risk && risk.score > 80))}
+            title={canViewCases ? undefined : 'Requires the Analyst role'}>
             {openCase ? `Case ${openCase.id}` : 'Open case'}
           </PrimaryPill>
           <OutlinePill className="flex-1" onClick={onTimeline} disabled={!risk}>Timeline</OutlinePill>

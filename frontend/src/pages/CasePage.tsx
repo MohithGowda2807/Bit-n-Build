@@ -7,6 +7,8 @@ import { formatClock } from '../design/format';
 import { riskColor } from '../design/risk';
 import { splitTrackAtGaps, TrackSegment } from '../design/track';
 import { renderMarkdownLite } from '../design/markdownLite';
+import { Role, can } from '../design/roles';
+import { session } from '../services/session';
 import {
   Eyebrow, FactorBar, GhostLink, InfoBadge, Mono, OutlinePill, Panel, PrimaryPill, RiskBadge, RiskNumber, factorTone,
 } from '../components/ui/primitives';
@@ -34,6 +36,7 @@ const EVIDENCE_LABEL: Record<string, string> = {
 
 interface Props {
   caseId: number;
+  role: Role;
   onBack: () => void;
   onShowOnMap: (vesselId: number) => void;
 }
@@ -58,7 +61,9 @@ const TrackSketch: React.FC<{ segments: TrackSegment[] }> = ({ segments }) => {
   );
 };
 
-export const CasePage: React.FC<Props> = ({ caseId, onBack, onShowOnMap }) => {
+export const CasePage: React.FC<Props> = ({ caseId, role, onBack, onShowOnMap }) => {
+  const mayAct = can(role, 'act_on_cases');
+  const mayAsk = can(role, 'ask_analyst');
   const [detail, setDetail] = useState<InvestigationCaseDetail | null>(null);
   const [segments, setSegments] = useState<TrackSegment[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -102,10 +107,11 @@ export const CasePage: React.FC<Props> = ({ caseId, onBack, onShowOnMap }) => {
           <span className="text-white">Case {detail.id}</span>
         </div>
         <div className="flex items-center gap-2">
-          <OutlinePill className="!py-2 !px-[18px]" disabled={closed || !!busy} onClick={() => act('escalate', () => escalateCase(detail.id))}>Escalate</OutlinePill>
-          <OutlinePill className="!py-2 !px-[18px]" disabled={closed || !!busy || !reason}
+          {!mayAct && <Mono className="text-[11px] text-os-slate mr-2">Viewing as {role.toLowerCase()} · case actions need Operator</Mono>}
+          <OutlinePill className="!py-2 !px-[18px]" disabled={closed || !!busy || !mayAct} onClick={() => act('escalate', () => escalateCase(detail.id))}>Escalate</OutlinePill>
+          <OutlinePill className="!py-2 !px-[18px]" disabled={closed || !!busy || !reason || !mayAct}
             onClick={() => reason && act('dismiss', () => dismissCase(detail.id, reason))}>Dismiss</OutlinePill>
-          <PrimaryPill className="!py-2 !px-[18px]" disabled={closed || !!busy} onClick={() => act('resolve', () => resolveCase(detail.id))}>Resolve case</PrimaryPill>
+          <PrimaryPill className="!py-2 !px-[18px]" disabled={closed || !!busy || !mayAct} onClick={() => act('resolve', () => resolveCase(detail.id))}>Resolve case</PrimaryPill>
         </div>
       </div>
 
@@ -140,8 +146,8 @@ export const CasePage: React.FC<Props> = ({ caseId, onBack, onShowOnMap }) => {
                 {(detail.assigned_to ?? '?').charAt(0).toUpperCase()}
               </span>
               <span className="text-sm font-medium text-white">{detail.assigned_to ?? 'Unassigned'}</span>
-              {!detail.assigned_to && !closed && (
-                <GhostLink className="ml-auto text-[13px]" disabled={!!busy} onClick={() => act('assign', () => assignCase(detail.id, 'analyst.a'))}>Assign to me</GhostLink>
+              {!detail.assigned_to && !closed && mayAct && (
+                <GhostLink className="ml-auto text-[13px]" disabled={!!busy} onClick={() => act('assign', () => assignCase(detail.id, session.user))}>Assign to me</GhostLink>
               )}
             </div>
           </div>
@@ -151,7 +157,7 @@ export const CasePage: React.FC<Props> = ({ caseId, onBack, onShowOnMap }) => {
             <span className="text-[15px] leading-relaxed text-os-fog">{detail.summary}</span>
           </div>
 
-          {!closed && (
+          {!closed && mayAct && (
             <div className="flex flex-col gap-2.5 mt-auto">
               <Eyebrow>Dismiss reason</Eyebrow>
               <div className="flex flex-wrap gap-1.5">
@@ -196,7 +202,7 @@ export const CasePage: React.FC<Props> = ({ caseId, onBack, onShowOnMap }) => {
           <Panel className="p-6 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-lg font-medium text-white">Analyst narrative</span>
-              {detail.agent_summary ? <InfoBadge>Agent</InfoBadge> : (
+              {detail.agent_summary ? <InfoBadge>Agent</InfoBadge> : mayAsk && (
                 <GhostLink className="text-[13px]" disabled={!!busy} onClick={() => act('analyze', () => analyzeCase(detail.id))}>
                   {busy === 'analyze' ? 'Writing…' : 'Generate narrative →'}
                 </GhostLink>
@@ -228,7 +234,7 @@ export const CasePage: React.FC<Props> = ({ caseId, onBack, onShowOnMap }) => {
                   <Mono className="text-xs text-os-slate w-10 shrink-0">{formatClock(a.timestamp)}</Mono>
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <span className="text-[13px] font-medium text-white">{a.action.replace(/_/g, ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())}</span>
-                    <span className="text-xs text-os-ash truncate">{a.actor}{a.note ? ` · ${a.note}` : ''}</span>
+                    <span className="text-xs text-os-ash truncate">{a.actor}{a.role ? ` (${a.role.toLowerCase()})` : ''}{a.note ? ` · ${a.note}` : ''}</span>
                   </div>
                 </div>
               ))}
