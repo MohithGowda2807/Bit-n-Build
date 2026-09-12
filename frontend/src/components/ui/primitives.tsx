@@ -46,6 +46,7 @@ const EVENT_TONE: Record<string, RiskLevel> = {
   ZONE_ENTRY: 'HIGH',
   AIS_GAP_DETECTED: 'MODERATE',
   VESSEL_RENDEZVOUS: 'MODERATE',
+  BEHAVIOR_DEVIATION: 'MODERATE',
   ZONE_EXIT: 'LOW',
 };
 
@@ -58,6 +59,7 @@ const EVENT_LABEL: Record<string, string> = {
   ZONE_EXIT: 'Zone',
   AIS_GAP_DETECTED: 'AIS',
   VESSEL_RENDEZVOUS: 'Meet',
+  BEHAVIOR_DEVIATION: 'Baseline',
 };
 
 export const EventBadge: React.FC<{ type: string }> = ({ type }) => {
@@ -84,6 +86,7 @@ export const RiskNumber: React.FC<{ score: number; size?: 'list' | 'display'; cl
 export const FactorBar: React.FC<{ factors: { type: string; score: number }[] }> = ({ factors }) => {
   const toneFor = (type: string): RiskLevel =>
     type === 'FISHING_BEHAVIOR' ? 'CRITICAL' : type === 'ZONE_ACTIVITY' ? 'HIGH' : type === 'AIS_GAP' ? 'ELEVATED' : 'MODERATE';
+// RENDEZVOUS and BEHAVIOR_DEVIATION share the moderate tone: supporting factors, never the headline.
   return (
     <div className="flex h-1 gap-0.5">
       {factors.map(f => (

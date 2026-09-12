@@ -1,6 +1,6 @@
 import {
   AISPosition, DarkPeriod, Evidence, FishingZone, InvestigationCase, InvestigationCaseDetail, ProtectedArea,
-  ReplayStart, ScenarioInfo, SimulationRunResult, SurveillanceEvent, VesselRisk, VesselRiskSummary,
+  ReplayStart, ScenarioInfo, SimulationRunResult, SurveillanceEvent, VesselBaseline, VesselRisk, VesselRiskSummary,
 } from '../types/surveillance';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -28,6 +28,8 @@ export const fetchRiskList = (minScore = 0) =>
   getJson<VesselRiskSummary[]>(`/api/v1/surveillance/risk?min_score=${minScore}`);
 
 export const fetchVesselRisk = (vesselId: number) => getJson<VesselRisk>(`/api/v1/vessels/${vesselId}/risk`);
+
+export const fetchVesselBaseline = (vesselId: number) => getJson<VesselBaseline>(`/api/v1/vessels/${vesselId}/baseline`);
 
 export const fetchVesselAisTrack = (vesselId: number) => getJson<AISPosition[]>(`/api/v1/vessels/${vesselId}/track`);
 

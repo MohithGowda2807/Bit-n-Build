@@ -1,6 +1,6 @@
 import React from 'react';
 import { Vessel } from '../../types';
-import { InvestigationCase, VesselRisk } from '../../types/surveillance';
+import { InvestigationCase, VesselBaseline, VesselRisk } from '../../types/surveillance';
 import { formatClock, formatLatLon } from '../../design/format';
 import { riskColor } from '../../design/risk';
 import { Eyebrow, FactorBar, GhostLink, Mono, OutlinePill, Panel, PrimaryPill, RiskBadge, RiskNumber, factorTone } from '../ui/primitives';
@@ -8,6 +8,7 @@ import { Eyebrow, FactorBar, GhostLink, Mono, OutlinePill, Panel, PrimaryPill, R
 interface Props {
   vessel: Vessel;
   risk: VesselRisk | null;
+  baseline: VesselBaseline | null;
   openCase: InvestigationCase | null;
   loading: boolean;
   onClose: () => void;
@@ -20,8 +21,9 @@ const CloseIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" stroke="currentColor" strokeWidth="1.5" fill="none" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" /></svg>
 );
 
-export const VesselPanel: React.FC<Props> = ({ vessel, risk, openCase, loading, onClose, onOpenCase, onAsk, onTimeline }) => {
+export const VesselPanel: React.FC<Props> = ({ vessel, risk, baseline, openCase, loading, onClose, onOpenCase, onAsk, onTimeline }) => {
   const factors = risk?.factors ?? [];
+  const deviation = baseline?.deviation ?? null;
   return (
     <Panel className="w-[376px] h-full p-6 flex flex-col gap-5 overflow-hidden">
       <div className="flex flex-col gap-2">
@@ -59,6 +61,19 @@ export const VesselPanel: React.FC<Props> = ({ vessel, risk, openCase, loading, 
             <span className="text-[15px] leading-relaxed text-os-fog">{f.explanation}</span>
           </div>
         ))}
+        {baseline && (
+          <div className="flex flex-col gap-1.5 px-3 py-2.5 rounded-row bg-os-raised mt-1">
+            <div className="flex items-center justify-between">
+              <Eyebrow>Baseline · {baseline.profile.source === 'LEARNED' ? 'learned from track history' : 'from provider history'}</Eyebrow>
+              {deviation && <Mono className="text-xs" style={{ color: riskColor(deviation.score) }}>{deviation.score}/100 off</Mono>}
+            </div>
+            <div className="os-mono grid grid-cols-3 gap-2 text-[11px] text-os-ash">
+              <span><span className="text-white">{baseline.profile.average_speed.toFixed(1)}</span> kn usual</span>
+              <span><span className="text-white">{deviation ? deviation.recent_speed.toFixed(1) : vessel.speed_knots?.toFixed(1) ?? '0.0'}</span> kn now</span>
+              <span><span className="text-white">{deviation ? `${deviation.turning_ratio.toFixed(1)}x` : '—'}</span> turning</span>
+            </div>
+          </div>
+        )}
         {risk && (
           <span className="text-[13px] leading-normal text-os-slate mt-1">
             A suspicion indicator for human review. Equipment failure, coverage loss or an authorized transfer would explain parts of this pattern.

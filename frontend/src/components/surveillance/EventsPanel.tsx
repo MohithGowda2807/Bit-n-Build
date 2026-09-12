@@ -34,6 +34,8 @@ export function describeEvent(e: FeedEvent, vesselName: string): React.ReactNode
       return <>{vesselName} loitering, <Mono>{Math.round(p.score ?? 0)}/100</Mono></>;
     case 'VESSEL_RENDEZVOUS':
       return <>{vesselName} met another vessel{p.minimum_distance_km ? <> within <Mono>{formatKm(p.minimum_distance_km)}</Mono></> : null}</>;
+    case 'BEHAVIOR_DEVIATION':
+      return <>{vesselName} off its baseline, <Mono>{Math.round(p.score ?? 0)}/100</Mono>{p.baseline_speed != null ? <> · usually <Mono>{Number(p.baseline_speed).toFixed(1)} kn</Mono></> : null}</>;
     case 'HIGH_RISK_VESSEL':
       return <>{vesselName} scored <Mono>{Math.round(p.score ?? 0)}</Mono> {p.level?.toLowerCase()}</>;
     case 'CASE_CREATED':

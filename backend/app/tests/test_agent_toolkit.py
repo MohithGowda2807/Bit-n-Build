@@ -47,7 +47,7 @@ def test_risk_evidence_and_case_lookups(db):
     assert risk["score"] > 80 and {f["type"] for f in risk["factors"]} >= {"AIS_GAP", "ZONE_ACTIVITY"}
     evidence = toolkit.get_evidence(vessel.id)
     assert evidence and all("description" in e for e in evidence)
-    case = db.query(InvestigationCase).one()
+    case = db.query(InvestigationCase).filter_by(vessel_id=vessel.id).one()
     detail = toolkit.get_investigation_case(case.id)
     assert detail["vessel"]["id"] == vessel.id and detail["evidence_snapshot"]
     assert toolkit.list_open_cases()[0]["id"] == case.id

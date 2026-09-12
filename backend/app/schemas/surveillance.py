@@ -194,6 +194,39 @@ class ReplayRequest(BaseModel):
     run_analysis: bool = True  # ingest, detect and score before animating
 
 
+class BehaviorProfileResponse(BaseModel):
+    source: str
+    point_count: int
+    hours_observed: float
+    average_speed: float
+    speed_stddev: float
+    course_change_rate_deg_per_hour: float
+    gap_count: int
+    common_cells: List[str]
+    window_start: Optional[datetime] = None
+    window_end: Optional[datetime] = None
+    last_updated: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BehaviorDeviationResponse(BaseModel):
+    score: int
+    speed_z: float
+    baseline_speed: float
+    recent_speed: float
+    turning_ratio: float
+    new_gaps: int
+    explanation: str
+    timestamp: datetime
+
+
+class VesselBaselineResponse(BaseModel):
+    vessel_id: int
+    profile: BehaviorProfileResponse
+    deviation: Optional[BehaviorDeviationResponse] = None
+
+
 class ReplayDarkWindow(BaseModel):
     mmsi: str
     name: str

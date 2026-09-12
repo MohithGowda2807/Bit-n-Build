@@ -16,6 +16,7 @@ from app.models.surveillance_event import SurveillanceEvent
 from app.models.vessel_risk_score import VesselRiskScore
 from app.models.evidence import Evidence
 from app.models.investigation_case import InvestigationCase
+from app.models.vessel_behavior_profile import VesselBehaviorProfile
 
 __all__ = [
     "Vessel", "Track", "Debris", "Alert", "Mission", "Incident",

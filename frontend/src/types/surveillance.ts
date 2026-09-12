@@ -172,3 +172,34 @@ export interface ReplayStart {
   end_time: string;
   dark_windows: { mmsi: string; name: string; start: number; end: number }[];
 }
+
+export interface BehaviorProfile {
+  source: 'HISTORICAL' | 'LEARNED';
+  point_count: number;
+  hours_observed: number;
+  average_speed: number;
+  speed_stddev: number;
+  course_change_rate_deg_per_hour: number;
+  gap_count: number;
+  common_cells: string[];
+  window_start: string | null;
+  window_end: string | null;
+  last_updated: string;
+}
+
+export interface BehaviorDeviation {
+  score: number;
+  speed_z: number;
+  baseline_speed: number;
+  recent_speed: number;
+  turning_ratio: number;
+  new_gaps: number;
+  explanation: string;
+  timestamp: string;
+}
+
+export interface VesselBaseline {
+  vessel_id: number;
+  profile: BehaviorProfile;
+  deviation: BehaviorDeviation | null;
+}

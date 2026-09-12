@@ -12,6 +12,7 @@ MAX_AIS_GAP = 28.0
 MAX_ZONE_ACTIVITY = 30.0
 MAX_FISHING_BEHAVIOR = 35.0
 MAX_RENDEZVOUS = 15.0
+MAX_BEHAVIOR_DEVIATION = 15.0
 MAX_PLAIN_RENDEZVOUS = 8.0
 
 GAP_FULL_SCORE_HOURS = 3.0
@@ -26,7 +27,7 @@ BEHAVIOR_EVENT_THRESHOLD = 40
 
 @dataclass(frozen=True)
 class RiskFactor:
-    factor_type: str  # AIS_GAP, ZONE_ACTIVITY, FISHING_BEHAVIOR, RENDEZVOUS
+    factor_type: str  # AIS_GAP, ZONE_ACTIVITY, FISHING_BEHAVIOR, RENDEZVOUS, BEHAVIOR_DEVIATION
     score: int
     explanation: str
     event_ids: List[int] = field(default_factory=list)
@@ -139,6 +140,16 @@ def _rendezvous_factor(events: Sequence) -> Optional[RiskFactor]:
     return RiskFactor("RENDEZVOUS", round(weight(strongest)), explanation, _ids(meetings))
 
 
+def _behavior_factor(events: Sequence) -> Optional[RiskFactor]:
+    deviations = _of_type(events, "BEHAVIOR_DEVIATION")
+    if not deviations:
+        return None
+    strongest = max(deviations, key=lambda e: e.score or 0)
+    score = round(MAX_BEHAVIOR_DEVIATION * (strongest.score or 0) / 100.0)
+    explanation = strongest.payload.get("explanation") or "Behavior departs from this vessel's baseline"
+    return RiskFactor("BEHAVIOR_DEVIATION", score, explanation, _ids(deviations))
+
+
 def assess_risk(vessel_type: str, events: Sequence) -> RiskAssessment:
     factors = [
         f for f in (
@@ -146,6 +157,7 @@ def assess_risk(vessel_type: str, events: Sequence) -> RiskAssessment:
             _zone_factor(events),
             _fishing_factor(events),
             _rendezvous_factor(events),
+            _behavior_factor(events),
         )
         if f is not None and f.score > 0
     ]

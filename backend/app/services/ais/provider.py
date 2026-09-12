@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 BoundingBox = Tuple[float, float, float, float]  # min_lat, min_lon, max_lat, max_lon
 
@@ -30,6 +30,19 @@ class AISReport:
     source: str = "AIS"
 
 
+@dataclass(frozen=True)
+class HistoricalBaseline:
+    """How a vessel normally behaves, summarised by the provider from its history."""
+    mmsi: str
+    average_speed: float
+    speed_stddev: float
+    course_change_rate_deg_per_hour: float
+    gaps_per_hour: float = 0.0
+    hours_observed: float = 0.0
+    point_count: int = 0
+    common_cells: Sequence[str] = ()
+
+
 class AISProvider(ABC):
     @abstractmethod
     def get_vessels(self, area: Optional[BoundingBox] = None) -> List[AISVesselInfo]: ...
@@ -44,3 +57,7 @@ class AISProvider(ABC):
     def get_positions(
         self, area: Optional[BoundingBox] = None, time_range: Optional[Tuple[datetime, datetime]] = None
     ) -> List[AISReport]: ...
+
+    def get_historical_baselines(self) -> List[HistoricalBaseline]:
+        """Baselines for vessels the provider knows historically; empty when it has no history."""
+        return []

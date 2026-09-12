@@ -6,9 +6,10 @@ from app.database import get_db
 from app.models.vessel import Vessel
 from app.schemas.vessel import VesselResponse, VesselCreate, VesselUpdate
 from app.models.ais_position import AISPosition
-from app.schemas.surveillance import AISPositionResponse, VesselRiskResponse
+from app.schemas.surveillance import AISPositionResponse, VesselBaselineResponse, VesselRiskResponse
 from app.models.evidence import Evidence
 from app.services.surveillance.risk_service import RiskService
+from app.services.surveillance.baseline_service import BaselineService
 
 router = APIRouter(prefix="/api/v1/vessels", tags=["Vessels"])
 
@@ -95,3 +96,15 @@ def get_vessel_risk(vessel_id: int, db: Session = Depends(get_db)):
         vessel_id=risk.vessel_id, risk_score_id=risk.id, score=risk.score, level=risk.level,
         factors=risk.factors, computed_at=risk.computed_at, evidence=evidence,
     )
+
+
+@router.get("/{vessel_id}/baseline", response_model=VesselBaselineResponse)
+def get_vessel_baseline(vessel_id: int, db: Session = Depends(get_db)):
+    """The vessel's behavior profile and how its current activity window compares with it."""
+    row = BaselineService(db).profile_for(vessel_id)
+    if not row:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "NO_BASELINE", "message": f"No behavior baseline exists for vessel {vessel_id}."}
+        )
+    return VesselBaselineResponse(vessel_id=vessel_id, profile=row, deviation=row.last_deviation)

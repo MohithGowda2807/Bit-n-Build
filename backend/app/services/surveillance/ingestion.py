@@ -10,6 +10,7 @@ from app.models.dark_period import DarkPeriod
 from app.models.vessel import Vessel
 from app.services.ais.provider import AISProvider, AISReport, AISVesselInfo
 from app.services.surveillance.ais_gap import Observation, detect_ais_gaps
+from app.services.surveillance.baseline_service import BaselineService
 
 
 @dataclass
@@ -35,6 +36,7 @@ class AISIngestor:
             summary.positions_added += self._store_positions(vessel, reports)
             self._update_live_position(vessel, reports[-1])
             summary.dark_periods_added += self._store_dark_periods(vessel, now)
+        self._store_baselines(provider)
 
         self.db.commit()
         return summary
@@ -56,6 +58,13 @@ class AISIngestor:
         self.db.flush()
         summary.vessels_created += 1
         return vessel
+
+    def _store_baselines(self, provider: AISProvider) -> None:
+        baselines = BaselineService(self.db)
+        for baseline in provider.get_historical_baselines():
+            vessel = self.db.query(Vessel).filter_by(mmsi=baseline.mmsi).first()
+            if vessel:
+                baselines.store_historical(vessel.id, baseline)
 
     def _store_positions(self, vessel: Vessel, reports: List[AISReport]) -> int:
         existing = {

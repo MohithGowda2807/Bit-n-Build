@@ -7,7 +7,7 @@ Dark-vessel detection, illegal-fishing intelligence, explainable risk, investiga
 ```
 AIS provider (simulation or live)
   -> AISIngestor         raw positions, vessel upsert by MMSI, dark periods
-  -> SurveillancePipeline geofence, loitering, fishing pattern, rendezvous -> surveillance_events
+  -> SurveillancePipeline geofence, loitering, fishing pattern, rendezvous, baseline deviation -> surveillance_events
   -> RiskService         weighted factors -> vessel_risk_scores + evidence -> investigation_cases
   -> Event publisher     AIS_GAP_DETECTED, ZONE_ENTRY, HIGH_RISK_VESSEL, CASE_CREATED ...
   -> CrewAI agents       investigation narrative and natural-language questions (Gemini)
@@ -22,6 +22,7 @@ All detection is deterministic. The LLM only reads tool output; it never scores 
 | AIS provider interface and simulation scenarios | `backend/app/services/ais/` |
 | AIS gap detector, geofence, feature engine, detectors | `backend/app/services/surveillance/` |
 | Risk weights and factor explanations | `backend/app/services/surveillance/risk.py` |
+| Behavior baseline and deviation scoring | `backend/app/services/surveillance/baseline.py`, `baseline_service.py` |
 | Risk persistence, evidence, case workflow | `backend/app/services/surveillance/risk_service.py` |
 | Event publisher seam (in-memory now, Redis from Phase 2) | `backend/app/events/publisher.py` |
 | Commander entry point | `backend/app/agents/commander_hook.py` |
@@ -34,18 +35,18 @@ All detection is deterministic. The LLM only reads tool output; it never scores 
 
 | Scenario | What happens | Expected outcome |
 |----------|--------------|------------------|
-| NORMAL_VESSEL | Cargo ship transits at 12 knots | No events, no risk |
+| NORMAL_VESSEL | Cargo ship transits at 12 knots | No events, no risk; baseline deviation stays low |
 | AIS_GAP | Fishing vessel goes dark 60 min, reappears inside a closed bank | Dark period, zone entry, ELEVATED risk |
 | SUSPICIOUS_FISHING | Slow zig-zag passes inside a restricted ground | FISHING_PATTERN event |
 | MPA_INTRUSION | Works the protected square slowly, then leaves | Zone entry and exit, fishing pattern |
 | LOITERING | Drifts under 3 knots in authorized grounds for 3 h | LOITERING event, discounted risk |
 | VESSEL_RENDEZVOUS | Fishing vessel and cargo ship stay within 1 km for 40 min | POSSIBLE_TRANSSHIPMENT for both |
-| TRANSIT_ANOMALY | Cargo ship makes an unexplained detour | Track only (baseline model is future work) |
-| DARK_FISHING_COMPOSITE | Closed bank, fishing, dark period, rendezvous | CRITICAL risk, investigation case opened |
+| TRANSIT_ANOMALY | Cargo ship makes an unexplained detour | Track and baseline comparison only |
+| DARK_FISHING_COMPOSITE | Closed bank, fishing, dark period, rendezvous | CRITICAL risk; cases opened for the fishing vessel and the cargo ship it met |
 
 ## Risk model
 
-Score is the sum of four factors, capped at 100, banded LOW (0-20), MODERATE (21-40), ELEVATED (41-60), HIGH (61-80), CRITICAL (81-100).
+Score is the sum of five factors, capped at 100, banded LOW (0-20), MODERATE (21-40), ELEVATED (41-60), HIGH (61-80), CRITICAL (81-100).
 
 | Factor | Max | Driver |
 |--------|-----|--------|
@@ -53,13 +54,21 @@ Score is the sum of four factors, capped at 100, banded LOW (0-20), MODERATE (21
 | ZONE_ACTIVITY | 30 | Prohibited zone 25, restricted 15, +5 for 1 h dwell, +5 with fishing-like behaviour |
 | FISHING_BEHAVIOR | 35 | Windowed fishing score; x1.25 inside prohibited zones, x0.4 inside authorized grounds |
 | RENDEZVOUS | 15 | Possible transshipment 15, plain rendezvous 8, scaled by confidence |
+| BEHAVIOR_DEVIATION | 15 | Deviation score from the vessel's behavior baseline (see below), scaled to 15 |
 
 Thresholds `RISK_ALERT_THRESHOLD` (60) and `RISK_CASE_THRESHOLD` (80) are settings. Every factor carries an explanation and the event ids behind it; evidence rows and the case's frozen evidence snapshot are built from those events.
+
+## Behavior baseline
+
+Every tracked vessel gets one `vessel_behavior_profiles` row: average speed, speed spread, turning rate, AIS gap rate, hours observed and the 0.25-degree cells it usually works. The profile is **learned** from stored positions older than the current activity window when at least `BASELINE_MIN_HISTORY_HOURS` (12) of history exist; otherwise the provider's **historical** baseline is used. The simulation provider ships a scripted 30-day history per vessel type (fishing 6.5 kn, cargo 12 kn), which is what the demo scenarios compare against.
+
+The last `BASELINE_CURRENT_HOURS` (6) of the track are scored against the profile: speed z-score (full 60 points at 3 sd, with a 1 kn floor on the spread), turning rate against the usual rate (20 points at 3x) and new AIS gaps for a vessel with none in its history (20 points). A score above 40 emits a `BEHAVIOR_DEVIATION` event with a plain-language explanation; the latest comparison is always kept on the profile and served by `GET /api/v1/vessels/{id}/baseline`.
 
 ## API
 
 ```
 GET  /api/v1/vessels?mmsi=            GET /api/v1/vessels/{id}/track?hours=   GET /api/v1/vessels/{id}/risk
+GET  /api/v1/vessels/{id}/baseline
 GET  /api/v1/ais/gaps                 GET /api/v1/ais/gaps/{id}
 GET  /api/v1/fishing/zones            GET /api/v1/fishing/protected-areas     GET /api/v1/fishing/events
 GET  /api/v1/surveillance/events      GET /api/v1/surveillance/risk           POST /api/v1/surveillance/run-cycle

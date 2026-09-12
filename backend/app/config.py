@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     RISK_ALERT_THRESHOLD: int = 60   # score above this is an alert
     RISK_CASE_THRESHOLD: int = 80    # score above this opens an investigation case
     SURVEILLANCE_CYCLE_SECONDS: int = 0  # 0 disables the background analysis loop
+    BASELINE_CURRENT_HOURS: float = 6.0       # the activity window compared against the vessel's baseline
+    BASELINE_MIN_HISTORY_HOURS: float = 12.0  # stored history needed before a baseline is learned from it
 
     # Agents (CrewAI + Gemini)
     GEMINI_API_KEY: str = ""

@@ -13,6 +13,7 @@ from app.models.marine_protected_area import MarineProtectedArea
 from app.models.surveillance_event import SurveillanceEvent
 from app.models.vessel import Vessel
 from app.services.surveillance.analyzer import DetectedEvent, SurveillanceAnalyzer
+from app.services.surveillance.baseline_service import BaselineService
 from app.services.surveillance.features import KinematicPoint
 
 EventKey = Tuple[str, int, object, Optional[int], Optional[int]]
@@ -36,6 +37,7 @@ class SurveillancePipeline:
         self.analyzer = analyzer or SurveillanceAnalyzer(
             db.query(FishingZone).all(), db.query(MarineProtectedArea).all()
         )
+        self.baseline = BaselineService(db)
 
     def run(self, vessel_ids: Optional[Sequence[int]] = None) -> PipelineSummary:
         tracks = self._load_tracks(vessel_ids)
@@ -45,8 +47,10 @@ class SurveillancePipeline:
 
         detected: List[DetectedEvent] = []
         for vessel_id, track in tracks.items():
+            periods = self.db.query(DarkPeriod).filter_by(vessel_id=vessel_id).all()
             detected += self.analyzer.analyze_vessel(vessel_id, track)
-            detected += self._gap_events(vessel_id)
+            detected += self._gap_events(vessel_id, periods)
+            detected += self.baseline.detect(vessel_id, track, periods)
         for (id_a, track_a), (id_b, track_b) in combinations(tracks.items(), 2):
             detected += self.analyzer.analyze_pair(
                 id_a, track_a, vessels[id_a].vessel_type, id_b, track_b, vessels[id_b].vessel_type
@@ -93,9 +97,9 @@ class SurveillancePipeline:
         ).all()
         return {_key(*row) for row in rows}
 
-    def _gap_events(self, vessel_id: int) -> List[DetectedEvent]:
+    def _gap_events(self, vessel_id: int, periods: Sequence[DarkPeriod]) -> List[DetectedEvent]:
         events = []
-        for period in self.db.query(DarkPeriod).filter_by(vessel_id=vessel_id).all():
+        for period in periods:
             payload = {
                 "dark_period_id": period.id,
                 "duration_seconds": period.duration_seconds,

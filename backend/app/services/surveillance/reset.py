@@ -12,6 +12,7 @@ from app.models.investigation_case import InvestigationCase
 from app.models.surveillance_event import SurveillanceEvent
 from app.models.vessel import Vessel
 from app.models.vessel_risk_score import VesselRiskScore
+from app.models.vessel_behavior_profile import VesselBehaviorProfile
 
 
 @dataclass
@@ -25,6 +26,7 @@ def reset_vessel_data(db: Session, vessel_ids: Sequence[int]) -> ResetSummary:
     ids = list(vessel_ids)
     if not ids:
         return ResetSummary()
+    db.query(VesselBehaviorProfile).filter(VesselBehaviorProfile.vessel_id.in_(ids)).delete(synchronize_session=False)
     db.query(Evidence).filter(Evidence.vessel_id.in_(ids)).delete(synchronize_session=False)
     db.query(InvestigationCase).filter(InvestigationCase.vessel_id.in_(ids)).delete(synchronize_session=False)
     db.query(VesselRiskScore).filter(VesselRiskScore.vessel_id.in_(ids)).delete(synchronize_session=False)

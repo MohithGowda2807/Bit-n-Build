@@ -21,6 +21,11 @@ def _prepare(db, scenario):
     SurveillancePipeline(db).run()
 
 
+def _fishing_case(db):
+    vessel = db.query(Vessel).filter_by(mmsi="419000801").one()
+    return db.query(InvestigationCase).filter_by(vessel_id=vessel.id).order_by(InvestigationCase.id).first()
+
+
 def test_thresholds_are_configurable():
     assert settings.RISK_ALERT_THRESHOLD == 60
     assert settings.RISK_CASE_THRESHOLD == 80
@@ -32,7 +37,7 @@ def test_gap_scenario_gets_a_stored_risk_score_with_evidence_but_no_case(db):
     vessel = db.query(Vessel).filter_by(mmsi="419000201").one()
     risk = RiskService(db).latest_for(vessel.id)
     assert 40 < risk.score <= 80
-    assert {f["type"] for f in risk.factors} == {"AIS_GAP", "ZONE_ACTIVITY"}
+    assert {f["type"] for f in risk.factors} == {"AIS_GAP", "ZONE_ACTIVITY", "BEHAVIOR_DEVIATION"}
     evidence_types = {e.evidence_type for e in db.query(Evidence).filter_by(risk_score_id=risk.id)}
     assert {"AIS_GAP", "ZONE_ENTRY"} <= evidence_types
     assert db.query(InvestigationCase).count() == 0
@@ -41,9 +46,9 @@ def test_gap_scenario_gets_a_stored_risk_score_with_evidence_but_no_case(db):
 def test_composite_scenario_opens_a_critical_case_with_evidence_snapshot(db):
     _prepare(db, "DARK_FISHING_COMPOSITE")
     summary = RiskService(db).assess_all()
-    assert summary.cases_opened == 1
-    case = db.query(InvestigationCase).one()
-    vessel = db.get(Vessel, case.vessel_id)
+    assert summary.cases_opened == 2  # the fishing vessel and the cargo ship it met
+    vessel = db.query(Vessel).filter_by(mmsi="419000801").one()
+    case = db.query(InvestigationCase).filter_by(vessel_id=vessel.id).one()
     assert vessel.vessel_type == "FISHING"
     assert case.risk_score > 80
     assert case.risk_level == "CRITICAL"
@@ -59,8 +64,8 @@ def test_reassessing_updates_the_open_case_instead_of_duplicating(db):
     RiskService(db).assess_all()
     second = RiskService(db).assess_all()
     assert second.cases_opened == 0
-    assert db.query(InvestigationCase).count() == 1
-    case = db.query(InvestigationCase).one()
+    assert db.query(InvestigationCase).count() == 2
+    case = _fishing_case(db)
     assert [entry["action"] for entry in case.audit_log] == ["CASE_CREATED", "RISK_UPDATED"]
     assert db.query(VesselRiskScore).filter_by(vessel_id=case.vessel_id).count() == 2
 
@@ -69,7 +74,7 @@ def test_case_workflow_assign_resolve_dismiss(db):
     _prepare(db, "DARK_FISHING_COMPOSITE")
     service = RiskService(db)
     service.assess_all()
-    case = db.query(InvestigationCase).one()
+    case = _fishing_case(db)
 
     service.assign_case(case.id, "analyst.a", actor="operator")
     assert case.status == "UNDER_REVIEW" and case.assigned_to == "analyst.a"
@@ -81,7 +86,7 @@ def test_case_workflow_assign_resolve_dismiss(db):
 
     # A dismissed case is closed; reassessment opens a fresh one rather than reviving it.
     service.assess_all()
-    assert db.query(InvestigationCase).count() == 2
+    assert db.query(InvestigationCase).filter_by(vessel_id=case.vessel_id).count() == 2
 
 
 def test_dismiss_requires_a_known_reason(db):
@@ -89,7 +94,7 @@ def test_dismiss_requires_a_known_reason(db):
     _prepare(db, "DARK_FISHING_COMPOSITE")
     service = RiskService(db)
     service.assess_all()
-    case = db.query(InvestigationCase).one()
+    case = _fishing_case(db)
     with pytest.raises(ValueError):
         service.dismiss_case(case.id, reason="BECAUSE", actor="x")
 

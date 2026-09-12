@@ -10,9 +10,17 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
 from app.services.routing.geometry import haversine_distance, km_to_nautical_miles
-from app.services.ais.provider import AISProvider, AISReport, AISVesselInfo, BoundingBox
+from app.services.ais.provider import AISProvider, AISReport, AISVesselInfo, BoundingBox, HistoricalBaseline
+from app.services.surveillance.baseline import cell_of
 
 REPORT_INTERVAL_MINUTES = 5
+
+# Scripted 30-day histories by vessel type: what each scenario vessel normally does.
+HISTORICAL_BASELINES = {
+    "FISHING": {"average_speed": 6.5, "speed_stddev": 1.5, "course_change_rate_deg_per_hour": 30.0},
+    "CARGO": {"average_speed": 12.0, "speed_stddev": 1.0, "course_change_rate_deg_per_hour": 15.0},
+}
+HISTORY_HOURS = 30 * 24
 
 
 @dataclass(frozen=True)
@@ -179,6 +187,16 @@ class SimulationAISProvider(AISProvider):
 
     def get_track(self, mmsi: str, start_time: datetime, end_time: datetime) -> List[AISReport]:
         return [r for r in self._reports.get(mmsi, []) if start_time <= r.timestamp <= end_time]
+
+    def get_historical_baselines(self) -> List[HistoricalBaseline]:
+        return [
+            HistoricalBaseline(
+                mmsi=script.info.mmsi, **HISTORICAL_BASELINES[script.info.vessel_type],
+                hours_observed=HISTORY_HOURS, point_count=HISTORY_HOURS * 60 // REPORT_INTERVAL_MINUTES,
+                common_cells=[cell_of(*script.start)],
+            )
+            for script in self._scripts.values()
+        ]
 
     def get_positions(
         self, area: Optional[BoundingBox] = None, time_range: Optional[Tuple[datetime, datetime]] = None

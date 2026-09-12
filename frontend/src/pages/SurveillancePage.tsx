@@ -11,12 +11,12 @@ import { FilterPill, Mono, OutlinePill, PrimaryPill } from '../components/ui/pri
 import { fetchVessels } from '../services/api';
 import {
   fetchAisGaps, fetchFishingZones, fetchInvestigations, fetchProtectedAreas, fetchRiskList, fetchScenarios,
-  fetchSurveillanceEvents, fetchVesselAisTrack, fetchVesselRisk, runScenario, startReplay,
+  fetchSurveillanceEvents, fetchVesselAisTrack, fetchVesselBaseline, fetchVesselRisk, runScenario, startReplay,
 } from '../services/surveillance';
 import { telemetry } from '../services/telemetry';
 import { Vessel } from '../types';
 import {
-  DarkPeriod, FishingZone, InvestigationCase, LiveSurveillanceEvent, ProtectedArea, ReplayStep, ScenarioInfo, VesselRisk, VesselRiskSummary,
+  DarkPeriod, FishingZone, InvestigationCase, LiveSurveillanceEvent, ProtectedArea, ReplayStep, ScenarioInfo, VesselBaseline, VesselRisk, VesselRiskSummary,
 } from '../types/surveillance';
 import { splitTrackAtGaps, TrackSegment } from '../design/track';
 import { darkSpans, timeProgress } from '../design/replay';
@@ -54,6 +54,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
   const [replay, setReplay] = useState<ReplayState | null>(null);
   const [replayPositions, setReplayPositions] = useState<Map<number, [number, number]>>(new Map());
   const [risk, setRisk] = useState<VesselRisk | null>(null);
+  const [baseline, setBaseline] = useState<VesselBaseline | null>(null);
   const [segments, setSegments] = useState<TrackSegment[]>([]);
   const [gaps, setGaps] = useState<DarkPeriod[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -79,12 +80,14 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
   const loadDetail = useCallback(async (vesselId: number) => {
     setDetailLoading(true);
     try {
-      const [riskDetail, track, vesselGaps] = await Promise.all([
+      const [riskDetail, track, vesselGaps, vesselBaseline] = await Promise.all([
         fetchVesselRisk(vesselId).catch(() => null),
         fetchVesselAisTrack(vesselId).catch(() => []),
         fetchAisGaps(vesselId).catch(() => []),
+        fetchVesselBaseline(vesselId).catch(() => null),
       ]);
       setRisk(riskDetail);
+      setBaseline(vesselBaseline);
       setGaps(vesselGaps);
       setSegments(splitTrackAtGaps(track, vesselGaps));
     } finally {
@@ -100,7 +103,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
   }, [loadFleet]);
 
   useEffect(() => {
-    if (selectedId === null) { setRisk(null); setSegments([]); setGaps([]); return; }
+    if (selectedId === null) { setRisk(null); setBaseline(null); setSegments([]); setGaps([]); return; }
     loadDetail(selectedId).catch(() => {});
   }, [selectedId, loadDetail]);
 
@@ -250,6 +253,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
           <VesselPanel
             vessel={selected}
             risk={risk}
+            baseline={baseline}
             openCase={openCases.find(c => c.vessel_id === selected.id) ?? null}
             loading={detailLoading}
             onClose={() => setSelectedId(null)}

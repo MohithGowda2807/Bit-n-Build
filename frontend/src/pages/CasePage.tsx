@@ -26,10 +26,10 @@ const STATUS_LABEL: Record<string, string> = {
 
 const EVIDENCE_TONE: Record<string, string> = {
   FISHING_PATTERN: 'CRITICAL', LOITERING: 'ELEVATED', ZONE_ENTRY: 'HIGH', ZONE_EXIT: 'LOW',
-  AIS_GAP: 'ELEVATED', VESSEL_RENDEZVOUS: 'MODERATE',
+  AIS_GAP: 'ELEVATED', VESSEL_RENDEZVOUS: 'MODERATE', BEHAVIOR_DEVIATION: 'MODERATE',
 };
 const EVIDENCE_LABEL: Record<string, string> = {
-  FISHING_PATTERN: 'Fishing', LOITERING: 'Loiter', ZONE_ENTRY: 'Zone', ZONE_EXIT: 'Zone', AIS_GAP: 'AIS gap', VESSEL_RENDEZVOUS: 'Meet',
+  FISHING_PATTERN: 'Fishing', LOITERING: 'Loiter', ZONE_ENTRY: 'Zone', ZONE_EXIT: 'Zone', AIS_GAP: 'AIS gap', VESSEL_RENDEZVOUS: 'Meet', BEHAVIOR_DEVIATION: 'Baseline',
 };
 
 interface Props {

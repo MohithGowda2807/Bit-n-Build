@@ -39,6 +39,8 @@ def describe_event(event: SurveillanceEvent) -> str:
     if event.event_type == "VESSEL_RENDEZVOUS":
         kind = p.get("interaction_type", "RENDEZVOUS").replace("_", " ").lower()
         return f"{kind.capitalize()} with vessel {event.other_vessel_id}, closest {p.get('minimum_distance_km')} km"
+    if event.event_type == "BEHAVIOR_DEVIATION":
+        return f"Behavior deviation {event.score:.0f}/100: {p.get('explanation', '').split(': ', 1)[-1]}"
     return f"{event.event_type.replace('_', ' ').capitalize()} score {event.score:.0f}/100"
 
 
