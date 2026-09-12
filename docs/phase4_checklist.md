@@ -25,10 +25,10 @@
   - [x] Battery drain model (hotel load + hydrodynamic drag $v^2$ + collection gear)
   - [x] Payload capacity tracking & automatic return-to-base triggers
   - [x] Simulation step function updating drone positions along waypoints
-- [ ] **Task 1.5**: Mission Planner & Multi-Target VRP Optimization Engine
-  - [ ] Vehicle Routing Problem (VRP) heuristic for cleanup units
-  - [ ] TSP 2-opt waypoint optimization
-  - [ ] Landmass avoidance validation
+- [x] **Task 1.5**: Mission Planner & Multi-Target VRP Optimization Engine
+  - [x] Vehicle Routing Problem (VRP) heuristic for cleanup units
+  - [x] TSP 2-opt waypoint optimization
+  - [x] Landmass avoidance validation
 
 ---
 
