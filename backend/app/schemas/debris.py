@@ -58,6 +58,7 @@ class DebrisDriftTrajectoryPoint(BaseModel):
     wind_speed_knots: float
     mpa_collision_risk: bool = False
     nearest_zone: Optional[str] = None
+    uncertainty_radius_nm: Optional[float] = None
 
 
 class DebrisDriftForecastResponse(BaseModel):

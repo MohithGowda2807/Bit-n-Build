@@ -77,7 +77,7 @@ export const DemoScenarioSwitcher: React.FC<DemoScenarioSwitcherProps> = ({
  title="1-Click Presentation Demo Scenarios"
       >
         <span className="animate-pulse">🎬</span>
-        <span className="tracking-wider uppercase text-[11px]">
+        <span className="tracking-wider uppercase text-[11px] truncate max-w-[150px]" title={activeScenarioId ? activeScenarioId.replace(/_/g, ' ') : undefined}>
           {activeScenarioId ? `Demo: ${activeScenarioId.replace(/_/g, ' ')}` : 'Demo Scenarios'}
         </span>
         <span className="text-os-ash text-[9px]">{isOpen ? '▲' : '▼'}</span>

@@ -95,12 +95,17 @@ class SurveillanceAnalyzer:
         result = assess_fishing_activity(track)
         if result.score <= EVENT_SCORE_THRESHOLD:
             return []
-        last = track[-1]
+        # Anchor the event in the middle of the window that scored, not at the end of the whole track:
+        # the evidence and the analyst narrative both read this timestamp as "when the fishing happened".
+        midpoint = result.window_start + (result.window_end - result.window_start) / 2
+        anchor = min(track, key=lambda p: abs((p.timestamp - midpoint).total_seconds()))
         f = result.features
         return [DetectedEvent(
-            "FISHING_PATTERN", vessel_id, last.timestamp, last.latitude, last.longitude, score=result.score,
+            "FISHING_PATTERN", vessel_id, anchor.timestamp, anchor.latitude, anchor.longitude, score=result.score,
             confidence=0.75,
             payload={
+                "window_start": result.window_start.isoformat(),
+                "window_end": result.window_end.isoformat(),
                 "course_change_rate_deg_per_hour": round(f.course_change_rate_deg_per_hour, 1),
                 "time_at_low_speed_seconds": f.time_at_low_speed_seconds,
                 "speed_stddev_knots": round(f.speed_stddev, 2),

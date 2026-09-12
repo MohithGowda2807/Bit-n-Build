@@ -584,7 +584,7 @@ export async function fetchFleetUnits(): Promise<import('../types').CleanupUnit[
 export async function sendFleetCommand(unitId: number, command: string): Promise<any> {
   const res = await fetch(`${API_BASE}/api/v1/fleet/units/${unitId}/command`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...session.headers() },
     body: JSON.stringify({ command })
   });
   if (!res.ok) throw new Error('Failed to send fleet command');
@@ -605,13 +605,23 @@ export async function planCleanupMission(payload: {
   return res.json();
 }
 
-export async function approveCleanupMission(missionId: number, decision: 'approved' | 'rejected'): Promise<any> {
-  const res = await fetch(`${API_BASE}/api/v1/missions/${missionId}/approve`, {
+/** Persist a planned sortie as a mission awaiting approval. */
+export async function createCleanupMission(mission: Record<string, unknown>): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/missions`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ decision })
+    headers: { 'Content-Type': 'application/json', ...session.headers() },
+    body: JSON.stringify(mission)
   });
-  if (!res.ok) throw new Error('Failed to approve/reject mission');
+  if (!res.ok) throw await failure(res, 'Failed to create cleanup mission');
+  return res.json();
+}
+
+/** The API reads the decision from the query string: approve activates the mission and sends its unit to sea. */
+export async function approveCleanupMission(missionId: number, decision: 'approve' | 'reject'): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/missions/${missionId}/approve?decision=${decision}`, {
+    method: 'POST', headers: session.headers()
+  });
+  if (!res.ok) throw await failure(res, 'Failed to approve or reject mission');
   return res.json();
 }
 

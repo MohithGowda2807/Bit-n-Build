@@ -24,7 +24,7 @@ def override_get_db():
         db.close()
 
 
-client = TestClient(app)
+client = TestClient(app, headers={"X-Role": "ADMIN", "X-User": "test.admin"})
 
 
 @pytest.fixture(autouse=True, scope="module")

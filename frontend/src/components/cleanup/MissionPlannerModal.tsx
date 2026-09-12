@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CleanupUnit, Debris } from '../../types';
-import { planCleanupMission, approveCleanupMission } from '../../services/api';
+import { planCleanupMission, approveCleanupMission, createCleanupMission } from '../../services/api';
 
 interface MissionPlannerModalProps {
  isOpen: boolean;
@@ -25,7 +25,8 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
  const [planResult, setPlanResult] = useState<any | null>(null);
  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Synchronize selection whenever the modal opens or props change
+  // Synchronize selection when the modal opens. The page refreshes debris and fleet every 10 s; reacting to
+  // those refreshes here would wipe a generated plan before the operator can dispatch it.
  useEffect(() => {
  if (isOpen) {
  setErrorMsg(null);
@@ -48,7 +49,8 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
  setSelectedUnitId(availableUnit.id);
       }
     }
-  }, [isOpen, initialDebrisId, debrisList, fleetUnits]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialDebrisId]);
 
  if (!isOpen) return null;
 
@@ -113,26 +115,46 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
     }
   };
 
+ // The planner returns a plan, not a mission. Dispatch persists it, then the operator's approval activates it
+ // and sends the unit to sea; the fleet loop moves it from there.
  const handleAuthorizeAndDispatch = async () => {
  if (!planResult) return;
  setIsSubmitting(true);
+ setErrorMsg(null);
  try {
- if (planResult.id) {
- await approveCleanupMission(planResult.id, 'approved');
-      }
- onMissionCreated?.(planResult);
+ const waypoints = planResult.waypoints ?? [];
+ const targets = waypoints.filter((w: any) => w.action === 'collect');
+ const first = waypoints[0];
+ const target = targets[targets.length - 1] ?? waypoints[waypoints.length - 1];
+ const created = planResult.id ? planResult : await createCleanupMission({
+ mission_name: planResult.mission_name,
+ mission_type: 'debris_cleanup',
+ status: 'pending',
+ approval_status: 'pending_approval',
+ priority: 'high',
+ assigned_unit_id: planResult.assigned_unit_id ?? selectedUnitId,
+ origin_lat: first?.latitude ?? null,
+ origin_lon: first?.longitude ?? null,
+ target_lat: target?.latitude ?? null,
+ target_lon: target?.longitude ?? null,
+ waypoints_json: JSON.stringify(waypoints),
+ target_debris_ids: JSON.stringify(selectedDebrisIds),
+ estimated_duration_hours: planResult.estimated_duration_hours ?? null,
+ estimated_energy_kwh: planResult.estimated_energy_kwh ?? null,
+ target_kg: planResult.estimated_yield_kg ?? planResult.target_kg ?? 500,
+      });
+ const mission = await approveCleanupMission(created.id, 'approve');
+ onMissionCreated?.(mission);
  onClose();
     } catch (err: any) {
- console.warn('Dispatch fallback:', err);
- onMissionCreated?.(planResult);
- onClose();
+ setErrorMsg(err.message || 'Dispatch failed');
     } finally {
  setIsSubmitting(false);
     }
   };
 
  return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-os-void p-4">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-os-void/80 p-4">
       <div className="bg-os-panel border border-os-signal rounded-panel w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="p-5 border-b border-os-pewter bg-os-void flex items-center justify-between">

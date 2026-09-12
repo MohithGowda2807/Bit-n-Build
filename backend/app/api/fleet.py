@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.security import require
 from app.models.cleanup_unit import CleanupUnit
 from app.models.mission import Mission
 from app.schemas.cleanup_unit import (
@@ -55,7 +56,7 @@ def register_cleanup_unit(unit_in: CleanupUnitCreate, db: Session = Depends(get_
     return unit
 
 
-@router.post("/units/{unit_id}/command", response_model=CleanupUnitResponse)
+@router.post("/units/{unit_id}/command", response_model=CleanupUnitResponse, dependencies=[Depends(require("OPERATOR"))])
 def issue_unit_command(
     unit_id: int,
     command_req: CleanupUnitCommandRequest,

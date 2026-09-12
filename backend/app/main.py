@@ -226,6 +226,8 @@ app.include_router(ais.router)
 app.include_router(debris.router)
 app.include_router(weather.router)
 app.include_router(agents.router)
+# Phase 4 missions before the Phase 1 operations router: both serve /api/v1/missions and the first match wins.
+app.include_router(missions.router)
 app.include_router(alerts.router)
 app.include_router(ports.router)
 app.include_router(zones.router)
@@ -244,7 +246,6 @@ app.include_router(assistant.router)
 app.include_router(auth.router)
 # Phase 4: autonomous cleanup fleet & missions
 app.include_router(fleet.router)
-app.include_router(missions.router)
 
 
 @app.get("/")

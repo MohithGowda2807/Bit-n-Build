@@ -78,3 +78,21 @@ def test_phase2_hazards_and_cycle_need_operator_and_mode_needs_admin(client):
     assert client.get("/api/v1/simulation/mode").json()["mode"] == "autonomous"
     assert client.delete("/api/v1/storms", headers=analyst).status_code == 403
     assert client.delete("/api/v1/storms", headers=operator).status_code == 200
+
+
+def test_phase4_fleet_dispatch_needs_operator_and_moves_the_unit(client):
+    analyst, operator = _as("ANALYST"), _as("OPERATOR")
+    unit = client.get("/api/v1/fleet/units").json()[0]
+    mission = {"mission_name": "Access test sortie", "mission_type": "debris_cleanup", "status": "pending",
+               "assigned_unit_id": unit["id"], "priority": "high", "approval_status": "pending_approval",
+               "waypoints_json": "[]", "target_debris_ids": "[]", "target_kg": 500}
+    assert client.post("/api/v1/missions", json=mission, headers=analyst).status_code == 403
+    created = client.post("/api/v1/missions", json=mission, headers=operator)
+    assert created.status_code == 201
+    mission_id = created.json()["id"]
+    assert client.post(f"/api/v1/missions/{mission_id}/approve?decision=approve", headers=analyst).status_code == 403
+    approved = client.post(f"/api/v1/missions/{mission_id}/approve?decision=approve", headers=operator).json()
+    assert approved["status"] == "active" and approved["approval_status"] == "approved"
+    moved = client.get(f"/api/v1/fleet/units/{unit['id']}").json()
+    assert moved["status"] == "transit" and moved["assigned_mission_id"] == mission_id
+    assert client.post(f"/api/v1/fleet/units/{unit['id']}/command", json={"command": "hold"}, headers=analyst).status_code == 403

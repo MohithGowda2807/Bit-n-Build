@@ -96,7 +96,8 @@ def get_debris_drift_forecast(
             current_speed_knots=pt["current_speed_knots"],
             wind_speed_knots=pt["wind_speed_knots"],
             mpa_collision_risk=pt.get("mpa_collision_risk", False),
-            nearest_zone=pt.get("nearest_zone")
+            nearest_zone=pt.get("nearest_zone"),
+            uncertainty_radius_nm=pt.get("uncertainty_radius_nm"),
         )
         for pt in trajectory
     ]

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.security import require
 from app.models.mission import Mission
 from app.models.cleanup_unit import CleanupUnit
 from app.models.debris import Debris
@@ -119,7 +120,7 @@ def plan_cleanup_mission_endpoint(
     )
 
 
-@router.post("", response_model=MissionResponse, status_code=201)
+@router.post("", response_model=MissionResponse, status_code=201, dependencies=[Depends(require("OPERATOR"))])
 def create_mission(
     mission_in: MissionCreate,
     db: Session = Depends(get_db)
@@ -142,7 +143,7 @@ def create_mission(
     return mission
 
 
-@router.post("/{mission_id}/approve", response_model=MissionResponse)
+@router.post("/{mission_id}/approve", response_model=MissionResponse, dependencies=[Depends(require("OPERATOR"))])
 def approve_mission(
     mission_id: int,
     decision: str = Query("approve", description="approve or reject"),

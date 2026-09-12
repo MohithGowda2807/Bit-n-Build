@@ -72,3 +72,15 @@ def test_detected_event_persists_with_payload(db):
     assert stored.event_type == "LOITERING"
     assert json.loads(stored.payload_json) == detected.payload
     assert stored.score == detected.score
+
+
+def test_fishing_pattern_event_is_anchored_inside_its_window_not_at_track_end(db):
+    # DARK_FISHING_COMPOSITE fishes during minutes 60-140 and then transits for 150 more minutes.
+    info, track = _track("DARK_FISHING_COMPOSITE", mmsi="419000801")
+    events = _analyzer(db).analyze_vessel(vessel_id=1, track=track)
+    fishing = next(e for e in events if e.event_type == "FISHING_PATTERN")
+    window_start = datetime.fromisoformat(fishing.payload["window_start"])
+    window_end = datetime.fromisoformat(fishing.payload["window_end"])
+    assert window_start <= fishing.timestamp <= window_end
+    assert fishing.timestamp < track[-1].timestamp - timedelta(hours=1)
+    assert fishing.latitude != track[-1].latitude

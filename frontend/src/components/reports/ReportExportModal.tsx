@@ -31,7 +31,7 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
   ];
 
  return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-os-void p-2 sm:p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-os-void/80 p-2 sm:p-4 overflow-y-auto">
       {/* Print CSS Injection */}
       <style>{`
         @media print {

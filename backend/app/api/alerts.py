@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.security import require
 from app.models.alert import Alert
 from app.models.mission import Mission
 from app.models.incident import Incident
@@ -68,7 +69,7 @@ def list_missions(
     return q.order_by(Mission.created_at.desc()).all()
 
 
-@router.post("/missions", response_model=MissionResponse, status_code=201)
+@router.post("/missions", response_model=MissionResponse, status_code=201, dependencies=[Depends(require("OPERATOR"))])
 def create_mission(mission_in: MissionCreate, db: Session = Depends(get_db)):
     """Dispatch or queue a new mission."""
     mission = Mission(**mission_in.model_dump())
