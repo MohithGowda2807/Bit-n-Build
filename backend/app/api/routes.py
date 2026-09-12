@@ -14,6 +14,7 @@ from app.database import get_db
 from app.config import settings
 from app.models.route import Route
 from app.schemas.route import RouteOptimizeRequest, RouteOptimizeResponse
+from app.schemas.dynamic_routing import RecalculateRouteRequest, RecalculateRouteResponse, RouteVersionResponse
 from app.services.optimization.service import OptimizationService
 
 logger = logging.getLogger("oceansentinel.routes")
@@ -132,3 +133,35 @@ def get_route(route_id: int, db: Session = Depends(get_db)):
         "geometry": json.loads(r.geometry_geojson) if r.geometry_geojson else None,
         "created_at": r.created_at
     }
+
+
+@router.post("/recalculate", response_model=RecalculateRouteResponse)
+def recalculate_route(payload: RecalculateRouteRequest, db: Session = Depends(get_db)):
+    """
+    Dynamically recalculate a voyage route avoiding detected storms or extreme sea-states.
+    Applies anti-oscillation guards and records route versions.
+    """
+    try:
+        from app.services.routing.service import routing_service
+        result = routing_service.recalculate_voyage_route(
+            voyage_id=payload.voyage_id,
+            reason=payload.reason,
+            mode=payload.mode,
+            db=db,
+            candidate_profile=payload.candidate_profile,
+            min_improvement_pct=payload.min_improvement_pct
+        )
+        return result
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Route recalculation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/voyages/{voyage_id}/versions", response_model=List[RouteVersionResponse])
+def get_voyage_route_versions(voyage_id: int, db: Session = Depends(get_db)):
+    """Retrieve all route version iterations and lineages for a voyage."""
+    from app.models.route_version import RouteVersion
+    versions = db.query(RouteVersion).filter(RouteVersion.voyage_id == voyage_id).order_by(RouteVersion.version_number.asc()).all()
+    return versions

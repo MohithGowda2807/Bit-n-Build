@@ -2,9 +2,12 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { OceanMap, Basemap } from '../components/OceanMap';
 import { BasemapToggle } from '../components/map/BaseMap';
 import { Eyebrow, FilterPill, GhostLink, IconFrame, Mono, OutlinePill, Panel, PrimaryPill, RiskBadge } from '../components/ui/primitives';
-import { fetchAlerts, fetchPorts, fetchVessels, fetchZones, optimizeRoute } from '../services/api';
-import { Alert, Coordinate, MarineZone, OptimizationWeights, Port, RouteDetail, RouteOptimizeResponse, Vessel } from '../types';
+import { fetchAlerts, fetchPorts, fetchVessels, fetchZones, optimizeRoute, fetchActiveStorms, getOperatingMode, recalculateVoyageRoute, fetchVoyageRouteVersions } from '../services/api';
+import { Alert, Coordinate, MarineZone, OptimizationWeights, Port, RouteDetail, RouteOptimizeResponse, Vessel, Storm, RouteVersion, RecalculateRouteResponse } from '../types';
 import { formatClock } from '../design/format';
+import { ScenarioControlBar } from '../components/routing/ScenarioControlBar';
+import { DynamicRouteDiffModal } from '../components/routing/DynamicRouteDiffModal';
+import { VoyageTimeline } from '../components/routing/VoyageTimeline';
 
 const MODES: { id: string; label: string; hint: string; weights: OptimizationWeights }[] = [
   { id: 'fuel_efficient', label: 'Fuel efficient', hint: 'Least consumption', weights: { fuel: 0.55, time: 0.15, safety: 0.15, environment: 0.15 } },
@@ -24,6 +27,11 @@ export const LogisticsPage: React.FC = () => {
   const [ports, setPorts] = useState<Port[]>([]);
   const [zones, setZones] = useState<MarineZone[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [storms, setStorms] = useState<Storm[]>([]);
+  const [operatingMode, setOperatingModeState] = useState<string>('autonomous');
+  const [routeVersions, setRouteVersions] = useState<RouteVersion[]>([]);
+  const [diffModal, setDiffModal] = useState<RecalculateRouteResponse | null>(null);
+  const [isRerouting, setIsRerouting] = useState<boolean>(false);
   const [basemap, setBasemap] = useState<Basemap>('chart');
 
   const [vesselId, setVesselId] = useState<number | null>(null);
@@ -44,8 +52,17 @@ export const LogisticsPage: React.FC = () => {
   const timer = useRef<number | null>(null);
 
   useEffect(() => {
-    Promise.all([fetchVessels(), fetchPorts(), fetchZones(), fetchAlerts().catch(() => [])]).then(([v, p, z, a]) => {
+    Promise.all([
+      fetchVessels(),
+      fetchPorts(),
+      fetchZones(),
+      fetchAlerts().catch(() => []),
+      fetchActiveStorms().catch(() => []),
+      getOperatingMode().catch(() => 'autonomous'),
+      fetchVoyageRouteVersions(1).catch(() => [])
+    ]).then(([v, p, z, a, st, opMode, vers]) => {
       setVessels(v); setPorts(p); setZones(z); setAlerts(a);
+      setStorms(st); setOperatingModeState(opMode); setRouteVersions(vers);
       if (v.length && vesselId === null) setVesselId(v[0].id);
       const mumbai = portByName(p, 'mumbai'); const singapore = portByName(p, 'singapore');
       if (mumbai && singapore) {
@@ -86,6 +103,30 @@ export const LogisticsPage: React.FC = () => {
     }
   };
 
+  const handleDynamicReroute = async () => {
+    try {
+      setIsRerouting(true);
+      const res = await recalculateVoyageRoute(1, 'DYNAMIC_STORM_AVOIDANCE', operatingMode, 'safest');
+      setDiffModal(res);
+      // Refresh route versions and route display
+      const vers = await fetchVoyageRouteVersions(1);
+      setRouteVersions(vers);
+      generate();
+    } catch (err: any) {
+      setError(`Dynamic recalculation failed: ${err.message}`);
+    } finally {
+      setIsRerouting(false);
+    }
+  };
+
+  const handleCycleExecuted = (cycleRes: any) => {
+    fetchActiveStorms().then(setStorms).catch(() => {});
+    fetchVoyageRouteVersions(1).then(setRouteVersions).catch(() => {});
+    if (cycleRes?.environmental_routing?.recalculations?.length > 0) {
+      generate();
+    }
+  };
+
   const onPick = (coord: Coordinate) => {
     if (pickMode === 'origin') setOrigin(coord);
     if (pickMode === 'destination') setDestination(coord);
@@ -96,7 +137,18 @@ export const LogisticsPage: React.FC = () => {
   const rightInset = result ? 408 : 16;
 
   return (
-    <div className="relative flex-1 min-h-0">
+    <div className="relative flex-1 min-h-0 flex flex-col">
+      {/* Simulation Scenario & Mode Control Bar */}
+      <div className="absolute top-4 left-4 right-4 z-[1001]">
+        <ScenarioControlBar
+          activeStorms={storms}
+          operatingMode={operatingMode}
+          onStormsChanged={setStorms}
+          onModeChanged={setOperatingModeState}
+          onCycleExecuted={handleCycleExecuted}
+        />
+      </div>
+
       <div className="absolute inset-0 [&>div]:!rounded-none [&>div]:!border-0 [&>div]:!shadow-none [&>div]:!min-h-0">
         <OceanMap
           vessels={vessels} ports={ports} zones={zones}
@@ -110,94 +162,109 @@ export const LogisticsPage: React.FC = () => {
           onSelectCoordinate={onPick}
           replayPosition={replayPos}
           basemap={basemap} onBasemapChange={setBasemap} showLayerBar={false}
+          storms={storms}
         />
       </div>
 
       {pickMode && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] os-reveal">
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[1000] os-reveal">
           <Mono className="text-xs text-white bg-os-signal px-3 py-1.5 rounded-pill">Click the map to set the {pickMode}</Mono>
         </div>
       )}
 
-      {/* Route planner */}
-      <div className="absolute left-4 top-4 z-[1000] flex flex-col gap-4">
-        <Panel className="w-[320px] p-5 flex flex-col gap-4">
+      {/* Route planner panel */}
+      <div className="absolute left-4 top-20 bottom-4 z-[1000] flex flex-col gap-4 overflow-y-auto pointer-events-none">
+        <Panel className="w-[320px] p-5 flex flex-col gap-4 pointer-events-auto">
           <div className="flex items-center justify-between">
             <span className="text-lg font-medium text-white">Route planner</span>
-            <Mono className="text-xs text-os-slate">A* · fuel model</Mono>
+            <span className="text-xs font-mono px-2 py-0.5 rounded bg-blue-950 border border-blue-800 text-blue-300">Phase 2 A*</span>
           </div>
 
           <label className="flex flex-col gap-1.5">
             <Eyebrow>Vessel</Eyebrow>
-            <select value={vesselId ?? ''} onChange={e => setVesselId(Number(e.target.value))}
-              className="bg-os-raised text-white text-sm border border-os-pewter rounded-input px-3 py-2 focus:outline-none focus:border-os-silver">
-              {vessels.map(v => <option key={v.id} value={v.id}>{v.name} · {v.vessel_type}</option>)}
+            <select
+              value={vesselId ?? ''}
+              onChange={e => setVesselId(Number(e.target.value))}
+              className="bg-os-raised text-white text-sm border border-os-pewter rounded-input px-3 py-2 focus:outline-none focus:border-os-silver"
+            >
+              {vessels.map(v => (
+                <option key={v.id} value={v.id}>{v.name} ({v.vessel_type})</option>
+              ))}
             </select>
-            {selectedVessel && (
-              <Mono className="text-[11px] text-os-ash">cruise {selectedVessel.cruise_speed_knots} kn · {fmt(selectedVessel.fuel_consumption_rate)} L/h · cargo {fmt(selectedVessel.cargo_capacity_tonnes)} t</Mono>
-            )}
           </label>
 
-          {(['origin', 'destination'] as const).map(kind => {
-            const value = kind === 'origin' ? origin : destination;
-            const set = kind === 'origin' ? setOrigin : setDestination;
-            const matched = ports.find(p => value && Math.abs(p.latitude - value.latitude) < 1e-6 && Math.abs(p.longitude - value.longitude) < 1e-6);
-            return (
-              <div key={kind} className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <Eyebrow>{kind}</Eyebrow>
-                  <button onClick={() => setPickMode(pickMode === kind ? null : kind)}
-                    className={`text-[11px] font-medium ${pickMode === kind ? 'text-white' : 'text-os-signal hover:text-os-signal-hover'}`}>
-                    {pickMode === kind ? 'Click the map…' : 'Pick on map'}
-                  </button>
-                </div>
-                <select value={matched?.id ?? ''} onChange={e => { const p = ports.find(x => x.id === Number(e.target.value)); if (p) set({ latitude: p.latitude, longitude: p.longitude }); }}
-                  className="bg-os-raised text-white text-sm border border-os-pewter rounded-input px-3 py-2 focus:outline-none focus:border-os-silver">
-                  <option value="">{value ? 'Custom point' : 'Select a port'}</option>
-                  {ports.map(p => <option key={p.id} value={p.id}>{p.name}, {p.country}</option>)}
-                </select>
-                {value && <Mono className="text-[11px] text-os-ash">{value.latitude.toFixed(4)}, {value.longitude.toFixed(4)}</Mono>}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <Eyebrow>Origin</Eyebrow>
+                <GhostLink className="text-[11px]" onClick={() => setPickMode('origin')}>Pick</GhostLink>
               </div>
-            );
-          })}
-
-          <div className="flex flex-col gap-1.5">
-            <Eyebrow>Optimize for</Eyebrow>
-            <div className="flex flex-wrap gap-1.5">
-              {MODES.map(m => <FilterPill key={m.id} size="sm" active={mode === m.id} onClick={() => setMode(m.id)}>{m.label}</FilterPill>)}
+              <div className="px-3 py-2 rounded-input bg-os-raised border border-os-pewter">
+                <Mono className="text-xs text-white truncate">{origin ? `${origin.latitude.toFixed(2)}, ${origin.longitude.toFixed(2)}` : 'unset'}</Mono>
+              </div>
             </div>
-            <span className="text-xs text-os-ash">{MODES.find(m => m.id === mode)?.hint}</span>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <Eyebrow>Destination</Eyebrow>
+                <GhostLink className="text-[11px]" onClick={() => setPickMode('destination')}>Pick</GhostLink>
+              </div>
+              <div className="px-3 py-2 rounded-input bg-os-raised border border-os-pewter">
+                <Mono className="text-xs text-white truncate">{destination ? `${destination.latitude.toFixed(2)}, ${destination.longitude.toFixed(2)}` : 'unset'}</Mono>
+              </div>
+            </div>
           </div>
 
-          <PrimaryPill onClick={generate} disabled={loading || !origin || !destination}>{loading ? 'Optimizing…' : 'Generate route'}</PrimaryPill>
-          {error && <span className="text-xs" style={{ color: '#f0483e' }}>{error}</span>}
+          <div className="flex flex-col gap-1.5">
+            <Eyebrow>Optimization Goal</Eyebrow>
+            <div className="grid grid-cols-2 gap-1.5">
+              {MODES.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => setMode(m.id)}
+                  className={`px-2 py-1.5 text-xs font-mono rounded border transition text-left ${
+                    mode === m.id
+                      ? 'bg-blue-600/30 border-blue-500 text-white font-semibold'
+                      : 'bg-os-raised border-os-pewter text-os-ash hover:text-white'
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && <span className="text-xs text-red-400">{error}</span>}
+
+          <div className="flex flex-col gap-2 pt-1">
+            <PrimaryPill className="w-full justify-center !py-2.5" onClick={generate} disabled={loading}>
+              {loading ? 'Optimizing Corridor...' : 'Calculate Routes'}
+            </PrimaryPill>
+
+            {/* Dynamic Hazard Recalculate Button */}
+            {storms.length > 0 && (
+              <button
+                onClick={handleDynamicReroute}
+                disabled={isRerouting}
+                className="w-full py-2 px-3 rounded text-xs font-mono font-semibold bg-red-700 hover:bg-red-600 text-white border border-red-500/80 shadow transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                <span>⚡</span>
+                <span>{isRerouting ? 'Rerouting...' : 'Autonomous Storm Avoidance'}</span>
+              </button>
+            )}
+          </div>
+
+          {/* Route Version Lineage */}
+          {routeVersions.length > 0 && (
+            <div className="pt-2 border-t border-os-pewter/60">
+              <VoyageTimeline versions={routeVersions} />
+            </div>
+          )}
         </Panel>
       </div>
 
-      {/* Advisories */}
-      {alerts.length > 0 && (
-        <div className="absolute left-4 bottom-4 z-[1000]">
-          <Panel className="w-[320px] p-5 flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="text-lg font-medium text-white">Advisories</span>
-              <Mono className="text-xs text-os-slate">{alerts.filter(a => !a.acknowledged).length} unacknowledged</Mono>
-            </div>
-            <div className="flex flex-col gap-2.5">
-              {alerts.slice(0, 3).map(a => (
-                <div key={a.id} className="flex items-start gap-2.5">
-                  <Mono className="text-xs text-os-slate w-10 shrink-0 pt-0.5">{formatClock(a.timestamp)}</Mono>
-                  <RiskBadge level={a.severity === 'critical' ? 'CRITICAL' : a.severity === 'warning' ? 'ELEVATED' : 'MODERATE'} />
-                  <span className="text-[13px] text-os-fog leading-snug line-clamp-2">{a.message}</span>
-                </div>
-              ))}
-            </div>
-          </Panel>
-        </div>
-      )}
-
-      {/* Route result */}
+      {/* Inspected route details panel */}
       {result && inspected && (
-        <div className="absolute right-4 top-4 bottom-4 z-[1000]">
+        <div className="absolute right-4 top-20 bottom-4 z-[1000]">
           <Panel className="w-[376px] h-full p-6 flex flex-col gap-5 overflow-hidden">
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
@@ -285,6 +352,15 @@ export const LogisticsPage: React.FC = () => {
         </div>
       )}
       <GhostLink className="hidden" />
+
+      {/* Dynamic Recalculation Diff Modal */}
+      {diffModal && (
+        <DynamicRouteDiffModal
+          diff={diffModal}
+          onClose={() => setDiffModal(null)}
+          onAccept={() => setDiffModal(null)}
+        />
+      )}
     </div>
   );
 };

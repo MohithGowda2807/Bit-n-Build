@@ -28,6 +28,8 @@ from app.api import (
     agents,
     alerts,
     ais,
+    risk,
+    simulation_scenario,
     simulation,
     surveillance,
     fishing,
@@ -149,7 +151,10 @@ app.include_router(ports.router)
 app.include_router(zones.router)
 app.include_router(routes.router)
 app.include_router(voyages.router)
+app.include_router(risk.router)
 app.include_router(analytics.router)
+# Phase 2 & 3: simulation, scenarios, and autonomous commander
+app.include_router(simulation_scenario.router)
 # Phase 3: maritime surveillance
 app.include_router(simulation.router)
 app.include_router(surveillance.router)

@@ -46,12 +46,19 @@ class OptimizationService:
         cargo_weight = request.cargo_weight_tonnes or (vessel.cargo_capacity_tonnes * 0.7 if vessel else 5000.0)
         departure_time = request.departure_time or datetime.now(timezone.utc)
 
-        # 1. Generate path corridors from routing engine
+        from app.services.storm.service import storm_service
+        from app.services.risk.engine import risk_engine
+
+        # 1. Fetch active storms from DB
+        active_storms = storm_service.get_active_storms(db) if db else []
+
+        # 2. Generate path corridors from routing engine respecting active storm buffers
         paths = self.routing_service.generate_candidate_paths(
             origin_lat=request.origin.latitude,
             origin_lon=request.origin.longitude,
             dest_lat=request.destination.latitude,
-            dest_lon=request.destination.longitude
+            dest_lon=request.destination.longitude,
+            storms=active_storms
         )
 
         candidates_raw = []

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import L from 'leaflet';
 import {
   MapContainer,
   TileLayer,
@@ -10,8 +11,8 @@ import {
   useMap,
   useMapEvents
 } from 'react-leaflet';
-import L from 'leaflet';
-import { Vessel, Port, MarineZone, RouteDetail, Coordinate, Debris, VesselTrack } from '../types';
+import { Vessel, Port, MarineZone, RouteDetail, Coordinate, Debris, VesselTrack, Storm } from '../types';
+import { StormLayer } from './map/StormLayer';
 
 // Custom SVG Icons for high-tech maritime visualization
 const createCustomIcon = (color: string, label: string, size = 28, glowColor?: string) => {
@@ -109,6 +110,7 @@ interface OceanMapProps {
   onBasemapChange?: (basemap: Basemap) => void;
   /** Hide the Phase 1 layer bar when a page supplies its own chips. */
   showLayerBar?: boolean;
+  storms?: Storm[];
 }
 
 export type Basemap = 'chart' | 'night';
@@ -146,7 +148,8 @@ export const OceanMap: React.FC<OceanMapProps> = ({
   replayPosition,
   basemap: basemapProp,
   onBasemapChange,
-  showLayerBar = true
+  showLayerBar = true,
+  storms = []
 }) => {
   const [basemapState, setBasemapState] = useState<Basemap>('chart');
   const basemap = basemapProp ?? basemapState;
@@ -160,6 +163,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
   const [showDebris, setShowDebris] = useState(true);
   const [showZones, setShowZones] = useState(true);
   const [showPorts, setShowPorts] = useState(true);
+  const [showStorms, setShowStorms] = useState(true);
 
   // Convert GeoJSON coords [lon, lat] -> Leaflet [lat, lon]
   const recommendedPolyline = activeRoute
@@ -223,6 +227,14 @@ export const OceanMap: React.FC<OceanMapProps> = ({
         >
           ⚓ Ports
         </button>
+        <button
+          onClick={() => setShowStorms(!showStorms)}
+          className={`px-2 py-1 rounded transition-colors ${
+            showStorms ? 'bg-red-600/30 text-red-300 border border-red-500/50' : 'bg-slate-800 text-slate-500'
+          }`}
+        >
+          🌀 Storms ({storms.length})
+        </button>
       </div>
       )}
 
@@ -246,6 +258,9 @@ export const OceanMap: React.FC<OceanMapProps> = ({
           url={tiles.url}
           opacity={tiles.opacity}
         />
+
+        {/* Active Storm Systems (Phase 2) */}
+        {showStorms && <StormLayer storms={storms} />}
 
         {/* Marine Protected Areas & Restricted Zones Polygons */}
         {showZones && zones.map(zone => {
