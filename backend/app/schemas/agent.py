@@ -9,6 +9,7 @@ class OrchestratorRequest(BaseModel):
     route_id: Optional[int] = Field(None, description="Optional route ID")
     zone_id: Optional[int] = Field(None, description="Optional marine zone ID")
     context: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Arbitrary situational context")
+    use_assistant: Optional[bool] = Field(None, description="Force (true) or suppress (false) the Phase 3 LLM assistant; default: only for questions")
 
 
 class AgentFinding(BaseModel):
@@ -31,6 +32,8 @@ class OrchestratorResponse(BaseModel):
     requires_human_approval: bool = False
     approval_status: str = "auto_cleared"  # auto_cleared, pending_human_approval, approved, action_executed, replan_requested, rejected
     proposed_action: Optional[str] = None
+    assistant_answer: Optional[str] = None  # Phase 3 LLM assistant, grounded in surveillance tools
+    assistant_provider: Optional[str] = None
     execution_time_ms: float
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 

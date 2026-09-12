@@ -5,7 +5,11 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.schemas.surveillance import ScenarioInfo, SimulationRunRequest, SimulationRunResponse
+from app.schemas.surveillance import (
+    ReplayRequest, ReplayStartResponse, ScenarioInfo, SimulationRunRequest, SimulationRunResponse,
+)
+from app.services.surveillance.replay import replay_runner
+import asyncio
 from app.services.ais.simulation import SCENARIOS, SimulationAISProvider
 from app.services.surveillance.ingestion import AISIngestor
 from app.services.surveillance.pipeline import SurveillancePipeline
@@ -65,3 +69,30 @@ def reset_simulation(db: Session = Depends(get_db)):
     """Remove every simulated vessel and its surveillance data. Phase 1 seed vessels are kept."""
     summary = reset_all_simulation_data(db)
     return {"vessels_removed": summary.vessels_removed}
+
+
+@router.post("/replay", response_model=ReplayStartResponse)
+async def start_replay(payload: ReplayRequest, db: Session = Depends(get_db)):
+    """Animate a scenario over the WebSocket feed: one replay_step per scripted report time, then replay_complete."""
+    if payload.scenario not in SCENARIOS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "UNKNOWN_SCENARIO", "message": f"Unknown scenario '{payload.scenario}'.",
+                    "available": sorted(SCENARIOS)},
+        )
+    if replay_runner.running:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": "REPLAY_IN_PROGRESS", "message": f"Replay of {replay_runner.scenario} is still running."},
+        )
+    run = None
+    if payload.run_analysis:
+        run = await asyncio.to_thread(run_scenario, SimulationRunRequest(scenario=payload.scenario), db)
+    start_time = run.start_time if run else utcnow() - timedelta(minutes=_duration_minutes(payload.scenario))
+    steps = replay_runner.start(payload.scenario, start_time, payload.step_seconds)
+    return ReplayStartResponse(status="started", scenario=payload.scenario, steps=steps, step_seconds=payload.step_seconds)
+
+
+@router.get("/replay/status")
+def replay_status():
+    return replay_runner.status()

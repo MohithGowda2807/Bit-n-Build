@@ -11,6 +11,8 @@ from app.database import engine, Base, SessionLocal
 from app.data.seed_data import seed_database
 from app.data.surveillance_seed import seed_surveillance_zones
 from app.agents.commander_hook import run_surveillance_cycle
+from app.events.publisher import set_publisher
+from app.events.websocket_publisher import WebSocketEventPublisher
 from app.services.websocket.hub import ws_hub
 from app.api import (
     health,
@@ -54,6 +56,8 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Seed data initialization warning: {e}")
     finally:
         db.close()
+    # Surveillance events (AIS gaps, high risk, cases) stream to WebSocket clients alongside telemetry.
+    set_publisher(WebSocketEventPublisher(ws_hub, asyncio.get_running_loop()))
     loop_task = None
     if settings.SURVEILLANCE_CYCLE_SECONDS > 0:
         loop_task = asyncio.create_task(surveillance_loop(settings.SURVEILLANCE_CYCLE_SECONDS))

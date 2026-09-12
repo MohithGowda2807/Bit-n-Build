@@ -42,3 +42,4 @@ def test_vessel_live_position_tracks_latest_report(db):
     last = provider.get_positions()[-1]
     assert (vessel.latitude, vessel.longitude) == (last.latitude, last.longitude)
     assert vessel.status == "underway"
+    assert vessel.speed_knots == last.speed_over_ground

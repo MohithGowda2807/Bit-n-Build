@@ -186,3 +186,16 @@ class CaseActionRequest(BaseModel):
 
 class DismissRequest(CaseActionRequest):
     reason: str = Field(..., min_length=1)
+
+
+class ReplayRequest(BaseModel):
+    scenario: str = Field(..., min_length=1)
+    step_seconds: float = Field(0.5, ge=0.0, le=10.0)  # wall-clock pause between scripted reports
+    run_analysis: bool = True  # ingest, detect and score before animating
+
+
+class ReplayStartResponse(BaseModel):
+    status: str
+    scenario: str
+    steps: int
+    step_seconds: float

@@ -66,6 +66,7 @@ GET  /api/v1/surveillance/events      GET /api/v1/surveillance/risk           PO
 GET  /api/v1/investigations           GET /api/v1/investigations/{id}         GET /api/v1/investigations/dismiss-reasons
 POST /api/v1/investigations/{id}/assign|escalate|resolve|dismiss|analyze
 GET  /api/v1/simulation/scenarios     POST /api/v1/simulation/run             POST /api/v1/simulation/reset
+POST /api/v1/simulation/replay        GET  /api/v1/simulation/replay/status
 GET  /api/v1/assistant/status         POST /api/v1/assistant/ask
 ```
 
@@ -85,9 +86,21 @@ Free lists change often; `GET https://openrouter.ai/api/v1/models` shows current
 - Assistant crew: one agent with all eleven tools answers operator questions such as "Why is vessel 12 high risk?".
 - Tools live in `app/agents/toolkit.py` and return JSON from the database only.
 
-## Overlap with the Phase 1 TRITON foundation
+## Live feed and replay
 
-Prajwal's foundation commit added a parallel set of features that coexist with Phase 3 but are not yet wired together:
+Surveillance events are published to the TRITON WebSocket at `/ws/telemetry` as `{"type": "surveillance_event", "data": {event_type, vessel_id, timestamp, payload}}` alongside Prajwal's `vessel_telemetry` messages. Event types worth rendering: `AIS_GAP_DETECTED`, `ZONE_ENTRY`, `FISHING_PATTERN`, `VESSEL_RENDEZVOUS`, `HIGH_RISK_VESSEL`, `CASE_CREATED`.
+
+`POST /api/v1/simulation/replay {"scenario": "...", "step_seconds": 0.5}` runs the scenario (ingest, detect, score) and then animates it: one `replay_step` message per scripted report time with every vessel's position, `progress` from 0 to 1, and vessel live positions moved along so markers follow; `replay_complete` closes it. One replay runs at a time (409 otherwise).
+
+## Wiring with the Phase 1 TRITON foundation
+
+Prajwal's foundation commit added a parallel set of features. They are now connected at these points:
+
+- His Vessel Watch agent consults the Phase 3 risk engine: when a vessel has an assessment, the finding carries `details.surveillance` (score, level, factors) and its risk level is raised to match, which feeds his human-approval gate.
+- His orchestrator falls through to the Phase 3 assistant for questions (a `?` or a question word) when any LLM provider is configured, returning `assistant_answer` and `assistant_provider`; `use_assistant` forces or suppresses it.
+- His kinematic step at `POST /api/v1/ais/simulate` skips scenario vessels (identifier `MMSI-*`), whose positions come from scripted AIS or replay.
+
+Still separate:
 
 - `GET /api/v1/vessels/{id}/tracks` returns his kinematic breadcrumbs (`tracks` table, written by `POST /api/v1/ais/simulate`); `GET /api/v1/vessels/{id}/track` returns Phase 3 AIS observations (`ais_positions`, written by scenario ingestion). The surveillance detectors read only `ais_positions`.
 - `POST /api/v1/ais/simulate` nudges every vessel's live position, including scenario vessels. It does not touch stored AIS positions, dark periods, events or risk.

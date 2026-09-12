@@ -85,6 +85,7 @@ class AISIngestor:
         vessel.latitude = latest.latitude
         vessel.longitude = latest.longitude
         vessel.heading = latest.heading if latest.heading is not None else latest.course_over_ground
+        vessel.speed_knots = latest.speed_over_ground or 0.0
         vessel.status = "underway"
 
     def _store_dark_periods(self, vessel: Vessel, now: Optional[datetime]) -> int:
