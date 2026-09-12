@@ -27,5 +27,24 @@ class OrchestratorResponse(BaseModel):
     orchestrator_decision: str
     recommendations: List[str]
     agent_findings: List[AgentFinding]
+    compliance_report: Optional[str] = None
+    requires_human_approval: bool = False
+    approval_status: str = "auto_cleared"  # auto_cleared, pending_human_approval, approved, action_executed, replan_requested, rejected
+    proposed_action: Optional[str] = None
     execution_time_ms: float
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+class HumanApprovalRequest(BaseModel):
+    mission_id: str
+    decision: str = Field(..., description="Operator decision: 'approve', 'replan', or 'reject'")
+    action_notes: Optional[str] = Field(None, description="Optional operator rationale or constraints")
+
+
+class HumanApprovalResponse(BaseModel):
+    mission_id: str
+    decision: str
+    approval_status: str
+    action_result: str
+    execution_timestamp: datetime = Field(default_factory=datetime.utcnow)
+

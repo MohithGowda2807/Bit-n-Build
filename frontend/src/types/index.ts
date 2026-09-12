@@ -128,9 +128,28 @@ export interface OrchestratorResponse {
   orchestrator_decision: string;
   recommendations: string[];
   agent_findings: AgentFinding[];
+  compliance_report?: string;
+  requires_human_approval?: boolean;
+  approval_status?: string;
+  proposed_action?: string;
   execution_time_ms: number;
   timestamp: string;
 }
+
+export interface HumanApprovalRequest {
+  mission_id: string;
+  decision: 'approve' | 'replan' | 'reject';
+  action_notes?: string;
+}
+
+export interface HumanApprovalResponse {
+  mission_id: string;
+  decision: string;
+  approval_status: string;
+  action_result: string;
+  execution_timestamp: string;
+}
+
 
 export interface Port {
   id: number;

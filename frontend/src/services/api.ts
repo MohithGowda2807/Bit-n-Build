@@ -9,6 +9,8 @@ import {
   Incident,
   AgentFinding,
   OrchestratorResponse,
+  HumanApprovalRequest,
+  HumanApprovalResponse,
   Port,
   MarineZone,
   RouteOptimizeResponse,
@@ -109,6 +111,20 @@ export async function dispatchOrchestrator(payload: {
   }
   return res.json();
 }
+
+export async function submitHumanDecision(payload: HumanApprovalRequest): Promise<HumanApprovalResponse> {
+  const res = await fetch(`${API_BASE}/api/v1/agents/decision`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail?.message || 'Human decision submission failed');
+  }
+  return res.json();
+}
+
 
 export async function triggerAisSimulation(): Promise<any> {
   const res = await fetch(`${API_BASE}/api/v1/ais/simulate`, { method: 'POST' });

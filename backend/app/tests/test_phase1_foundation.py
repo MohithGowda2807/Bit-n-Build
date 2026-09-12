@@ -175,7 +175,7 @@ def test_orchestrator_calls_all_agents():
     assert "Vessel Watch Agent" in agent_names
     assert "Route Planner Agent" in agent_names
     assert "Debris Sentinel Agent" in agent_names
-    assert "Compliance Agent" in agent_names
+    assert "Compliance Report Agent" in agent_names or "Compliance Agent" in agent_names
 
     # Check finding details structure
     for finding in findings:
@@ -183,6 +183,51 @@ def test_orchestrator_calls_all_agents():
         assert len(finding["summary"]) > 0
         assert "risk_level" in finding
         assert isinstance(finding["details"], dict)
+
+    # Check human approval and compliance report synthesis
+    assert "requires_human_approval" in result
+    assert "approval_status" in result
+    assert "compliance_report" in result
+
+
+def test_human_approval_decision_workflow():
+    """
+    Verify Human Approval & Action/Replan flow:
+    Compliance Report Agent -> HUMAN APPROVAL -> ACTION / REPLAN
+    """
+    # 1. Dispatch mission that triggers orchestrator findings
+    orchestrate_payload = {
+        "query": "Review critical debris alert and authorize evasive route replan",
+        "vessel_id": 1
+    }
+    orch_res = client.post("/api/v1/agents/orchestrate", json=orchestrate_payload)
+    assert orch_res.status_code == 200
+    mission_id = orch_res.json()["mission_id"]
+
+    # 2. Submit human approval decision
+    approve_payload = {
+        "mission_id": mission_id,
+        "decision": "approve",
+        "action_notes": "Authorized by watch officer"
+    }
+    dec_res = client.post("/api/v1/agents/decision", json=approve_payload)
+    assert dec_res.status_code == 200
+    dec_data = dec_res.json()
+    assert dec_data["mission_id"] == mission_id
+    assert dec_data["decision"] == "approve"
+    assert dec_data["approval_status"] == "action_executed"
+    assert len(dec_data["action_result"]) > 0
+
+    # 3. Test replan directive
+    replan_payload = {
+        "mission_id": mission_id,
+        "decision": "replan",
+        "action_notes": "Avoid northern quadrant"
+    }
+    replan_res = client.post("/api/v1/agents/decision", json=replan_payload)
+    assert replan_res.status_code == 200
+    assert replan_res.json()["approval_status"] == "replan_requested"
+
 
 
 def test_operations_alerts_and_missions():
