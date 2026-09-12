@@ -16,11 +16,11 @@
   - [x] Leeway physics drift calculation: $\vec{v}_{drift} = \alpha \vec{v}_{current} + \beta \vec{v}_{wind}$
   - [x] Hourly trajectory forecast generator
   - [x] Spatial clustering (DBSCAN/proximity) for debris sightings
-- [ ] **Task 1.3**: Environmental Risk & MPA Interaction Engine
-  - [ ] Distance calculation to nearest Marine Protected Areas
-  - [ ] 24-48h drift trajectory collision detection with MPAs
-  - [ ] Hazard calculation for commercial shipping channels
-  - [ ] 0-100 composite environmental risk score and narrative
+- [x] **Task 1.3**: Environmental Risk & MPA Interaction Engine
+  - [x] Distance calculation to nearest Marine Protected Areas
+  - [x] 24-48h drift trajectory collision detection with MPAs
+  - [x] Hazard calculation for commercial shipping channels
+  - [x] 0-100 composite environmental risk score and narrative
 - [ ] **Task 1.4**: Autonomous Fleet Simulator & Energy/Payload Model
   - [ ] Battery drain model (hotel load + hydrodynamic drag $v^2$ + collection gear)
   - [ ] Payload capacity tracking & automatic return-to-base triggers
