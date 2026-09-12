@@ -79,12 +79,14 @@ Roles are VIEWER < ANALYST < OPERATOR < ADMIN (spec sections 92-93). The caller 
 | OPERATOR | Assign, escalate, resolve, dismiss; run and replay scenarios |
 | ADMIN | Reset the simulation, force a surveillance cycle |
 
-A refused call answers 403 with code `FORBIDDEN`, the required role and the caller's role. Case audit entries record the actor name and role. `GET /api/v1/auth/me` returns the caller's role and a permissions map the UI mirrors; the top bar's role picker sets the headers for the browser. Token-based authentication replaces the header at the same seam.
+A refused call answers 403 with code `FORBIDDEN`, the required role and the caller's role. Case audit entries record the actor name and role. `GET /api/v1/auth/me` returns the caller's role and a permissions map the UI mirrors.
+
+**Sign-in.** `POST /api/v1/auth/login` with a configured account (`AUTH_USERS`, `name:password:ROLE` entries; demo accounts admin, operator, analyst and viewer ship by default) returns a bearer token signed with `JWT_SECRET`, valid for `JWT_TTL_MINUTES`. A bearer token always wins. The `X-Role` and `X-User` headers remain a development convenience while `AUTH_ALLOW_ROLE_HEADER` is true; set it false in production and a token becomes the only way to hold a role. The top bar offers Sign in; the role picker is a dev shortcut that disappears when the header is not honoured.
 
 ## API
 
 ```
-GET  /api/v1/auth/roles               GET /api/v1/auth/me
+GET  /api/v1/auth/roles               GET /api/v1/auth/me                     POST /api/v1/auth/login   GET /api/v1/auth/session-policy
 GET  /api/v1/vessels?mmsi=            GET /api/v1/vessels/{id}/track?hours=   GET /api/v1/vessels/{id}/risk
 GET  /api/v1/vessels/{id}/baseline
 GET  /api/v1/ais/gaps                 GET /api/v1/ais/gaps/{id}               GET /api/v1/ais/provider   POST /api/v1/ais/ingest

@@ -5,6 +5,7 @@ import {
 
 import { API_BASE } from './api';
 import { session } from './session';
+import { Role } from '../design/roles';
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, { headers: session.headers() });
@@ -80,6 +81,11 @@ export const analyzeCase = (caseId: number) => postJson<InvestigationCaseDetail>
 
 export const askAnalyst = (question: string) =>
   postJson<{ question: string; answer: string; provider: string; model: string }>('/api/v1/assistant/ask', { question });
+
+export const login = (username: string, password: string) =>
+  postJson<{ access_token: string; token_type: string; role: Role; name: string; expires_at: string }>('/api/v1/auth/login', { username, password });
+
+export const fetchSessionPolicy = () => getJson<{ role_header_allowed: boolean; token_ttl_minutes: number }>('/api/v1/auth/session-policy');
 
 export const fetchAssistantStatus = () =>
   getJson<{ llm_configured: boolean; model: string; providers: { name: string; model: string; configured: boolean }[] }>(

@@ -82,7 +82,7 @@ USER / OPERATOR
 - **Behavior baseline**: a profile of each vessel's normal speed, turning and AIS reporting, learned from history or supplied by the provider, with deviations scored and explained.
 - **Explainable risk**: weighted 0-100 score over five factors with per-factor explanations, evidence rows, and configurable alert and case thresholds.
 - **Investigation cases** with assign, escalate, resolve, and dismiss workflow, frozen evidence snapshots, and an audit log.
-- **Roles**: VIEWER, ANALYST, OPERATOR and ADMIN enforced per route from an `X-Role` header, with a role picker in the top bar and actor and role recorded on every case action.
+- **Roles and sign-in**: VIEWER, ANALYST, OPERATOR and ADMIN enforced per route. Sign in with a configured account for a bearer token (demo accounts ship by default), or use the role picker while the dev role header is allowed. Actor and role are recorded on every case action.
 - **CrewAI agents**: a four-agent investigation crew and a natural-language assistant, restricted to deterministic tools, running on Groq, Gemini and OpenRouter with automatic provider fallback.
 - Run a scenario: `POST /api/v1/simulation/run {"scenario": "DARK_FISHING_COMPOSITE"}`, then open `GET /api/v1/investigations`.
 
@@ -198,13 +198,21 @@ cd frontend
 npm test
 ```
 
+Browser tests for the demo path (Playwright, Chromium). Start the backend on 8000 and the frontend on 5173 first, ideally on a fresh database:
+```bash
+cd frontend
+npx playwright install chromium
+npm run test:e2e
+```
+
 The backend suite runs against a local SQLite file by default; set `TEST_DATABASE_URL` to run it against PostGIS. Coverage by area:
 
 - **Phase 1 logistics**: `test_haversine.py`, `test_fuel.py`, `test_eta.py`, `test_astar.py`, `test_optimization.py`, `test_api.py`, `test_phase1_foundation.py`.
 - **AIS and detection**: `test_ais_position.py`, `test_ais_gap_detector.py`, `test_dark_period.py`, `test_geofence.py`, `test_features.py`, `test_loitering.py`, `test_fishing_pattern.py`, `test_rendezvous.py`, `test_analyzer.py`, `test_pipeline.py`, `test_ingestion.py`, `test_simulation_provider.py`.
 - **Risk and cases**: `test_risk_engine.py`, `test_risk_service.py`, `test_surveillance_api.py`, `test_investigation_api.py`, `test_surveillance_seed.py`, `test_vessel_identity.py`.
 - **Agents and events**: `test_agent_toolkit.py`, `test_crew.py`, `test_llm_providers.py`, `test_agent_api.py`, `test_triton_integration.py`, `test_event_publisher.py`, `test_events_api.py`, `test_websocket_publisher.py`, `test_settings.py`.
-- **Frontend** (vitest): risk banding, time formatting and AIS-gap track splitting under `frontend/src/design/`.
+- **Frontend** (vitest): risk banding, time formatting, AIS-gap track splitting, replay and heat layer helpers, the session.
+- **Browser** (Playwright, `frontend/e2e/`): landing launch, composite scenario to escalated case, timeline and replay, roles and sign-in, hazard reroute, sortie dispatch.
 
 Agent tests use fake LLM providers, so no API key is needed to run the suite.
 

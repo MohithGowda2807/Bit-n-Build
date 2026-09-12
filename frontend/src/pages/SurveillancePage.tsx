@@ -219,7 +219,8 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
       />
 
       {/* Feeds toggle, layer chips and scenario runner */}
-      <div className="absolute top-4 z-[1000] flex items-center gap-2 os-reveal transition-[left] duration-200" style={{ left: leftInset }}>
+      {/* Bounded by the feeds on the left and whichever panel is open on the right, so chips wrap instead of sliding under a panel. */}
+      <div className="absolute top-4 z-[1000] flex flex-wrap items-center gap-2 os-reveal transition-[left] duration-200" style={{ left: leftInset, right: rightInset }}>
         <FilterPill active={feedsOpen} onClick={() => setFeedsOpen(o => !o)}>
           Feeds{openCases.length > 0 ? ` · ${openCases.length}` : ''}
         </FilterPill>

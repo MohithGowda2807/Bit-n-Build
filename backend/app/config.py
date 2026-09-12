@@ -33,6 +33,11 @@ class Settings(BaseSettings):
     AISSTREAM_API_KEY: str = ""
     AIS_BOUNDING_BOX: str = "10,68,16,76"  # min_lat,min_lon,max_lat,max_lon (eastern Arabian Sea)
     AIS_COLLECT_SECONDS: int = 30            # how long one live ingest listens to the stream
+    # Sign-in. Demo accounts by default (name:password:ROLE, semicolon separated); replace both in production.
+    AUTH_USERS: str = "admin:admin:ADMIN;operator:operator:OPERATOR;analyst:analyst:ANALYST;viewer:viewer:VIEWER"
+    JWT_SECRET: str = "change-me-in-production"
+    JWT_TTL_MINUTES: int = 480
+    AUTH_ALLOW_ROLE_HEADER: bool = True  # False makes a bearer token the only way to hold a role
     RISK_ALERT_THRESHOLD: int = 60   # score above this is an alert
     RISK_CASE_THRESHOLD: int = 80    # score above this opens an investigation case
     SURVEILLANCE_CYCLE_SECONDS: int = 0  # 0 disables the background analysis loop
