@@ -12,10 +12,10 @@
   - [x] Extend `Mission` model with waypoints JSON, assigned unit, and energy estimates
   - [x] Create corresponding Pydantic schemas in `app/schemas/`
   - [x] Update `app/models/__init__.py`
-- [ ] **Task 1.2**: Debris Drift & Ocean Current Physics Engine
-  - [ ] Leeway physics drift calculation: $\vec{v}_{drift} = \alpha \vec{v}_{current} + \beta \vec{v}_{wind}$
-  - [ ] Hourly trajectory forecast generator
-  - [ ] Spatial clustering (DBSCAN/proximity) for debris sightings
+- [x] **Task 1.2**: Debris Drift & Ocean Current Physics Engine
+  - [x] Leeway physics drift calculation: $\vec{v}_{drift} = \alpha \vec{v}_{current} + \beta \vec{v}_{wind}$
+  - [x] Hourly trajectory forecast generator
+  - [x] Spatial clustering (DBSCAN/proximity) for debris sightings
 - [ ] **Task 1.3**: Environmental Risk & MPA Interaction Engine
   - [ ] Distance calculation to nearest Marine Protected Areas
   - [ ] 24-48h drift trajectory collision detection with MPAs
