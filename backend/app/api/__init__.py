@@ -11,7 +11,9 @@ from app.api import (
     weather,
     agents,
     alerts,
-    ais
+    ais,
+    risk,
+    simulation_scenario
 )
 
 __all__ = [
@@ -28,4 +30,6 @@ __all__ = [
     "agents",
     "alerts",
     "ais",
+    "risk",
+    "simulation_scenario",
 ]

@@ -120,3 +120,7 @@ One reveal: panels fade and rise 8px over 240ms when they appear. Replay markers
 1. Risk semantic scale and Map Green as a status color. A surveillance console cannot express "how worried to be" in one hue.
 2. JetBrains Mono for data. Mapbox is single-face; a console compares numbers constantly.
 3. Hairline row separators inside dense lists. Mapbox has no lists this dense.
+
+## Alias tokens (Phase 2 components)
+
+The Phase 2 logistics and environment components were written against `os-deep`, `os-card`, `os-surface` and `os-border`. Those names are kept as aliases that resolve to `void`, `panel`, `raised` and `steel` respectively, in both `tokens.css` and the Tailwind theme. New work should use the canonical names; the aliases exist so the merged components render on the system without a rewrite.

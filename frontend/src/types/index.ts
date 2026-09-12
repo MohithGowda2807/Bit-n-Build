@@ -63,6 +63,9 @@ export interface WeatherData {
   conditions: string;
   source: string;
   timestamp: string;
+  sea_state?: number;
+  data_freshness_sec?: number;
+  is_stale?: boolean;
 }
 
 export interface OceanCurrentData {
@@ -262,4 +265,80 @@ export interface AnalyticsSummary {
   total_co2_kg: number;
   total_estimated_cost_usd: number;
   average_eta_hours: number;
+}
+
+export interface Storm {
+  id: number;
+  name: string;
+  storm_type: string;
+  severity: 'low' | 'moderate' | 'high' | 'critical' | string;
+  center_latitude: number;
+  center_longitude: number;
+  radius_km: number;
+  wind_speed_knots: number;
+  movement_direction_deg: number;
+  movement_speed_knots: number;
+  is_active: boolean;
+  source: string;
+  created_at: string;
+}
+
+export interface RouteVersion {
+  id: number;
+  voyage_id: number;
+  version_number: number;
+  route_id: number;
+  trigger_event: string;
+  change_reason?: string;
+  risk_score: number;
+  fuel_liters: number;
+  eta_hours: number;
+  co2_kg: number;
+  risk_reduction_pct?: number;
+  fuel_change_pct?: number;
+  eta_change_hours?: number;
+  explanation_json?: string;
+  status: string;
+  created_at: string;
+}
+
+export interface RecalculateRouteResponse {
+  voyage_id: number;
+  previous_route_id: number;
+  new_route_id: number;
+  version_number: number;
+  risk_reduction_pct: number;
+  fuel_change_pct: number;
+  eta_change_hours: number;
+  reasons: string[];
+  tradeoffs: Record<string, any>;
+  route_geojson: string;
+  applied: boolean;
+  mode: string;
+}
+
+export interface VoyageHealth {
+  voyage_id: number;
+  overall_health: number;
+  safety_score: number;
+  fuel_efficiency_score: number;
+  environmental_score: number;
+  eta_adherence_score: number;
+  current_risk: number;
+  active_storms_count: number;
+  route_status: string;
+  operating_mode: string;
+  alerts: Array<{ severity: string; title: string; message: string }>;
+}
+
+export interface AgentDecision {
+  id: number;
+  agent_name: string;
+  action: string;
+  trigger_event?: string;
+  target_id?: string;
+  reason?: string;
+  confidence: number;
+  mode: string;
+  created_at: string;
 }

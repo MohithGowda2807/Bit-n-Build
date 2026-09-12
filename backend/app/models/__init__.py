@@ -17,10 +17,16 @@ from app.models.vessel_risk_score import VesselRiskScore
 from app.models.evidence import Evidence
 from app.models.investigation_case import InvestigationCase
 from app.models.vessel_behavior_profile import VesselBehaviorProfile
+from app.models.storm import Storm
+from app.models.route_version import RouteVersion
+from app.models.agent_decision import AgentDecisionLog
+from app.models.environmental_observation import EnvironmentalObservation
 
 __all__ = [
     "Vessel", "Track", "Debris", "Alert", "Mission", "Incident",
     "Port", "MarineZone", "Route", "RouteSegment", "Voyage",
     "AISPosition", "DarkPeriod", "FishingZone", "MarineProtectedArea",
     "SurveillanceEvent", "VesselRiskScore", "Evidence", "InvestigationCase",
+    "VesselBehaviorProfile",
+    "Storm", "RouteVersion", "AgentDecisionLog", "EnvironmentalObservation",
 ]

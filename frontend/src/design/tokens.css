@@ -5,6 +5,11 @@
   --os-panel: #15171b;
   --os-raised: #1c1f24;
   --os-overlay: #23262d;
+  /* Aliases for the Phase 2 components: same surfaces, older names. Prefer the canonical names above. */
+  --os-deep: var(--os-void);
+  --os-card: var(--os-panel);
+  --os-surface: var(--os-raised);
+  --os-border: var(--os-steel);
 
   /* Text and strokes */
   --os-white: #ffffff;

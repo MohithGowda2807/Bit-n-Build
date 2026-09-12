@@ -10,6 +10,12 @@ export default {
         // OceanSentinel system (design/DESIGN.md)
         os: {
           void: '#0e1012',
+          // Aliases used by the Phase 2 components; they resolve to the system surfaces above and below.
+          deep: '#0e1012',
+          card: '#15171b',
+          'card-hover': '#1c1f24',
+          surface: '#1c1f24',
+          border: '#333943',
           panel: '#15171b',
           raised: '#1c1f24',
           overlay: '#23262d',

@@ -46,12 +46,19 @@ class OptimizationService:
         cargo_weight = request.cargo_weight_tonnes or (vessel.cargo_capacity_tonnes * 0.7 if vessel else 5000.0)
         departure_time = request.departure_time or datetime.now(timezone.utc)
 
-        # 1. Generate path corridors from routing engine
+        from app.services.storm.service import storm_service
+        from app.services.risk.engine import risk_engine
+
+        # 1. Fetch active storms from DB
+        active_storms = storm_service.get_active_storms(db) if db else []
+
+        # 2. Generate path corridors from routing engine respecting active storm buffers
         paths = self.routing_service.generate_candidate_paths(
             origin_lat=request.origin.latitude,
             origin_lon=request.origin.longitude,
             dest_lat=request.destination.latitude,
-            dest_lon=request.destination.longitude
+            dest_lon=request.destination.longitude,
+            storms=active_storms
         )
 
         candidates_raw = []
@@ -249,6 +256,71 @@ class OptimizationService:
             db.commit()
             db.refresh(db_route)
             recommended_detail.id = db_route.id
+
+            # Maintain active Voyage & RouteVersion lineage for this vessel
+            from app.models.voyage import Voyage
+            from app.models.route_version import RouteVersion
+            target_vessel_id = request.vessel_id or 1
+            voyage = db.query(Voyage).filter(Voyage.vessel_id == target_vessel_id).order_by(Voyage.id.desc()).first()
+            if not voyage:
+                voyage = db.query(Voyage).filter(Voyage.id == 1).first()
+
+            if not voyage:
+                voyage = Voyage(
+                    id=1,
+                    vessel_id=target_vessel_id,
+                    route_id=db_route.id,
+                    status="active",
+                    departure_time=datetime.now(timezone.utc),
+                    starting_fuel=vessel.current_fuel_liters if vessel else 850000.0,
+                    estimated_fuel=db_route.estimated_fuel_liters,
+                    fuel_saved=recommended_detail.fuel_saved_liters,
+                    co2_estimated=db_route.estimated_co2_kg
+                )
+                db.add(voyage)
+                db.commit()
+                db.refresh(voyage)
+            else:
+                voyage.route_id = db_route.id
+                voyage.estimated_fuel = db_route.estimated_fuel_liters
+                voyage.co2_estimated = db_route.estimated_co2_kg
+                voyage.fuel_saved = recommended_detail.fuel_saved_liters
+                db.commit()
+
+            # Record version iteration
+            latest_ver = db.query(RouteVersion).filter(RouteVersion.voyage_id == voyage.id).order_by(RouteVersion.version_number.desc()).first()
+            next_ver_num = (latest_ver.version_number + 1) if latest_ver else 1
+
+            old_risk = latest_ver.risk_score if latest_ver else recommended_detail.risk_score
+            old_fuel = latest_ver.fuel_liters if latest_ver else recommended_detail.estimated_fuel_liters
+            old_eta = latest_ver.eta_hours if latest_ver else recommended_detail.estimated_time_hours
+
+            risk_delta = round(((old_risk - recommended_detail.risk_score) / max(1.0, old_risk)) * 100.0, 1) if latest_ver else 0.0
+            fuel_delta = round(((recommended_detail.estimated_fuel_liters - old_fuel) / max(1.0, old_fuel)) * 100.0, 1) if latest_ver else 0.0
+            eta_delta = round(recommended_detail.estimated_time_hours - old_eta, 2) if latest_ver else 0.0
+
+            route_ver = RouteVersion(
+                voyage_id=voyage.id,
+                version_number=next_ver_num,
+                route_id=db_route.id,
+                parent_version_id=latest_ver.id if latest_ver else None,
+                trigger_event="ROUTE_OPTIMIZED",
+                change_reason=f"Optimized fairway using {request.mode.upper()} objective profile: {explanation.recommendation}",
+                risk_score=recommended_detail.risk_score,
+                fuel_liters=recommended_detail.estimated_fuel_liters,
+                eta_hours=recommended_detail.estimated_time_hours,
+                co2_kg=recommended_detail.estimated_co2_kg,
+                risk_reduction_pct=risk_delta,
+                fuel_change_pct=fuel_delta,
+                eta_change_hours=eta_delta,
+                explanation_json=json.dumps({
+                    "reasons": explanation.reasons,
+                    "tradeoffs": explanation.tradeoffs
+                }),
+                status="active"
+            )
+            db.add(route_ver)
+            db.commit()
 
         return RouteOptimizeResponse(
             recommended_route=recommended_detail,
