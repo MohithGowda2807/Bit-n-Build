@@ -51,6 +51,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
   const [streaming, setStreaming] = useState(telemetry.connected);
 
   const [basemap, setBasemap] = useState<Basemap>('night');
+  const [feedsOpen, setFeedsOpen] = useState(true);
   const [layers, setLayers] = useState<LayerState>({ vessels: true, trails: true, zones: true, gaps: true });
 
   const [selectedId, setSelectedId] = useState<number | null>(initialSelectedId);
@@ -196,6 +197,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
 
   const toggleLayer = (k: keyof LayerState) => setLayers(l => ({ ...l, [k]: !l[k] }));
   const rightInset = panel === 'analyst' ? 472 : selected ? 408 : 16;
+  const leftInset = feedsOpen ? 352 : 16;
 
   return (
     <div className="relative flex-1 min-h-0">
@@ -213,8 +215,12 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
         replayPositions={replay ? replayPositions : undefined}
       />
 
-      {/* Layer chips and scenario runner */}
-      <div className="absolute left-[352px] top-4 z-[1000] flex items-center gap-2 os-reveal">
+      {/* Feeds toggle, layer chips and scenario runner */}
+      <div className="absolute top-4 z-[1000] flex items-center gap-2 os-reveal transition-[left] duration-200" style={{ left: leftInset }}>
+        <FilterPill active={feedsOpen} onClick={() => setFeedsOpen(o => !o)}>
+          Feeds{openCases.length > 0 ? ` · ${openCases.length}` : ''}
+        </FilterPill>
+        <span className="w-px h-6 bg-os-pewter mx-1" />
         <FilterPill active={layers.vessels} onClick={() => toggleLayer('vessels')}>Vessels</FilterPill>
         <FilterPill active={layers.trails} onClick={() => toggleLayer('trails')}>Trails</FilterPill>
         <FilterPill active={layers.zones} onClick={() => toggleLayer('zones')}>Zones</FilterPill>
@@ -245,12 +251,16 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
         ))}
       </div>
 
-      <div className="absolute left-4 top-4 z-[1000] flex flex-col gap-4">
-        <Watchlist risks={risks} vessels={vessels} openCases={openCases} selectedId={selectedId} onSelect={setSelectedId} />
-      </div>
-      <div className="absolute left-4 bottom-4 z-[1000]">
-        <EventsPanel events={events} vessels={vessels} streaming={streaming} onSelectVessel={setSelectedId} />
-      </div>
+      {feedsOpen && (
+        <>
+          <div className="absolute left-4 top-4 z-[1000] flex flex-col gap-4">
+            <Watchlist risks={risks} vessels={vessels} openCases={openCases} selectedId={selectedId} onSelect={setSelectedId} />
+          </div>
+          <div className="absolute left-4 bottom-4 z-[1000]">
+            <EventsPanel events={events} vessels={vessels} streaming={streaming} onSelectVessel={setSelectedId} />
+          </div>
+        </>
+      )}
 
       {panel === 'analyst' ? (
         <div className="absolute right-4 top-4 bottom-4 z-[1000]">
@@ -281,7 +291,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
       )}
 
       {replay && (
-        <div className="absolute bottom-4 z-[1000]" style={{ left: 352, right: rightInset }}>
+        <div className="absolute bottom-4 z-[1000]" style={{ left: leftInset, right: rightInset }}>
           <ReplayBar replay={replay} startLabel={replay.startTime ? formatClock(replay.startTime) : "start"} endLabel={replay.endTime ? formatClock(replay.endTime) : "end"} onClose={exitReplay} />
         </div>
       )}
