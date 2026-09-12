@@ -2,8 +2,9 @@
 
 type Handler = (data: any) => void;
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const WS_URL = `${API_BASE.replace(/^http/, 'ws')}/ws/telemetry`;
+import { API_BASE } from './api';
+const wsBase = API_BASE || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
+const WS_URL = `${wsBase.replace(/^http/, 'ws')}/ws/telemetry`;
 
 class TelemetryClient {
   private socket: WebSocket | null = null;

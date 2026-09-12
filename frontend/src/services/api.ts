@@ -19,7 +19,10 @@ import {
   OptimizationWeights
 } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const rawApi = (import.meta.env.VITE_API_URL || '').trim();
+export const API_BASE = rawApi
+  ? (rawApi.startsWith('http') ? rawApi : `https://${rawApi}`)
+  : (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
 
 export async function fetchHealth(): Promise<any> {
   const res = await fetch(`${API_BASE}/health`);

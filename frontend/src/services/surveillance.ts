@@ -3,7 +3,7 @@ import {
   ScenarioInfo, SimulationRunResult, SurveillanceEvent, VesselRisk, VesselRiskSummary,
 } from '../types/surveillance';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import { API_BASE } from './api';
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`);
