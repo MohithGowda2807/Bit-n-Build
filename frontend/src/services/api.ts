@@ -19,10 +19,27 @@ import {
   OptimizationWeights
 } from '../types';
 
-const rawApi = (import.meta.env.VITE_API_URL || '').trim();
-export const API_BASE = rawApi
-  ? (rawApi.startsWith('http') ? rawApi : `https://${rawApi}`)
-  : (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+function resolveApiBase(): string {
+  const rawApi = (import.meta.env.VITE_API_URL || '').trim();
+  if (rawApi) {
+    return rawApi.startsWith('http') ? rawApi : `https://${rawApi}`;
+  }
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host.includes('onrender.com')) {
+      const backendHost = host.includes('-frontend')
+        ? host.replace('-frontend', '-backend')
+        : 'oceansentinel-backend.onrender.com';
+      return `https://${backendHost}`;
+    }
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      return '';
+    }
+  }
+  return 'http://localhost:8000';
+}
+
+export const API_BASE = resolveApiBase();
 
 export async function fetchHealth(): Promise<any> {
   const res = await fetch(`${API_BASE}/health`);
