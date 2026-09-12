@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { DemoScenario } from '../../types';
 import { fetchSimulationScenarios, loadSimulationScenario } from '../../services/api';
 
@@ -15,10 +15,25 @@ export const DemoScenarioSwitcher: React.FC<DemoScenarioSwitcherProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [activeScenarioId, setActiveScenarioId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchSimulationScenarios().then(setScenarios).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleSelectScenario = async (scenario: DemoScenario) => {
     setLoading(true);
@@ -55,7 +70,7 @@ export const DemoScenarioSwitcher: React.FC<DemoScenarioSwitcherProps> = ({
   };
 
   return (
-    <div className="relative font-mono text-xs">
+    <div ref={containerRef} className="relative font-mono text-xs">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-600/30 via-cyan-500/20 to-emerald-500/30 border border-cyan-500/50 hover:border-cyan-400 text-white font-bold flex items-center space-x-2 shadow-lg shadow-cyan-950/40 transition cursor-pointer"
@@ -69,7 +84,7 @@ export const DemoScenarioSwitcher: React.FC<DemoScenarioSwitcherProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-10 w-80 bg-slate-900/95 backdrop-blur-xl border border-slate-700/90 rounded-2xl shadow-2xl p-3.5 z-[2000] space-y-2">
+        <div className="absolute right-0 top-full mt-2 w-84 bg-slate-900/98 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl p-3.5 z-[3000] space-y-2">
           <div className="flex items-center justify-between pb-2 border-b border-slate-800">
             <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">
               Select Turnkey Scenario

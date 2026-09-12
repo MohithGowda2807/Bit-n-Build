@@ -81,82 +81,88 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
   };
 
   return (
-    <div className="w-full bg-os-card/95 backdrop-blur-md border-b border-os-border/80 px-6 py-2 flex flex-wrap items-center justify-between gap-3 shadow-md shrink-0 z-30">
-      {/* Left: Mode Selector */}
-      <div className="flex items-center gap-3">
-        <span className="text-[11px] uppercase font-mono font-semibold tracking-wider text-os-ash">Agent Mode</span>
-        <div className="inline-flex rounded-lg bg-os-void/80 p-0.5 border border-os-border/80">
+    <div className="w-full bg-slate-900/95 backdrop-blur-md border-b border-slate-800/90 px-4 py-2 flex items-center justify-between gap-4 shadow-lg shrink-0 z-30 overflow-x-auto whitespace-nowrap os-scrollbar">
+      {/* Left: Agent Mode Segmented Controller */}
+      <div className="flex items-center gap-2.5 shrink-0">
+        <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-400">Agent Mode:</span>
+        <div className="inline-flex rounded-lg bg-slate-950 p-0.5 border border-slate-800">
           {(['advisory', 'semi_autonomous', 'autonomous'] as const).map(m => (
             <button
               key={m}
               onClick={() => handleModeToggle(m)}
-              className={`px-3 py-1 text-xs font-mono rounded-md transition-all ${
+              className={`px-3 py-1 text-xs font-mono rounded-md transition-all cursor-pointer ${
                 operatingMode === m
-                  ? 'bg-blue-600 text-white font-bold shadow-sm'
-                  : 'text-os-fog hover:text-white hover:bg-white/5'
+                  ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-900/40'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              {m === 'semi_autonomous' ? 'Semi-Auto' : m.toUpperCase()}
+              {m === 'semi_autonomous' ? 'Semi-Auto' : m === 'autonomous' ? 'Autonomous' : 'Advisory'}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Middle: Scenario Preset Injection */}
-      <div className="flex items-center gap-2.5">
-        <span className="text-[11px] uppercase font-mono font-semibold tracking-wider text-os-ash">Scenario</span>
+      {/* Middle: Environmental Hazard Preset Injector */}
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-400">Hazard:</span>
         <select
           value={selectedPreset}
           onChange={e => setSelectedPreset(e.target.value)}
-          className="bg-os-void text-white border border-os-border text-xs font-mono rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 max-w-[320px] truncate"
+          className="bg-slate-950 text-slate-200 border border-slate-800 text-xs font-mono rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 max-w-[210px] sm:max-w-[260px] truncate"
         >
-          <option value="bay_of_bengal_cyclone" className="bg-[#121620] text-white">🌀 Cyclone Vardah (Bay of Bengal / Malacca)</option>
-          <option value="malacca_squall" className="bg-[#121620] text-white">⛈️ Sumatra Squall (Malacca Strait Choke)</option>
-          <option value="arabian_sea_monsoon" className="bg-[#121620] text-white">🌊 Monsoon Depression (Arabian Sea / Gulf)</option>
-          <option value="pacific_typhoon" className="bg-[#121620] text-white">🌪️ Super Typhoon Rai (Pacific / East Asia)</option>
-          <option value="atlantic_hurricane" className="bg-[#121620] text-white">🌀 Hurricane Lee (North Atlantic Trans-oceanic)</option>
-          <option value="southern_ocean_gale" className="bg-[#121620] text-white">🌊 Southern Ocean Gale (Australia / Bass Strait)</option>
+          <option value="bay_of_bengal_cyclone" className="bg-[#121620] text-white">🌀 Cyclone Vardah</option>
+          <option value="malacca_squall" className="bg-[#121620] text-white">⛈️ Sumatra Squall</option>
+          <option value="arabian_sea_monsoon" className="bg-[#121620] text-white">🌊 Arabian Sea Monsoon</option>
+          <option value="pacific_typhoon" className="bg-[#121620] text-white">🌪️ Super Typhoon Rai</option>
+          <option value="atlantic_hurricane" className="bg-[#121620] text-white">🌀 Hurricane Lee</option>
+          <option value="southern_ocean_gale" className="bg-[#121620] text-white">🌊 Southern Ocean Gale</option>
         </select>
         <button
           onClick={handleInject}
           disabled={loading}
-          className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition disabled:opacity-50"
+          className="bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-mono font-bold px-3 py-1 rounded-lg shadow-sm flex items-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
+          title="Inject environmental hazard into ocean model"
         >
-          <span>⚡</span> Inject Hazard
+          <span>⚡</span>
+          <span>Inject Hazard</span>
         </button>
         <button
           onClick={handleReset}
           disabled={loading}
-          className="bg-os-surface hover:bg-os-border/80 text-os-fog hover:text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-os-border transition"
+          className="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-mono font-semibold px-2.5 py-1 rounded-lg border border-slate-700 transition cursor-pointer"
+          title="Reset environmental hazards"
         >
-          Clear Ocean
+          <span>↺ Clear</span>
         </button>
       </div>
 
-      {/* Right: Manual Cycle & Active Storms Status */}
-      <div className="flex items-center gap-3">
+      {/* Right: Manual Loop Trigger & State Badge */}
+      <div className="flex items-center gap-2.5 shrink-0">
         <button
           onClick={handleManualCycle}
           disabled={loading}
-          className="bg-blue-600/90 hover:bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition disabled:opacity-50"
+          className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-mono font-bold px-3 py-1 rounded-lg shadow-md shadow-cyan-950/40 flex items-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
         >
-          <span>🔄</span> Run Commander Loop
+          <span className={loading ? 'animate-spin' : ''}>🔄</span>
+          <span>Run Commander Loop</span>
         </button>
 
         {activeStorms.length > 0 ? (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-950/80 border border-rose-800 text-rose-300 font-mono text-xs font-medium animate-pulse">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-950/80 border border-rose-700/80 text-rose-300 font-mono text-xs font-bold animate-pulse">
             <span>⚠️</span>
-            <span>{activeStorms.length} Active Storm{activeStorms.length > 1 ? 's' : ''}</span>
+            <span>{activeStorms.length} Storm{activeStorms.length > 1 ? 's' : ''} Active</span>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950/70 border border-emerald-800 text-emerald-300 font-mono text-xs font-medium">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/80 border border-emerald-700/80 text-emerald-300 font-mono text-xs font-bold">
             <span>✓</span>
             <span>Ocean Calm</span>
           </div>
         )}
 
         {statusMessage && (
-          <span className="text-xs font-mono text-amber-300 animate-fade-in px-2 py-0.5 rounded bg-amber-950/60 border border-amber-800/80">{statusMessage}</span>
+          <span className="text-xs font-mono text-cyan-300 px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800/80 max-w-[220px] truncate">
+            {statusMessage}
+          </span>
         )}
       </div>
     </div>
