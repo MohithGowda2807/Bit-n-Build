@@ -24,10 +24,23 @@ export const DemoScenarioSwitcher: React.FC<DemoScenarioSwitcherProps> = ({
     setLoading(true);
     setActiveScenarioId(scenario.id);
     try {
-      const res = await loadSimulationScenario(scenario.id);
+      let res: any = null;
+      try {
+        res = await loadSimulationScenario(scenario.id);
+      } catch (err) {
+        console.warn('Backend scenario activation notice:', err);
+      }
+
       onScenarioLoaded?.(scenario.id, res);
 
-      // Auto switch to appropriate domain view for optimal demonstration
+      // Dispatch global window event with complete scenario focus and metadata
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('triton:scenario-activated', {
+          detail: { scenario, result: res }
+        }));
+      }
+
+      // Auto switch to appropriate domain view for optimal presentation
       if (scenario.category === 'preservation') {
         onNavigateDomain?.('cleanup');
       } else if (scenario.category === 'surveillance') {
@@ -35,12 +48,6 @@ export const DemoScenarioSwitcher: React.FC<DemoScenarioSwitcherProps> = ({
       } else if (scenario.category === 'routing') {
         onNavigateDomain?.('logistics');
       }
-      setIsOpen(false);
-    } catch (err) {
-      console.warn('Fallback scenario activation:', err);
-      if (scenario.category === 'preservation') onNavigateDomain?.('cleanup');
-      else if (scenario.category === 'surveillance') onNavigateDomain?.('surveillance');
-      else onNavigateDomain?.('logistics');
       setIsOpen(false);
     } finally {
       setLoading(false);

@@ -40,30 +40,31 @@ export const TopBar: React.FC<TopBarProps> = ({ domain, onDomainChange, subtitle
 
   return (
     <>
-      <header className="h-14 flex items-center justify-between px-6 bg-os-deep/95 backdrop-blur-md border-b border-os-border/80 shrink-0 z-50">
-        <div className="flex items-center gap-3.5 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 p-0.5 flex items-center justify-center shadow-lg shadow-blue-500/20">
+      <header className="h-14 flex items-center justify-between px-3 sm:px-4 bg-os-deep/95 backdrop-blur-md border-b border-os-border/80 shrink-0 z-50">
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 p-0.5 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
               <path d="M12 3v18M3 12h18" />
               <circle cx="12" cy="12" r="3" fill="#ffffff" stroke="none" />
             </svg>
           </div>
-          <div className="flex flex-col leading-none gap-1">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-bold text-white tracking-tight">TRITON / OceanSentinel</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-semibold uppercase">Command Center</span>
+          <div className="flex flex-col leading-none gap-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm sm:text-base font-bold text-white tracking-tight">TRITON</span>
+              <span className="hidden md:inline text-xs font-medium text-slate-400">/ OceanSentinel</span>
+              <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-semibold uppercase">Command Center</span>
             </div>
-            <span className="os-eyebrow text-os-slate text-[10px]">{subtitle}</span>
+            <span className="os-eyebrow text-os-slate text-[10px] truncate max-w-[180px] sm:max-w-none">{subtitle}</span>
           </div>
         </div>
 
-        <nav className="flex items-center gap-1 bg-os-void/70 p-1 rounded-full border border-os-border/70 shrink-0" aria-label="Domains">
+        <nav className="flex items-center gap-0.5 bg-os-void/70 p-0.5 rounded-full border border-os-border/70 shrink-0" aria-label="Domains">
           {DOMAINS.map(d => (
             <button
               key={d.id}
               onClick={() => onDomainChange(d.id)}
-              className={`text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all duration-150 ${
+              className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-all duration-150 whitespace-nowrap ${
                 domain === d.id
                   ? 'bg-os-signal text-white shadow-md shadow-blue-600/30'
                   : 'text-os-fog hover:text-white hover:bg-white/5'

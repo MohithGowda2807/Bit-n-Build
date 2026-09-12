@@ -48,6 +48,25 @@ const FitToSegments: React.FC<{ segments: TrackSegment[] }> = ({ segments }) => 
   return null;
 };
 
+const ScenarioFocusController: React.FC = () => {
+  const map = useMap();
+  useEffect(() => {
+    const handleScenario = (e: Event) => {
+      const custom = e as CustomEvent;
+      const focus = custom.detail?.scenario?.focus;
+      if (focus && typeof focus.latitude === 'number' && typeof focus.longitude === 'number') {
+        map.flyTo([focus.latitude, focus.longitude], focus.zoom || 8, {
+          duration: 1.5,
+          easeLinearity: 0.25
+        });
+      }
+    };
+    window.addEventListener('triton:scenario-activated', handleScenario);
+    return () => window.removeEventListener('triton:scenario-activated', handleScenario);
+  }, [map]);
+  return null;
+};
+
 export const SurveillanceMap: React.FC<Props> = ({
   basemap, vessels, riskByVessel, fishingZones, protectedAreas, selectedId, onSelect, segments, gaps, layers, replayPositions,
 }) => {
@@ -61,6 +80,7 @@ export const SurveillanceMap: React.FC<Props> = ({
     <MapContainer center={[13.0, 72.0]} zoom={6} scrollWheelZoom className="w-full h-full" zoomControl={false} style={{ background: '#10141a' }}>
       <TileLayer key={basemap} attribution={tiles.attribution} url={tiles.url} opacity={tiles.opacity} />
       <FitToSegments segments={segments} />
+      <ScenarioFocusController />
 
       {layers.zones && protectedAreas.map(a => (
         <Polygon key={`mpa-${a.id}`} positions={ring(a.geometry)}

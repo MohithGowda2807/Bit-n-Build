@@ -14,8 +14,10 @@ import {
 import { DebrisDetailDrawer } from '../components/cleanup/DebrisDetailDrawer';
 import { FleetControlDrawer } from '../components/cleanup/FleetControlDrawer';
 import { MissionPlannerModal } from '../components/cleanup/MissionPlannerModal';
+import { ReportExportModal } from '../components/reports/ReportExportModal';
 
 export const CleanupPage: React.FC = () => {
+  const [isReportOpen, setIsReportOpen] = useState(false);
   const [debris, setDebris] = useState<Debris[]>([]);
   const [fleetUnits, setFleetUnits] = useState<CleanupUnit[]>([]);
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -55,7 +57,14 @@ export const CleanupPage: React.FC = () => {
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 10000); // Poll live fleet telemetry every 10s
-    return () => clearInterval(interval);
+    const onScenario = () => {
+      loadData();
+    };
+    window.addEventListener('triton:scenario-activated', onScenario);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('triton:scenario-activated', onScenario);
+    };
   }, []);
 
   const handleMissionCreated = (newMission: any) => {
@@ -112,6 +121,15 @@ export const CleanupPage: React.FC = () => {
           >
             <span>⚡</span>
             <span>Plan Autonomous Sortie</span>
+          </button>
+
+          <button
+            onClick={() => setIsReportOpen(true)}
+            className="bg-slate-900/90 backdrop-blur-md border border-slate-700/80 hover:border-emerald-500 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 hover:text-white transition shadow-xl flex items-center gap-1.5 cursor-pointer"
+            title="Generate Stage 4 Autonomous Sortie Order"
+          >
+            <span>📑</span>
+            <span className="font-bold">Sortie Order</span>
           </button>
         </div>
 
@@ -221,6 +239,13 @@ export const CleanupPage: React.FC = () => {
         fleetUnits={fleetUnits}
         initialDebrisId={selectedDebris?.id}
         onMissionCreated={handleMissionCreated}
+      />
+
+      {/* Stage 4 Sortie Order Printable Document */}
+      <ReportExportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        initialStage="cleanup"
       />
     </div>
   );

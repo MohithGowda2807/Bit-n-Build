@@ -113,6 +113,26 @@ const RouteBoundsController: React.FC<{ coords: [number, number][] | null }> = (
   return null;
 };
 
+// Auto-pan to demo scenario location
+const ScenarioFocusController: React.FC = () => {
+  const map = useMap();
+  useEffect(() => {
+    const handleScenario = (e: Event) => {
+      const custom = e as CustomEvent;
+      const focus = custom.detail?.scenario?.focus;
+      if (focus && typeof focus.latitude === 'number' && typeof focus.longitude === 'number') {
+        map.flyTo([focus.latitude, focus.longitude], focus.zoom || 8, {
+          duration: 1.5,
+          easeLinearity: 0.25
+        });
+      }
+    };
+    window.addEventListener('triton:scenario-activated', handleScenario);
+    return () => window.removeEventListener('triton:scenario-activated', handleScenario);
+  }, [map]);
+  return null;
+};
+
 interface OceanMapProps {
   vessels: Vessel[];
   ports: Port[];
@@ -309,6 +329,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
           onSelectPort={onSelectPort}
         />
         <RouteBoundsController coords={activeRoute ? activeRoute.geometry.coordinates : null} />
+        <ScenarioFocusController />
 
         {/* Basemap: Chart (OpenStreetMap) or Night (CARTO dark) */}
         <TileLayer
