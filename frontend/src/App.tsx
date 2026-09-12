@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CommandCenter } from './pages/CommandCenter';
 import { SurveillancePage } from './pages/SurveillancePage';
 import { TopBar, Domain } from './components/shell/TopBar';
+import { telemetry } from './services/telemetry';
 
 const SUBTITLES: Record<Domain, string> = {
   logistics: 'Logistics · Route optimization',
@@ -12,20 +13,12 @@ const SUBTITLES: Record<Domain, string> = {
 };
 
 function useTelemetryLive(): boolean {
-  const [live, setLive] = useState(false);
-  const socketRef = useRef<WebSocket | null>(null);
+  const [live, setLive] = useState(telemetry.connected);
   useEffect(() => {
-    const base = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/^http/, 'ws');
-    let retry: number | undefined;
-    const connect = () => {
-      const socket = new WebSocket(`${base}/ws/telemetry`);
-      socketRef.current = socket;
-      socket.onopen = () => setLive(true);
-      socket.onclose = () => { setLive(false); retry = window.setTimeout(connect, 5000); };
-      socket.onerror = () => socket.close();
-    };
-    connect();
-    return () => { window.clearTimeout(retry); socketRef.current?.close(); };
+    telemetry.start();
+    const offOpen = telemetry.subscribe('$open', () => setLive(true));
+    const offClose = telemetry.subscribe('$close', () => setLive(false));
+    return () => { offOpen(); offClose(); };
   }, []);
   return live;
 }
