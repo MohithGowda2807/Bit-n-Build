@@ -18,6 +18,8 @@ import {
   ArrowRight,
   ShieldCheck
 } from 'lucide-react';
+import { AgentTraceVisualizer } from './agents/AgentTraceVisualizer';
+
 
 interface AgentOrchestratorConsoleProps {
   vessels: Vessel[];
@@ -358,8 +360,15 @@ export const AgentOrchestratorConsole: React.FC<AgentOrchestratorConsoleProps> =
             </div>
           )}
 
+          {/* Autonomous Multi-Agent Execution Tree & Domain Impact */}
+          <AgentTraceVisualizer
+            traces={(result as any).agent_traces}
+            domainImpact={(result as any).domain_impact}
+          />
+
           {/* HUMAN APPROVAL & ACTION / REPLAN SECTION */}
           <div className="p-3.5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-amber-500/40 rounded-lg shadow-lg space-y-2.5">
+
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <UserCheck className="w-4 h-4 text-amber-400" />

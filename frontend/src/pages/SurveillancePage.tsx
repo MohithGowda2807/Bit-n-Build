@@ -21,7 +21,8 @@ import { splitTrackAtGaps, TrackSegment } from '../design/track';
 
 const OPEN_STATUSES = new Set(['OPEN', 'UNDER_REVIEW', 'ESCALATED']);
 
-function prettyScenario(name: string): string {
+function prettyScenario(name?: string | null): string {
+  if (!name || typeof name !== 'string') return '';
   return name.toLowerCase().replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
 }
 
@@ -224,8 +225,8 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, on
           onChange={e => setScenario(e.target.value)}
           className="os-mono text-xs bg-os-card text-white border border-os-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500"
         >
-          {(scenarios.length ? scenarios.map(s => s.name) : [scenario]).map(name => (
-            <option key={name} value={name}>{prettyScenario(name)}</option>
+          {(scenarios.length ? scenarios.map(s => ({ key: String((s as any).name ?? (s as any).id ?? ''), label: (s as any).title ?? (s as any).name })) : [{ key: scenario, label: undefined }]).map(({ key, label }) => (
+            <option key={key} value={key}>{label ?? prettyScenario(key)}</option>
           ))}
         </select>
         <PrimaryPill className="!py-1.5 !px-4 text-[13px]" onClick={onRunScenario} disabled={running}>

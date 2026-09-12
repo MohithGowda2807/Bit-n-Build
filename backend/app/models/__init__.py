@@ -20,6 +20,7 @@ from app.models.storm import Storm
 from app.models.route_version import RouteVersion
 from app.models.agent_decision import AgentDecisionLog
 from app.models.environmental_observation import EnvironmentalObservation
+from app.models.cleanup_unit import CleanupUnit
 
 __all__ = [
     "Vessel", "Track", "Debris", "Alert", "Mission", "Incident",
@@ -27,4 +28,5 @@ __all__ = [
     "AISPosition", "DarkPeriod", "FishingZone", "MarineProtectedArea",
     "SurveillanceEvent", "VesselRiskScore", "Evidence", "InvestigationCase",
     "Storm", "RouteVersion", "AgentDecisionLog", "EnvironmentalObservation",
+    "CleanupUnit",
 ]

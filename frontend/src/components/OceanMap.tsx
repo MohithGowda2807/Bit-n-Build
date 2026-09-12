@@ -11,8 +11,12 @@ import {
   useMap,
   useMapEvents
 } from 'react-leaflet';
-import { Vessel, Port, MarineZone, RouteDetail, Coordinate, Debris, VesselTrack, Storm } from '../types';
+import { Vessel, Port, MarineZone, RouteDetail, Coordinate, Debris, VesselTrack, Storm, CleanupUnit, DebrisCluster, Mission } from '../types';
 import { StormLayer } from './map/StormLayer';
+import { DebrisLayer } from './map/DebrisLayer';
+import { FleetLayer } from './map/FleetLayer';
+import { MissionPathLayer } from './map/MissionPathLayer';
+
 
 // Custom SVG Icons for high-tech maritime visualization
 const createCustomIcon = (color: string, label: string, size = 28, glowColor?: string) => {
@@ -113,9 +117,18 @@ interface OceanMapProps {
   ports: Port[];
   zones: MarineZone[];
   debris?: Debris[];
+  fleetUnits?: CleanupUnit[];
+  missions?: Mission[];
+  debrisClusters?: DebrisCluster[];
   selectedVessel?: Vessel | null;
   selectedVesselTracks?: VesselTrack[];
   onSelectVessel?: (vessel: Vessel) => void;
+  selectedDebris?: Debris | null;
+  onSelectDebris?: (debris: Debris) => void;
+  selectedFleetUnit?: CleanupUnit | null;
+  onSelectFleetUnit?: (unit: CleanupUnit) => void;
+  selectedMission?: Mission | null;
+  onSelectMission?: (mission: Mission) => void;
   origin: Coordinate | null;
   destination: Coordinate | null;
   activeRoute: RouteDetail | null;
@@ -155,9 +168,18 @@ export const OceanMap: React.FC<OceanMapProps> = ({
   ports,
   zones,
   debris = [],
+  fleetUnits = [],
+  missions = [],
+  debrisClusters = [],
   selectedVessel,
   selectedVesselTracks = [],
   onSelectVessel,
+  selectedDebris,
+  onSelectDebris,
+  selectedFleetUnit,
+  onSelectFleetUnit,
+  selectedMission,
+  onSelectMission,
   origin,
   destination,
   activeRoute,
@@ -183,6 +205,8 @@ export const OceanMap: React.FC<OceanMapProps> = ({
   // Layer toggles
   const [showVessels, setShowVessels] = useState(true);
   const [showDebris, setShowDebris] = useState(true);
+  const [showFleet, setShowFleet] = useState(true);
+  const [showMissions, setShowMissions] = useState(true);
   const [showZones, setShowZones] = useState(true);
   const [showPorts, setShowPorts] = useState(true);
   const [showStorms, setShowStorms] = useState(true);
@@ -218,12 +242,12 @@ export const OceanMap: React.FC<OceanMapProps> = ({
         </button>
         <span className="text-slate-400 font-semibold px-1">Layers:</span>
         <button
-          onClick={() => setShowVessels(!showVessels)}
+          onClick={() => setShowFleet(!showFleet)}
           className={`px-2 py-1 rounded transition-colors ${
-            showVessels ? 'bg-cyan-600/30 text-cyan-300 border border-cyan-500/50' : 'bg-slate-800 text-slate-500'
+            showFleet ? 'bg-cyan-600/30 text-cyan-300 border border-cyan-500/50' : 'bg-slate-800 text-slate-500'
           }`}
         >
-          🚢 Vessels ({vessels.length})
+          🚤 Fleet ({fleetUnits.length})
         </button>
         <button
           onClick={() => setShowDebris(!showDebris)}
@@ -234,20 +258,28 @@ export const OceanMap: React.FC<OceanMapProps> = ({
           ♻️ Debris ({debris.length})
         </button>
         <button
+          onClick={() => setShowMissions(!showMissions)}
+          className={`px-2 py-1 rounded transition-colors ${
+            showMissions ? 'bg-purple-600/30 text-purple-300 border border-purple-500/50' : 'bg-slate-800 text-slate-500'
+          }`}
+        >
+          🎯 Missions ({missions.length})
+        </button>
+        <button
+          onClick={() => setShowVessels(!showVessels)}
+          className={`px-2 py-1 rounded transition-colors ${
+            showVessels ? 'bg-sky-600/30 text-sky-300 border border-sky-500/50' : 'bg-slate-800 text-slate-500'
+          }`}
+        >
+          🚢 Vessels ({vessels.length})
+        </button>
+        <button
           onClick={() => setShowZones(!showZones)}
           className={`px-2 py-1 rounded transition-colors ${
             showZones ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/50' : 'bg-slate-800 text-slate-500'
           }`}
         >
           🛡️ MPAs ({zones.length})
-        </button>
-        <button
-          onClick={() => setShowPorts(!showPorts)}
-          className={`px-2 py-1 rounded transition-colors ${
-            showPorts ? 'bg-sky-600/30 text-sky-300 border border-sky-500/50' : 'bg-slate-800 text-slate-500'
-          }`}
-        >
-          ⚓ Ports
         </button>
         <button
           onClick={() => setShowStorms(!showStorms)}
@@ -355,39 +387,35 @@ export const OceanMap: React.FC<OceanMapProps> = ({
           </Marker>
         ))}
 
-        {/* Debris Sentinel Markers */}
-        {showDebris && debris.map(item => {
-          const icon = item.severity >= 90
-            ? debrisCriticalIcon
-            : item.severity >= 70
-            ? debrisHighIcon
-            : debrisMediumIcon;
+        {/* Autonomous Cleanup Fleet Layer */}
+        {showFleet && (
+          <FleetLayer
+            units={fleetUnits}
+            selectedUnitId={selectedFleetUnit?.id}
+            onSelectUnit={onSelectFleetUnit}
+          />
+        )}
 
-          return (
-            <Marker
-              key={`debris-${item.id}`}
-              position={[item.latitude, item.longitude]}
-              icon={icon}
-            >
-              <Popup className="font-mono text-xs">
-                <div className="p-1 space-y-1">
-                  <div className="font-bold text-amber-900 flex items-center space-x-1">
-                    <span>⚠️ Debris Cluster #{item.id}</span>
-                  </div>
-                  <div className="text-slate-700 font-semibold uppercase">{item.debris_type.replace('_', ' ')}</div>
-                  <div className="text-slate-600">Severity: <span className="font-bold text-rose-600">{item.severity}/100</span> ({item.density_category})</div>
-                  <div className="text-slate-600">Area: {item.estimated_size_m2.toLocaleString()} m²</div>
-                  <div className="text-slate-600">Priority: <span className="font-semibold uppercase text-amber-700">{item.clean_up_priority}</span></div>
-                  <div className="text-slate-500 text-[10px]">Source: {item.source}</div>
-                  {item.description && <div className="text-slate-600 italic text-[11px] pt-1">{item.description}</div>}
-                </div>
-              </Popup>
-              <Tooltip direction="top" offset={[0, -10]}>
-                <span>⚠️ {item.debris_type.replace('_', ' ')} ({item.severity}%)</span>
-              </Tooltip>
-            </Marker>
-          );
-        })}
+        {/* Debris Sentinel Clusters & Drift Vectors Layer */}
+        {showDebris && (
+          <DebrisLayer
+            debrisList={debris}
+            clusters={debrisClusters}
+            selectedDebrisId={selectedDebris?.id}
+            onSelectDebris={onSelectDebris}
+            showDriftVectors={true}
+          />
+        )}
+
+        {/* Autonomous Mission Trajectories Layer */}
+        {showMissions && (
+          <MissionPathLayer
+            missions={missions}
+            selectedMissionId={selectedMission?.id}
+            onSelectMission={onSelectMission}
+          />
+        )}
+
 
         {/* Selected Vessel Historical Track Trail */}
         {vesselTrackPolyline && (

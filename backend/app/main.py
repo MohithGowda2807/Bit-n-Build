@@ -35,6 +35,8 @@ from app.api import (
     fishing,
     investigations,
     assistant,
+    fleet,
+    missions,
 )
 
 logging.basicConfig(
@@ -53,7 +55,9 @@ async def lifespan(app: FastAPI):
     try:
         seed_database(db)
         seed_surveillance_zones(db)
-        logger.info("TRITON Phase 1 seed data verified and active.")
+        from app.data.phase4_seed import seed_phase4_data
+        seed_phase4_data(db)
+        logger.info("TRITON Phase 1-4 seed data verified and active.")
     except Exception as e:
         logger.warning(f"Seed data initialization warning: {e}")
     finally:
@@ -61,12 +65,65 @@ async def lifespan(app: FastAPI):
     # Surveillance events (AIS gaps, high risk, cases) stream to WebSocket clients alongside telemetry.
     set_publisher(WebSocketEventPublisher(ws_hub, asyncio.get_running_loop()))
     loop_task = None
+    fleet_task = None
     if settings.SURVEILLANCE_CYCLE_SECONDS > 0:
         loop_task = asyncio.create_task(surveillance_loop(settings.SURVEILLANCE_CYCLE_SECONDS))
+    fleet_task = asyncio.create_task(fleet_simulation_loop(10))
     yield
     if loop_task:
         loop_task.cancel()
+    if fleet_task:
+        fleet_task.cancel()
     logger.info("TRITON application shutting down.")
+
+
+async def fleet_simulation_loop(interval_seconds: int = 10):
+    """Background autonomous mode: advance active cleanup units and broadcast live telemetry."""
+    from app.services.debris.fleet_simulator import AutonomousUnitState
+    import json
+    while True:
+        await asyncio.sleep(interval_seconds)
+        try:
+            with SessionLocal() as db:
+                from app.models.cleanup_unit import CleanupUnit
+                from app.models.mission import Mission
+                active_units = db.query(CleanupUnit).filter(CleanupUnit.status.in_(["transit", "collecting", "returning"])).all()
+                if active_units:
+                    telemetry_payload = []
+                    for unit in active_units:
+                        waypoints = []
+                        if unit.assigned_mission_id:
+                            m = db.query(Mission).filter(Mission.id == unit.assigned_mission_id).first()
+                            if m and m.waypoints_json:
+                                try:
+                                    waypoints = json.loads(m.waypoints_json)
+                                except Exception:
+                                    pass
+                        sim = AutonomousUnitState(
+                            unit_id=unit.id,
+                            unit_name=unit.unit_name,
+                            unit_type=unit.unit_type,
+                            latitude=unit.latitude,
+                            longitude=unit.longitude,
+                            battery_pct=unit.battery_pct,
+                            capacity_kg=unit.capacity_kg,
+                            current_load_kg=unit.current_load_kg,
+                            speed_knots=unit.speed_knots,
+                            status=unit.status,
+                            waypoints=waypoints
+                        )
+                        new_state = sim.step(dt_hours=0.05)
+                        unit.latitude = new_state["latitude"]
+                        unit.longitude = new_state["longitude"]
+                        unit.heading_deg = new_state["heading_deg"]
+                        unit.battery_pct = new_state["battery_pct"]
+                        unit.current_load_kg = new_state["current_load_kg"]
+                        unit.status = new_state["status"]
+                        telemetry_payload.append(new_state)
+                    db.commit()
+                    await ws_hub.broadcast("cleanup_telemetry", {"units": telemetry_payload})
+        except Exception as exc:
+            logger.debug("Fleet simulation step notice: %s", exc)
 
 
 async def surveillance_loop(interval_seconds: int):
@@ -161,14 +218,17 @@ app.include_router(surveillance.router)
 app.include_router(fishing.router)
 app.include_router(investigations.router)
 app.include_router(assistant.router)
+# Phase 4: autonomous cleanup fleet & missions
+app.include_router(fleet.router)
+app.include_router(missions.router)
 
 
 @app.get("/")
 def root():
     return {
         "platform": "TRITON / OceanSentinel",
-        "phase": 3,
-        "name": "Maritime Intelligence & Autonomous Multi-Agent Platform",
+        "phase": 4,
+        "name": "Command Center & Autonomous Multi-Agent Maritime Intelligence Platform",
         "status": "operational",
         "docs_url": "/docs",
         "openapi_url": "/openapi.json",

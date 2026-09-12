@@ -7,7 +7,7 @@
 
 **OceanSentinel** is an autonomous multi-agent maritime command platform designed to optimize shipping logistics, enforce marine conservation boundaries, detect dark vessels, and coordinate ocean debris cleanup fleets.
 
-This repository contains the complete implementation of **Phase 1: Maritime Logistics Intelligence MVP**, featuring deterministic A* ocean route planning, vessel hydrodynamic physics, emissions modeling, multi-objective ranking, explainable route recommendations, and an interactive React Command Center.
+This repository contains **Phase 1: Maritime Logistics Intelligence** (deterministic A* ocean routing, vessel hydrodynamics, emissions modeling, multi-objective ranking, explainable route recommendations) and **Phase 3: Maritime Surveillance** (AIS ingestion, dark-vessel and illegal-fishing detection, explainable risk scoring, investigation cases, and a CrewAI agent layer), served through one React command center with Logistics, Surveillance, Environment, Cleanup and Agents views.
 
 ---
 
@@ -17,31 +17,36 @@ This repository contains the complete implementation of **Phase 1: Maritime Logi
 USER / OPERATOR
      │
      ▼
-┌────────────────────────────────────────┐
-│      Maritime Command Center (React)   │
-│   Interactive Map & Telemetry HUD      │
-└───────────────────┬────────────────────┘
-                    │ REST API
-                    ▼
-┌────────────────────────────────────────┐
-│          FastAPI Backend Engine        │
-│                                        │
-│   ┌───────────────┐ ┌───────────────┐  │
-│   │ A* Routing    │ │ Hydrodynamic  │  │
-│   │ Ocean Grid    │ │ Fuel Model    │  │
-│   └───────┬───────┘ └───────┬───────┘  │
-│           │                 │          │
-│   ┌───────┴───────┐ ┌───────┴───────┐  │
-│   │ CO₂ Emissions │ │ Multi-Obj     │  │
-│   │ & ETA Engine  │ │ Optimizer     │  │
-│   └───────────────┘ └───────────────┘  │
-└───────────────────┬────────────────────┘
-                    │
-                    ▼
-┌────────────────────────────────────────┐
-│     PostgreSQL / PostGIS & Redis       │
-│  (Vessels, Ports, Marine Zones, Routes)│
-└────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                 OceanSentinel Command Center (React)         │
+│  Logistics · Surveillance · Environment · Cleanup · Agents   │
+└──────────────┬───────────────────────────────┬───────────────┘
+               │ REST API                      │ WebSocket /ws/telemetry
+               ▼                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                     FastAPI Backend Engine                   │
+│                                                              │
+│  Phase 1: Logistics            Phase 3: Surveillance         │
+│  ┌──────────────────────┐      ┌──────────────────────────┐  │
+│  │ A* Routing · Fuel    │      │ AIS Ingestion (provider  │  │
+│  │ CO₂ & ETA · Multi-   │      │ + 8 simulation scenarios)│  │
+│  │ Objective Optimizer  │      │ Gap · Geofence · Fishing │  │
+│  └──────────────────────┘      │ Loitering · Rendezvous   │  │
+│                                │ Risk Engine · Evidence   │  │
+│  ┌──────────────────────┐      │ Investigation Cases      │  │
+│  │ TRITON orchestrator  │◄────►└────────────┬─────────────┘  │
+│  │ + CrewAI surveillance│                   │ events         │
+│  │ crew (Groq / Gemini /│      ┌────────────┴─────────────┐  │
+│  │ OpenRouter fallback) │      │ Event Publisher seam     │  │
+│  └──────────────────────┘      │ (Phase 2 Redis bus later)│  │
+│                                └──────────────────────────┘  │
+└──────────────────────────────┬───────────────────────────────┘
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                PostgreSQL / PostGIS (SQLite locally)         │
+│  Vessels · Ports · Zones · Routes · AIS positions · Dark     │
+│  periods · Fishing zones · MPAs · Risk scores · Cases        │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -70,13 +75,13 @@ USER / OPERATOR
 
 ---
 
-## Phase 3: Maritime Surveillance (backend)
+## Phase 3: Maritime Surveillance
 
 - **AIS ingestion** behind a provider interface, with eight scripted simulation scenarios for demos.
 - **Detection**: AIS gaps (dark periods), fishing-zone and protected-area geofencing, loitering, fishing-pattern and rendezvous detectors.
 - **Explainable risk**: weighted 0-100 score with per-factor explanations, evidence rows, and configurable alert and case thresholds.
 - **Investigation cases** with assign, escalate, resolve, and dismiss workflow, frozen evidence snapshots, and an audit log.
-- **CrewAI agents**: a four-agent investigation crew and a natural-language assistant, restricted to deterministic tools, running on Gemini with automatic fallback to Groq and OpenRouter.
+- **CrewAI agents**: a four-agent investigation crew and a natural-language assistant, restricted to deterministic tools, running on Groq, Gemini and OpenRouter with automatic provider fallback.
 - Run a scenario: `POST /api/v1/simulation/run {"scenario": "DARK_FISHING_COMPOSITE"}`, then open `GET /api/v1/investigations`.
 
 - **Frontend**: a Mapbox-inspired dark system (see [design/DESIGN.md](./design/DESIGN.md)). Surveillance view with a Night/Chart basemap, watchlist, live events, vessel evidence panel, investigation case screen, replay and the analyst chat; the Phase 1 Command Center lives under Logistics.
@@ -84,6 +89,39 @@ USER / OPERATOR
 Details in [docs/surveillance.md](./docs/surveillance.md).
 
 ---
+
+## Phase 4: Autonomous Marine Preservation & Command Center Studio
+
+Phase 4 elevates TRITON / OceanSentinel into a presentation-ready, hackathon-winning unified autonomous marine command platform uniting **Logistics**, **Maritime Surveillance**, and **Ecological Preservation**:
+
+- **Unified Multi-Layer Ocean Map**:
+  - Commercial shipping traffic, dark vessels with AIS transponder blackouts, and Marine Protected Areas (MPAs).
+  - Debris clusters with density halos and 12-hour projected leeway drift vectors ($\vec{v}_{drift} = \alpha \vec{v}_{current} + \beta \vec{v}_{wind}$).
+  - Autonomous cleanup fleet positions (ASV skimmers, UAV quad/fixed-wing drones, robotic interceptors) with live battery gauges, speed, and heading indicators.
+  - Active sortie waypoints connected with dynamic animated trajectory corridors.
+  - Granular HUD layer toggle bar allowing live switching between Fleet, Debris, Missions, Vessels, MPAs, and Storms.
+
+- **Autonomous Fleet Simulator & Mission Studio**:
+  - Physics-informed energy kinetics model taking into account hydrodynamic resistance ($P \propto v^3$), hotel load, and collection machinery power draw.
+  - Automatic return-to-base triggers on battery depletion or payload capacity saturation.
+  - Real-time background simulation loop broadcasting coordinates and telemetry via WebSockets (`/ws/telemetry`).
+  - Interactive Mission Planner Modal powered by a multi-target Vehicle Routing Problem (VRP) heuristic and Traveling Salesperson (TSP) 2-opt route solver.
+  - 1-Click Dispatch & Human Approval Gate (Authorize & Dispatch / Replan / Reject).
+
+- **Multi-Agent Orchestration & Explainability Tree**:
+  - Five coordinated specialists (Vessel Watch, Route Planner, Debris Sentinel, Autonomous Cleanup Agent, Compliance Agent) coordinated by the Maritime Commander.
+  - Interactive 7-step visual thought trace tree (`AgentTraceVisualizer`) rendering agent thinking, observations, and tool executions.
+  - Tri-Domain Impact Ticker quantifying fuel saved, CO₂ eliminated, marine debris intercepted, and MPA sanctuaries shielded.
+
+- **3 Turnkey 1-Click Presentation Scenarios (100% Offline Reliable)**:
+  1. **Lakshadweep Ghost Net Crisis (`ghost_net_mpa`)**: 1,450 kg monofilament net drifting toward coral sanctuary; triggers ASV `SeaSweeper-Alpha` intercept.
+  2. **Mumbai Offshore Dark Trawler & Fuel Slick (`dark_vessel_spill`)**: Dark vessel transponder blackout correlated with 1,200 m² SAR slick anomaly.
+  3. **Arabian Sea Eco-Corridor Voyage Optimization (`eco_corridor_voyage`)**: Deep monsoon depression avoidance saving 8.4t bunker fuel.
+  - Accessible directly via the TopBar **Demo Scenarios** 1-click switcher.
+
+- **Executive Intelligence Briefing Export**:
+  - Formatted printable tactical briefing with official sign-off stamps, multi-agent findings, and environmental decarbonization receipts (`ReportExportModal`).
+
 
 ## Getting Started
 
@@ -116,7 +154,7 @@ uv sync
 # Run FastAPI backend server
 uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
-Set `GEMINI_API_KEY` (optionally `GROQ_API_KEY` and `OPENROUTER_API_KEY` as fallbacks) in `.env` to enable the Phase 3 agent layer; everything else runs without it.
+Set at least one of `GROQ_API_KEY`, `GEMINI_API_KEY` or `OPENROUTER_API_KEY` in `backend/.env` to enable the Phase 3 agent layer (tried in that order); everything else runs without a key.
 API Documentation will be active at: `http://localhost:8000/docs`.
 
 #### Frontend Setup
@@ -147,13 +185,15 @@ cd frontend
 npm test
 ```
 
-Tests include:
-- `test_haversine.py`: Great circle distance and nautical mile verification.
-- `test_fuel.py`: Deterministic hydrodynamic consumption and cargo loading.
-- `test_eta.py`: Speed scaling and timestamp projection.
-- `test_astar.py`: Navigable ocean pathfinding and obstacle avoidance.
-- `test_optimization.py`: Weight preference shifts across modes.
-- `test_api.py`: FastAPI endpoints, validation, and error states.
+The backend suite runs against a local SQLite file by default; set `TEST_DATABASE_URL` to run it against PostGIS. Coverage by area:
+
+- **Phase 1 logistics**: `test_haversine.py`, `test_fuel.py`, `test_eta.py`, `test_astar.py`, `test_optimization.py`, `test_api.py`, `test_phase1_foundation.py`.
+- **AIS and detection**: `test_ais_position.py`, `test_ais_gap_detector.py`, `test_dark_period.py`, `test_geofence.py`, `test_features.py`, `test_loitering.py`, `test_fishing_pattern.py`, `test_rendezvous.py`, `test_analyzer.py`, `test_pipeline.py`, `test_ingestion.py`, `test_simulation_provider.py`.
+- **Risk and cases**: `test_risk_engine.py`, `test_risk_service.py`, `test_surveillance_api.py`, `test_investigation_api.py`, `test_surveillance_seed.py`, `test_vessel_identity.py`.
+- **Agents and events**: `test_agent_toolkit.py`, `test_crew.py`, `test_llm_providers.py`, `test_agent_api.py`, `test_triton_integration.py`, `test_event_publisher.py`, `test_events_api.py`, `test_websocket_publisher.py`, `test_settings.py`.
+- **Frontend** (vitest): risk banding, time formatting and AIS-gap track splitting under `frontend/src/design/`.
+
+Agent tests use fake LLM providers, so no API key is needed to run the suite.
 
 ---
 
@@ -165,30 +205,49 @@ oceansentinel/
 ├── docker-compose.yml
 ├── .env.example
 ├── backend/
-│   ├── requirements.txt
+│   ├── pyproject.toml     # uv project (requirements.txt kept in sync for Docker)
 │   ├── Dockerfile
 │   └── app/
-│       ├── main.py
-│       ├── config.py
+│       ├── main.py        # Routers, seeds, WebSocket publisher, optional surveillance loop
+│       ├── config.py      # Settings incl. risk thresholds and LLM provider order
 │       ├── database.py
-│       ├── models/        # SQLAlchemy Models (Vessel, Port, Zone, Route, Voyage)
-│       ├── schemas/       # Pydantic Schemas & Validations
-│       ├── services/      # Routing, Fuel, Emissions, ETA, Optimization
-│       ├── api/           # REST Endpoints
-│       ├── data/          # Deterministic Seeds
-│       └── tests/         # Unit & Integration Tests
+│       ├── models/        # Vessel, Port, Zone, Route, AISPosition, DarkPeriod, FishingZone,
+│       │                  # MarineProtectedArea, SurveillanceEvent, VesselRiskScore, Evidence,
+│       │                  # InvestigationCase
+│       ├── schemas/       # Pydantic schemas
+│       ├── services/
+│       │   ├── routing/ fuel/ emissions/ eta/ optimization/ weather/ ocean/   # Phase 1
+│       │   ├── ais/           # Provider interface, simulation scenarios, ingestion
+│       │   ├── surveillance/  # Gap, geofence, loitering, fishing, rendezvous, risk, cases, replay
+│       │   └── websocket/     # Telemetry hub
+│       ├── agents/        # CrewAI toolkit, providers with fallback, investigation crew, TRITON
+│       ├── events/        # Event publisher seam and WebSocket publisher
+│       ├── api/           # REST endpoints (vessels, routes, ais, simulation, surveillance,
+│       │                  # fishing, investigations, assistant, agents)
+│       ├── data/          # Deterministic seeds (ports, vessels, zones, MPAs, fishing zones)
+│       └── tests/         # pytest suite
 ├── frontend/
 │   ├── package.json
-│   ├── vite.config.ts
+│   ├── tailwind.config.js # Design tokens as Tailwind theme
+│   ├── vitest.config.ts
 │   └── src/
-│       ├── components/    # Navbar, OceanMap, RoutePlanner, HUD, Comparison, Replay
-│       ├── pages/         # CommandCenter Dashboard
-│       └── services/      # API integration client
+│       ├── design/        # tokens.css, risk bands, formatting, track splitting, markdown-lite
+│       ├── components/
+│       │   ├── shell/ ui/ map/   # TopBar, primitives, BaseMap and basemap toggle
+│       │   ├── surveillance/     # Map, watchlist, events, vessel, analyst, replay panels
+│       │   └── ...               # Phase 1 OceanMap, RoutePlanner, RouteReplay, HUD
+│       ├── pages/         # Logistics, Surveillance, Case, Environment, Cleanup, Agents
+│       ├── services/      # api.ts, surveillance.ts, telemetry.ts (shared WebSocket)
+│       └── types/
+├── design/
+│   ├── DESIGN.md          # Visual system: surfaces, type, risk scale, components
+│   └── command-center/    # Design canvas artboards
 └── docs/
     ├── architecture.md
     ├── routing.md
     ├── database.md
-    └── api.md
+    ├── api.md
+    └── surveillance.md
 ```
 
 ---

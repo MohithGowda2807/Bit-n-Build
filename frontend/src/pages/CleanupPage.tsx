@@ -1,133 +1,217 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { CircleMarker, Tooltip, useMap } from 'react-leaflet';
-import { Basemap } from '../components/OceanMap';
-import { BaseMap, BasemapToggle } from '../components/map/BaseMap';
-import { Eyebrow, InfoBadge, Mono, Panel, RiskBadge, RiskNumber } from '../components/ui/primitives';
-import { fetchDebris, fetchIncidents, fetchMissions } from '../services/api';
-import { Debris, Incident, Mission } from '../types';
-import { riskColor } from '../design/risk';
-import { formatClock } from '../design/format';
-
-const FlyTo: React.FC<{ target: [number, number] | null }> = ({ target }) => {
-  const map = useMap();
-  useEffect(() => { if (target) map.flyTo(target, Math.max(map.getZoom(), 6), { duration: 0.6 }); }, [target, map]);
-  return null;
-};
+import React, { useEffect, useState } from 'react';
+import { OceanMap, Basemap } from '../components/OceanMap';
+import { Debris, CleanupUnit, Mission, MarineZone, DebrisCluster } from '../types';
+import {
+  fetchDebris,
+  fetchFleetUnits,
+  fetchMissions,
+  fetchZones,
+  fetchDebrisClusters
+} from '../services/api';
+import { DebrisDetailDrawer } from '../components/cleanup/DebrisDetailDrawer';
+import { FleetControlDrawer } from '../components/cleanup/FleetControlDrawer';
+import { MissionPlannerModal } from '../components/cleanup/MissionPlannerModal';
 
 export const CleanupPage: React.FC = () => {
   const [debris, setDebris] = useState<Debris[]>([]);
+  const [fleetUnits, setFleetUnits] = useState<CleanupUnit[]>([]);
   const [missions, setMissions] = useState<Mission[]>([]);
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  const [zones, setZones] = useState<MarineZone[]>([]);
+  const [clusters, setClusters] = useState<DebrisCluster[]>([]);
+  const [selectedDebris, setSelectedDebris] = useState<Debris | null>(null);
+  const [selectedFleetUnit, setSelectedFleetUnit] = useState<CleanupUnit | null>(null);
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  const [isPlannerOpen, setIsPlannerOpen] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<'debris' | 'fleet'>('debris');
   const [basemap, setBasemap] = useState<Basemap>('night');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const loadData = () => {
+    fetchDebris()
+      .then(d => {
+        const sorted = [...d].sort((a, b) => (b.severity || 0) - (a.severity || 0));
+        setDebris(sorted);
+        if (!selectedDebris && sorted.length > 0) {
+          setSelectedDebris(sorted[0]);
+        }
+      })
+      .catch(() => {});
+
+    fetchFleetUnits().then(setFleetUnits).catch(() => {});
+    fetchMissions().then(setMissions).catch(() => {});
+    fetchZones().then(setZones).catch(() => {});
+    fetchDebrisClusters().then(setClusters).catch(() => {});
+  };
 
   useEffect(() => {
-    fetchDebris().then(d => setDebris([...d].sort((a, b) => b.severity - a.severity))).catch(() => {});
-    fetchMissions().then(setMissions).catch(() => {});
-    fetchIncidents().then(setIncidents).catch(() => {});
+    loadData();
+    const interval = setInterval(loadData, 10000); // Poll live fleet telemetry every 10s
+    return () => clearInterval(interval);
   }, []);
 
-  const selected = useMemo(() => debris.find(d => d.id === selectedId) ?? null, [debris, selectedId]);
+  const handleMissionCreated = (newMission: any) => {
+    setMissions(prev => [newMission, ...prev]);
+    loadData();
+  };
 
   return (
-    <div className="relative flex-1 min-h-0">
-      <BaseMap basemap={basemap} center={[10, 78]} zoom={5}>
-        <FlyTo target={selected ? [selected.latitude, selected.longitude] : null} />
-        {debris.map(d => (
-          <CircleMarker key={d.id} center={[d.latitude, d.longitude]} radius={Math.max(5, Math.min(14, Math.sqrt(d.estimated_size_m2) / 2))}
-            pathOptions={{ color: '#0e1012', weight: 2, fillColor: riskColor(d.severity), fillOpacity: 0.9 }}
-            eventHandlers={{ click: () => setSelectedId(d.id) }}>
-            <Tooltip direction="top" offset={[0, -6]}>{d.debris_type.replace(/_/g, ' ')} · severity {Math.round(d.severity)}</Tooltip>
-          </CircleMarker>
-        ))}
-        {selected && <CircleMarker center={[selected.latitude, selected.longitude]} radius={18} interactive={false} pathOptions={{ color: '#007afc', weight: 1.5, fill: false }} />}
-        {missions.filter(m => m.target_lat && m.target_lon).map(m => (
-          <CircleMarker key={`m-${m.id}`} center={[m.target_lat!, m.target_lon!]} radius={4} pathOptions={{ color: '#2fae6e', weight: 1.5, fill: false }}>
-            <Tooltip>{m.mission_name}</Tooltip>
-          </CircleMarker>
-        ))}
-      </BaseMap>
+    <div className="relative w-full h-[calc(100vh-4rem)] flex overflow-hidden bg-slate-950 font-sans">
+      {/* Main Unified Ocean Map */}
+      <div className="flex-1 h-full relative">
+        <OceanMap
+          vessels={[]}
+          ports={[]}
+          zones={zones}
+          debris={debris}
+          fleetUnits={fleetUnits}
+          missions={missions}
+          debrisClusters={clusters}
+          selectedDebris={selectedDebris}
+          onSelectDebris={setSelectedDebris}
+          selectedFleetUnit={selectedFleetUnit}
+          onSelectFleetUnit={setSelectedFleetUnit}
+          selectedMission={selectedMission}
+          onSelectMission={setSelectedMission}
+          origin={null}
+          destination={null}
+          activeRoute={null}
+          alternativeRoutes={[]}
+          selectedAlternativeIndex={null}
+          onSelectAlternative={() => {}}
+          mapSelectionMode={null}
+          onSelectCoordinate={() => {}}
+          replayPosition={null}
+          basemap={basemap}
+          onBasemapChange={setBasemap}
+          showLayerBar={true}
+        />
 
-      {/* Left panel collapse toggle */}
-      <div className="absolute left-4 top-4 z-[1001]">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="bg-os-card/90 backdrop-blur-md border border-os-border/90 rounded-xl px-3 py-1.5 text-xs font-mono text-slate-200 hover:text-white hover:border-blue-500 transition shadow-lg flex items-center gap-1.5 cursor-pointer"
-        >
-          <span>{sidebarOpen ? '◀' : '▶'}</span>
-          <span className="font-semibold">{sidebarOpen ? 'Hide Debris List' : 'Show Debris List'}</span>
-        </button>
-      </div>
+        {/* Floating Mission Studio Header HUD */}
+        <div className="absolute top-4 left-4 z-[1000] flex items-center space-x-3">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 hover:text-white hover:border-cyan-500 transition shadow-xl flex items-center gap-2 cursor-pointer"
+          >
+            <span>{sidebarOpen ? '◀' : '▶'}</span>
+            <span className="font-bold">{sidebarOpen ? 'Collapse Studio' : 'Open Studio'}</span>
+          </button>
 
-      {sidebarOpen && (
-        <div className="absolute left-4 top-14 bottom-4 z-[1000]">
-          <Panel className="w-[340px] h-full p-5 flex flex-col gap-3.5 overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-lg font-medium text-white">Debris</span>
-              <Mono className="text-xs text-os-slate">sorted by severity</Mono>
-            </div>
-            <div className="flex flex-col overflow-auto pr-1">
-              {debris.map((d, i) => {
-                const active = d.id === selectedId;
-                return (
-                  <button key={d.id} onClick={() => setSelectedId(d.id)}
-                    className={`flex items-center gap-3 h-14 text-left ${active ? 'bg-os-raised rounded-row px-3 -mx-3 shadow-[inset_2px_0_0_#007afc]' : `${i < debris.length - 1 ? 'border-b border-os-raised' : ''} hover:bg-os-raised/50`}`}>
-                    <RiskNumber score={d.severity} className="w-11 shrink-0" />
-                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                      <span className="text-sm font-medium text-white truncate">{d.debris_type.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())}</span>
-                      <span className="text-xs text-os-ash truncate">{Math.round(d.estimated_size_m2)} m² · {d.density_category} · {d.status.replace(/_/g, ' ')}</span>
-                    </div>
-                    <RiskBadge level={d.clean_up_priority === 'urgent' ? 'CRITICAL' : d.clean_up_priority === 'high' ? 'HIGH' : 'MODERATE'} />
-                  </button>
-                );
-              })}
-              {debris.length === 0 && <span className="text-sm text-os-fog py-2">No debris reports.</span>}
-            </div>
-            <span className="text-xs text-os-ash leading-relaxed">Autonomous cleanup allocation and drift prediction arrive with Phase 4. Reports here come from the Phase 1 debris service.</span>
-          </Panel>
+          <button
+            onClick={() => setIsPlannerOpen(true)}
+            className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-mono font-bold text-xs px-4 py-2 rounded-xl shadow-lg shadow-cyan-950/60 border border-cyan-400/40 flex items-center gap-2 transition cursor-pointer"
+          >
+            <span>⚡</span>
+            <span>Plan Autonomous Sortie</span>
+          </button>
         </div>
-      )}
 
-      <div className="absolute right-4 top-4 bottom-4 z-[1000]">
-        <Panel className="w-[376px] h-full p-6 flex flex-col gap-4 overflow-hidden">
-          {selected && (
-            <div className="flex flex-col gap-2 pb-4 border-b border-os-raised">
-              <Eyebrow>Report {selected.id} · {selected.source.replace(/_/g, ' ')} · {formatClock(selected.detected_at)}</Eyebrow>
-              <span className="text-xl font-bold text-white tracking-tight">{selected.debris_type.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())}</span>
-              {selected.description && <span className="text-sm text-os-fog leading-relaxed">{selected.description}</span>}
-              <Mono className="text-xs text-os-ash">{selected.latitude.toFixed(3)}, {selected.longitude.toFixed(3)} · {Math.round(selected.estimated_size_m2)} m²</Mono>
-            </div>
-          )}
-          <span className="text-lg font-medium text-white">Missions</span>
-          <div className="flex flex-col overflow-auto pr-1">
-            {missions.map((m, i) => (
-              <div key={m.id} className={`flex flex-col gap-1 py-3 ${i < missions.length - 1 ? 'border-b border-os-raised' : ''}`}>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-white flex-1 truncate">{m.mission_name}</span>
-                  <InfoBadge tone={m.status === 'active' ? 'clear' : 'muted'}>{m.status}</InfoBadge>
+        {/* Collapsible Left Panel: Debris & Fleet Tabs */}
+        {sidebarOpen && (
+          <div className="absolute left-4 top-16 bottom-4 w-84 z-[1000] flex flex-col space-y-3 pointer-events-none">
+            <div className="bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-2xl p-4 shadow-2xl flex flex-col max-h-full overflow-hidden pointer-events-auto">
+              {/* Studio Tabs */}
+              <div className="flex items-center space-x-1 p-1 bg-slate-950 rounded-xl border border-slate-800 mb-3 font-mono text-xs">
+                <button
+                  onClick={() => setSidebarTab('debris')}
+                  className={`flex-1 py-1.5 rounded-lg font-bold transition ${
+                    sidebarTab === 'debris'
+                      ? 'bg-cyan-600 text-white shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  ⚠️ Debris ({debris.length})
+                </button>
+                <button
+                  onClick={() => setSidebarTab('fleet')}
+                  className={`flex-1 py-1.5 rounded-lg font-bold transition ${
+                    sidebarTab === 'fleet'
+                      ? 'bg-cyan-600 text-white shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  🚤 Fleet ({fleetUnits.length})
+                </button>
+              </div>
+
+              {/* Tab 1: Debris List */}
+              {sidebarTab === 'debris' && (
+                <div className="flex-1 overflow-y-auto space-y-2 pr-1 font-mono text-xs">
+                  {debris.map(d => {
+                    const isSelected = d.id === selectedDebris?.id;
+                    return (
+                      <div
+                        key={d.id}
+                        onClick={() => setSelectedDebris(d)}
+                        className={`p-3 rounded-xl border cursor-pointer transition ${
+                          isSelected
+                            ? 'bg-cyan-950/40 border-cyan-500 text-white shadow-lg'
+                            : 'bg-slate-950/40 border-slate-800/80 hover:border-slate-700 text-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold capitalize">{d.debris_type.replace('_', ' ')}</span>
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                              d.severity >= 85
+                                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                            }`}
+                          >
+                            {d.clean_up_priority}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
+                          <span>Severity: {d.severity}/100</span>
+                          <span className="text-cyan-300 font-semibold">
+                            {d.estimated_mass_kg?.toLocaleString() || Math.round(d.estimated_size_m2)} kg
+                          </span>
+                        </div>
+                        {d.nearest_mpa_distance_nm && (
+                          <div className="text-[10px] text-emerald-400 mt-1">
+                            🛡️ {d.nearest_mpa_distance_nm} NM from MPA
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                <Mono className="text-[11px] text-os-ash">{m.mission_type.replace(/_/g, ' ')} · priority {m.priority}{m.assigned_vessel_id ? ` · vessel ${m.assigned_vessel_id}` : ' · unassigned'}</Mono>
-              </div>
-            ))}
+              )}
+
+              {/* Tab 2: Fleet Status */}
+              {sidebarTab === 'fleet' && (
+                <FleetControlDrawer
+                  units={fleetUnits}
+                  selectedUnitId={selectedFleetUnit?.id}
+                  onSelectUnit={setSelectedFleetUnit}
+                  onRefreshFleet={loadData}
+                />
+              )}
+            </div>
           </div>
-          {incidents.length > 0 && (
-            <>
-              <Eyebrow>Incidents</Eyebrow>
-              <div className="flex flex-col gap-2">
-                {incidents.slice(0, 3).map(inc => (
-                  <div key={inc.id} className="flex items-center gap-2.5">
-                    <RiskBadge level={inc.severity === 'critical' ? 'CRITICAL' : inc.severity === 'high' ? 'HIGH' : 'MODERATE'} />
-                    <span className="text-[13px] text-os-fog truncate">{inc.title}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </Panel>
+        )}
+
+        {/* Right Drawer: Selected Debris Intelligence & Drift Projection */}
+        {selectedDebris && (
+          <DebrisDetailDrawer
+            debris={selectedDebris}
+            onClose={() => setSelectedDebris(null)}
+            onPlanMission={(d) => {
+              setSelectedDebris(d);
+              setIsPlannerOpen(true);
+            }}
+          />
+        )}
       </div>
 
-      <BasemapToggle basemap={basemap} onChange={setBasemap} style={{ right: 408, bottom: 16 }} />
+      {/* Mission Planner & Autonomous Dispatch Modal */}
+      <MissionPlannerModal
+        isOpen={isPlannerOpen}
+        onClose={() => setIsPlannerOpen(false)}
+        debrisList={debris}
+        fleetUnits={fleetUnits}
+        initialDebrisId={selectedDebris?.id}
+        onMissionCreated={handleMissionCreated}
+      />
     </div>
   );
 };

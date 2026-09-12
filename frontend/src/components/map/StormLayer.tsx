@@ -12,13 +12,21 @@ export const StormLayer: React.FC<StormLayerProps> = ({ storms }) => {
   return (
     <>
       {storms.map(storm => {
+        if (
+          storm.center_latitude == null ||
+          storm.center_longitude == null ||
+          isNaN(storm.center_latitude) ||
+          isNaN(storm.center_longitude)
+        ) {
+          return null;
+        }
         const isCritical = storm.severity === 'critical';
         const isHigh = storm.severity === 'high';
         const strokeColor = isCritical ? '#ef4444' : isHigh ? '#f97316' : '#eab308';
         const fillColor = isCritical ? '#ef4444' : isHigh ? '#ea580c' : '#ca8a04';
 
         const center: [number, number] = [storm.center_latitude, storm.center_longitude];
-        const radiusMeters = storm.radius_km * 1000;
+        const radiusMeters = (storm.radius_km || 10) * 1000;
         const coreRadiusMeters = radiusMeters * 0.4;
 
         return (
