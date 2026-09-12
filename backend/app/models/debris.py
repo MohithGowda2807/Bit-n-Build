@@ -14,7 +14,18 @@ class Debris(Base):
     density_category = Column(String(50), nullable=False, default="medium")  # low, medium, high, critical
     severity = Column(Float, nullable=False, default=50.0)  # 0.0 - 100.0
     detected_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
-    status = Column(String(50), nullable=False, default="detected")  # detected, monitoring, dispatch_scheduled, cleared
+    status = Column(String(50), nullable=False, default="detected")  # detected, verified, assigned, collecting, cleared, dismissed
     clean_up_priority = Column(String(50), nullable=False, default="medium")  # low, medium, high, urgent
     source = Column(String(100), nullable=False, default="synthetic_sensor")  # satellite, synthetic_sensor, vessel_report, buoy
     description = Column(Text, nullable=True)
+
+    # Phase 4 extensions: clustering, physics, and environmental impact
+    cluster_id = Column(Integer, nullable=True, index=True)
+    estimated_mass_kg = Column(Float, nullable=False, default=500.0)
+    estimated_volume_m3 = Column(Float, nullable=False, default=1.5)
+    confidence = Column(Float, nullable=False, default=0.92)
+    drift_heading_deg = Column(Float, nullable=True)
+    drift_speed_knots = Column(Float, nullable=True)
+    target_species_threatened = Column(String(150), nullable=True)
+    environmental_risk_score = Column(Float, nullable=False, default=50.0)
+    nearest_mpa_distance_nm = Column(Float, nullable=True)
