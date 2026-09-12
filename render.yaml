@@ -20,7 +20,6 @@ services:
   - type: web
     name: oceansentinel-frontend
     runtime: static
-    plan: free
     branch: main
     rootDir: frontend
     buildCommand: npm install && npm run build
