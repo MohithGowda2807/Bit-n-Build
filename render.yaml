@@ -1,9 +1,9 @@
-﻿services:
+services:
   - type: web
     name: oceansentinel-backend
     runtime: python
     plan: free
-    branch: Mohith
+    branch: main
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -21,7 +21,7 @@
     name: oceansentinel-frontend
     runtime: static
     plan: free
-    branch: Mohith
+    branch: main
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
