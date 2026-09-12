@@ -39,6 +39,9 @@ export const LogisticsPage: React.FC = () => {
   const [vesselId, setVesselId] = useState<number | null>(null);
   const [origin, setOrigin] = useState<Coordinate | null>(null);
   const [destination, setDestination] = useState<Coordinate | null>(null);
+  const [originPortId, setOriginPortId] = useState<number | null>(null);
+  const [destPortId, setDestPortId] = useState<number | null>(null);
+  const [snapNotification, setSnapNotification] = useState<string | null>(null);
   const [pickMode, setPickMode] = useState<'origin' | 'destination' | null>(null);
   const [mode, setMode] = useState('fuel_efficient');
 
@@ -66,10 +69,20 @@ export const LogisticsPage: React.FC = () => {
       setVessels(v); setPorts(p); setZones(z); setAlerts(a);
       setStorms(st); setOperatingModeState(opMode); setRouteVersions(vers);
       if (v.length && vesselId === null) setVesselId(v[0].id);
-      const mumbai = portByName(p, 'mumbai'); const singapore = portByName(p, 'singapore');
+      const mumbai = portByName(p, 'mumbai') || p[0];
+      const singapore = portByName(p, 'singapore') || p[1];
       if (mumbai && singapore) {
-        setOrigin({ latitude: mumbai.latitude, longitude: mumbai.longitude });
-        setDestination({ latitude: singapore.latitude, longitude: singapore.longitude });
+        const orig = { latitude: mumbai.latitude, longitude: mumbai.longitude };
+        const dest = { latitude: singapore.latitude, longitude: singapore.longitude };
+        setOrigin(orig);
+        setDestination(dest);
+        setOriginPortId(mumbai.id);
+        setDestPortId(singapore.id);
+        setLoading(true);
+        optimizeRoute({ vessel_id: v[0]?.id ?? 1, origin: orig, destination: dest, mode: 'fuel_efficient', optimization: MODES[0].weights })
+          .then(res => setResult(res))
+          .catch(() => {})
+          .finally(() => setLoading(false));
       }
     }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -129,10 +142,61 @@ export const LogisticsPage: React.FC = () => {
     }
   };
 
-  const onPick = (coord: Coordinate) => {
-    if (pickMode === 'origin') setOrigin(coord);
-    if (pickMode === 'destination') setDestination(coord);
+  const sortedPorts = useMemo(() => {
+    return [...ports].sort((a, b) => {
+      if (a.country !== b.country) return a.country.localeCompare(b.country);
+      return a.name.localeCompare(b.name);
+    });
+  }, [ports]);
+
+  const handleOriginPortChange = (pId: number) => {
+    const p = ports.find(pt => pt.id === pId);
+    if (p) {
+      setOriginPortId(p.id);
+      setOrigin({ latitude: p.latitude, longitude: p.longitude });
+    }
+  };
+
+  const handleDestPortChange = (pId: number) => {
+    const p = ports.find(pt => pt.id === pId);
+    if (p) {
+      setDestPortId(p.id);
+      setDestination({ latitude: p.latitude, longitude: p.longitude });
+    }
+  };
+
+  const handlePortSelectedFromMap = (port: Port) => {
+    if (pickMode === 'origin') {
+      setOrigin({ latitude: port.latitude, longitude: port.longitude });
+      setOriginPortId(port.id);
+      setSnapNotification(`🎯 Snapped Origin: ${port.name} (${port.country})`);
+    } else if (pickMode === 'destination') {
+      setDestination({ latitude: port.latitude, longitude: port.longitude });
+      setDestPortId(port.id);
+      setSnapNotification(`🎯 Snapped Destination: ${port.name} (${port.country})`);
+    }
     setPickMode(null);
+    setTimeout(() => setSnapNotification(null), 4500);
+  };
+
+  const onPick = (coord: Coordinate) => {
+    // If coordinate didn't snap via onSelectPort, snap to nearest port
+    if (ports.length > 0) {
+      let nearest = ports[0];
+      let minDist = Math.hypot(coord.latitude - nearest.latitude, coord.longitude - nearest.longitude);
+      for (let i = 1; i < ports.length; i++) {
+        const d = Math.hypot(coord.latitude - ports[i].latitude, coord.longitude - ports[i].longitude);
+        if (d < minDist) {
+          minDist = d;
+          nearest = ports[i];
+        }
+      }
+      handlePortSelectedFromMap(nearest);
+    } else {
+      if (pickMode === 'origin') setOrigin(coord);
+      if (pickMode === 'destination') setDestination(coord);
+      setPickMode(null);
+    }
   };
 
   const selectedVessel = vessels.find(v => v.id === vesselId) ?? null;
@@ -164,6 +228,7 @@ export const LogisticsPage: React.FC = () => {
           onSelectAlternative={setAltIndex}
           mapSelectionMode={pickMode}
           onSelectCoordinate={onPick}
+          onSelectPort={handlePortSelectedFromMap}
           replayPosition={replayPos}
           basemap={basemap}
           onBasemapChange={setBasemap}
@@ -174,23 +239,39 @@ export const LogisticsPage: React.FC = () => {
         {/* Floating Pick Mode Hint */}
         {pickMode && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] os-reveal">
-            <Mono className="text-xs text-white bg-os-signal px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-              Click anywhere on the oceanic chart to set {pickMode.toUpperCase()}
-            </Mono>
+            <div className="text-xs font-mono font-bold text-white bg-blue-600 px-5 py-2 rounded-full shadow-2xl border border-blue-400 flex items-center gap-2.5 backdrop-blur-md">
+              <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
+              <span>Click any port or ocean area to snap {pickMode.toUpperCase()}</span>
+              <button
+                onClick={() => setPickMode(null)}
+                className="ml-2 px-2 py-0.5 rounded bg-blue-800 hover:bg-blue-700 text-blue-200 text-[10px] uppercase font-semibold"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Floating Snap Notification Toast */}
+        {snapNotification && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1001] os-reveal">
+            <div className="bg-emerald-600/95 text-white text-xs font-mono font-bold px-5 py-2.5 rounded-full shadow-2xl backdrop-blur-md border border-emerald-400 flex items-center gap-2 animate-bounce">
+              <span>⚓</span>
+              <span>{snapNotification}</span>
+            </div>
           </div>
         )}
 
         {/* 3. Left Operations Studio (Collapsible Dock) */}
         {sidebarOpen ? (
           <div className="absolute left-4 top-4 bottom-4 z-[1000] flex flex-col pointer-events-none os-reveal">
-            <div className="w-[350px] h-full bg-os-card/95 backdrop-blur-xl border border-os-border rounded-2xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden">
+            <div className="w-[360px] h-full bg-os-card/95 backdrop-blur-xl border border-os-border rounded-2xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden">
               {/* Studio Header */}
               <div className="px-5 py-3.5 border-b border-os-border flex items-center justify-between bg-os-surface/50">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-white tracking-tight">Route Operations</span>
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/20 border border-blue-500/40 text-blue-300 font-semibold">
-                    A* v2
+                    A* Global
                   </span>
                 </div>
                 <button
@@ -224,7 +305,7 @@ export const LogisticsPage: React.FC = () => {
                 >
                   Lineage History
                   {routeVersions.length > 0 && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-300">
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-300 font-bold">
                       {routeVersions.length}
                     </span>
                   )}
@@ -250,40 +331,76 @@ export const LogisticsPage: React.FC = () => {
                       </select>
                     </label>
 
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between">
-                          <Eyebrow>Origin</Eyebrow>
-                          <button
-                            onClick={() => setPickMode('origin')}
-                            className="text-[11px] font-mono text-blue-400 hover:text-blue-300 font-semibold"
-                          >
-                            Pick Map
-                          </button>
-                        </div>
-                        <div className="px-3 py-2 rounded-lg bg-os-void border border-os-border">
-                          <Mono className="text-xs text-white truncate block">
-                            {origin ? `${origin.latitude.toFixed(2)}, ${origin.longitude.toFixed(2)}` : 'Click Pick'}
-                          </Mono>
-                        </div>
+                    {/* Global Origin Port Selector */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <Eyebrow>Origin Port</Eyebrow>
+                        <button
+                          onClick={() => setPickMode(pickMode === 'origin' ? null : 'origin')}
+                          className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded transition flex items-center gap-1 ${
+                            pickMode === 'origin'
+                              ? 'bg-blue-600 text-white shadow-sm'
+                              : 'text-blue-400 hover:text-blue-300 hover:bg-blue-600/10'
+                          }`}
+                        >
+                          <span>📍</span>
+                          <span>{pickMode === 'origin' ? 'Click to Snap' : 'Map Snap'}</span>
+                        </button>
                       </div>
+                      <select
+                        value={originPortId ?? ''}
+                        onChange={e => handleOriginPortChange(Number(e.target.value))}
+                        className="bg-os-void text-white text-xs font-mono border border-os-border rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 truncate"
+                      >
+                        <option value="" disabled>-- Select World Origin Port --</option>
+                        {sortedPorts.map(p => (
+                          <option key={`orig-${p.id}`} value={p.id} className="bg-[#121620] text-white">
+                            {p.country} · {p.name}
+                          </option>
+                        ))}
+                      </select>
+                      {origin && (
+                        <div className="text-[10px] font-mono text-slate-400 px-1 flex items-center justify-between">
+                          <span>Fairway Coords:</span>
+                          <span className="text-slate-300 font-semibold">{origin.latitude.toFixed(2)}°, {origin.longitude.toFixed(2)}°</span>
+                        </div>
+                      )}
+                    </div>
 
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between">
-                          <Eyebrow>Destination</Eyebrow>
-                          <button
-                            onClick={() => setPickMode('destination')}
-                            className="text-[11px] font-mono text-blue-400 hover:text-blue-300 font-semibold"
-                          >
-                            Pick Map
-                          </button>
-                        </div>
-                        <div className="px-3 py-2 rounded-lg bg-os-void border border-os-border">
-                          <Mono className="text-xs text-white truncate block">
-                            {destination ? `${destination.latitude.toFixed(2)}, ${destination.longitude.toFixed(2)}` : 'Click Pick'}
-                          </Mono>
-                        </div>
+                    {/* Global Destination Port Selector */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <Eyebrow>Destination Port</Eyebrow>
+                        <button
+                          onClick={() => setPickMode(pickMode === 'destination' ? null : 'destination')}
+                          className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded transition flex items-center gap-1 ${
+                            pickMode === 'destination'
+                              ? 'bg-blue-600 text-white shadow-sm'
+                              : 'text-blue-400 hover:text-blue-300 hover:bg-blue-600/10'
+                          }`}
+                        >
+                          <span>📍</span>
+                          <span>{pickMode === 'destination' ? 'Click to Snap' : 'Map Snap'}</span>
+                        </button>
                       </div>
+                      <select
+                        value={destPortId ?? ''}
+                        onChange={e => handleDestPortChange(Number(e.target.value))}
+                        className="bg-os-void text-white text-xs font-mono border border-os-border rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 truncate"
+                      >
+                        <option value="" disabled>-- Select World Destination Port --</option>
+                        {sortedPorts.map(p => (
+                          <option key={`dest-${p.id}`} value={p.id} className="bg-[#121620] text-white">
+                            {p.country} · {p.name}
+                          </option>
+                        ))}
+                      </select>
+                      {destination && (
+                        <div className="text-[10px] font-mono text-slate-400 px-1 flex items-center justify-between">
+                          <span>Fairway Coords:</span>
+                          <span className="text-slate-300 font-semibold">{destination.latitude.toFixed(2)}°, {destination.longitude.toFixed(2)}°</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col gap-1.5">

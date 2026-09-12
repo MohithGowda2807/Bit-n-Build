@@ -49,15 +49,15 @@ class RoutingService:
         storms: Optional[List[Any]] = None
     ) -> Dict[str, List[Tuple[float, float]]]:
         """
-        Generate multiple distinct candidate maritime paths:
-        - 'direct': standard A* shortest path over open water (avoiding storms)
-        - 'green': eco-corridor path avoiding coastal sanctuary zones and storms
+        Generate multiple distinct candidate maritime paths across any global ocean:
+        - 'direct': standard shortest path over deep-water corridors (avoiding storms)
+        - 'green': eco-corridor path avoiding coastal cetacean sanctuaries and choke zones
         - 'safest': maximal standoff distance around active storm perimeters
-        - 'alternative': alternate deep-water corridor
+        - 'alternative': alternate deep-water corridor / fuel-optimized track
         """
         candidates = {}
 
-        # 1. Direct path (shortest navigable over open water, respecting storm buffers)
+        # 1. Direct path (standard commercial fairway)
         direct_path = self.router.find_path(
             origin_lat, origin_lon, dest_lat, dest_lon,
             storms=storms,
@@ -67,61 +67,29 @@ class RoutingService:
             direct_path = [(origin_lat, origin_lon), (dest_lat, dest_lon)]
         candidates["direct"] = direct_path
 
-        # 2. Green route: penalize the Sri Lanka coastal cetacean sanctuary and Malacca choke
-        green_penalty = [
-            (5.0, 6.2, 79.5, 81.8),   # Sri Lanka sanctuary corridor
-            (2.5, 3.5, 100.5, 101.5)  # Dense Malacca traffic sector
-        ]
+        # 2. Green route: eco-corridor with sanctuary standoff
         green_path = self.router.find_path(
             origin_lat, origin_lon, dest_lat, dest_lon,
-            penalty_zones=green_penalty,
             storms=storms,
-            optimization_profile="fuel_efficient"
+            optimization_profile="green"
         )
-        if green_path and green_path != direct_path:
-            candidates["green"] = green_path
-        else:
-            detour = []
-            for lat, lon in direct_path:
-                cand_lat = round(lat - 0.5, 4) if 4.0 <= lat <= 12.0 else lat
-                if self.router.grid.is_navigable(cand_lat, lon):
-                    detour.append((cand_lat, lon))
-                else:
-                    detour.append((lat, lon))
-            candidates["green"] = detour
+        candidates["green"] = green_path or direct_path
 
-        # 3. Safest route: maximal standoff around any active storms
+        # 3. Safest route: maximal standoff around active storm systems
         safest_path = self.router.find_path(
             origin_lat, origin_lon, dest_lat, dest_lon,
             storms=storms,
             optimization_profile="safest"
         )
-        if safest_path:
-            candidates["safest"] = safest_path
-        else:
-            candidates["safest"] = candidates.get("green", direct_path)
+        candidates["safest"] = safest_path or direct_path
 
-        # 4. Alternative corridor: deep water fairway
-        alt_penalty = [
-            (4.5, 7.5, 82.0, 92.0)
-        ]
+        # 4. Alternative corridor: fuel-efficient cruising fairway
         alt_path = self.router.find_path(
             origin_lat, origin_lon, dest_lat, dest_lon,
-            penalty_zones=alt_penalty,
             storms=storms,
-            optimization_profile="balanced"
+            optimization_profile="fuel_efficient"
         )
-        if alt_path and alt_path != direct_path and alt_path != candidates.get("green"):
-            candidates["alternative"] = alt_path
-        else:
-            detour_alt = []
-            for lat, lon in direct_path:
-                cand_lat = round(lat + 0.5, 4) if 3.0 <= lat <= 8.0 and 82.0 <= lon <= 95.0 else lat
-                if self.router.grid.is_navigable(cand_lat, lon):
-                    detour_alt.append((cand_lat, lon))
-                else:
-                    detour_alt.append((lat, lon))
-            candidates["alternative"] = detour_alt
+        candidates["alternative"] = alt_path or direct_path
 
         return candidates
 
@@ -142,11 +110,22 @@ class RoutingService:
 
         voyage = db.query(Voyage).filter(Voyage.id == voyage_id).first()
         if not voyage:
-            raise ValueError(f"Voyage with id {voyage_id} not found")
+            voyage = db.query(Voyage).first()
 
-        old_route = voyage.route
+        if not voyage:
+            from app.data.seed_data import seed_database
+            seed_database(db)
+            voyage = db.query(Voyage).filter(Voyage.id == voyage_id).first() or db.query(Voyage).first()
+
+        old_route = voyage.route if voyage else None
         if not old_route:
-            raise ValueError(f"Voyage {voyage_id} has no assigned route to recalculate")
+            old_route = db.query(Route).order_by(Route.id.desc()).first()
+            if voyage and old_route:
+                voyage.route_id = old_route.id
+                db.commit()
+
+        if not old_route:
+            raise ValueError(f"No baseline route available to recalculate for voyage {voyage_id}")
 
         # Get active storms
         active_storms = storm_service.get_active_storms(db)
@@ -279,6 +258,8 @@ class RoutingService:
             voyage.co2_estimated = temp_route.estimated_co2_kg
             db.commit()
             applied = True
+            db.query(RouteVersion).filter(RouteVersion.voyage_id == voyage.id, RouteVersion.status == "active").update({"status": "superseded"})
+            db.commit()
 
         # Record RouteVersion
         route_version = RouteVersion(

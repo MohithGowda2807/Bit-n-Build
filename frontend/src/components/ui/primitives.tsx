@@ -7,7 +7,7 @@ export const Panel: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ classNam
 );
 
 export const Eyebrow: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <span className={`os-eyebrow text-os-slate ${className}`}>{children}</span>
+  <span className={`os-eyebrow text-slate-200 font-semibold tracking-wider text-[11px] ${className}`}>{children}</span>
 );
 
 export const Mono: React.FC<React.HTMLAttributes<HTMLSpanElement>> = ({ className = '', children, ...rest }) => (

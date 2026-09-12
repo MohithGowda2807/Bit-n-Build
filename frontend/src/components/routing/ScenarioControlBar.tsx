@@ -113,6 +113,9 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
           <option value="bay_of_bengal_cyclone" className="bg-[#121620] text-white">🌀 Cyclone Vardah (Bay of Bengal / Malacca)</option>
           <option value="malacca_squall" className="bg-[#121620] text-white">⛈️ Sumatra Squall (Malacca Strait Choke)</option>
           <option value="arabian_sea_monsoon" className="bg-[#121620] text-white">🌊 Monsoon Depression (Arabian Sea / Gulf)</option>
+          <option value="pacific_typhoon" className="bg-[#121620] text-white">🌪️ Super Typhoon Rai (Pacific / East Asia)</option>
+          <option value="atlantic_hurricane" className="bg-[#121620] text-white">🌀 Hurricane Lee (North Atlantic Trans-oceanic)</option>
+          <option value="southern_ocean_gale" className="bg-[#121620] text-white">🌊 Southern Ocean Gale (Australia / Bass Strait)</option>
         </select>
         <button
           onClick={handleInject}

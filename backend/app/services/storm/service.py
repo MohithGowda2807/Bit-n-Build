@@ -95,6 +95,9 @@ class StormService:
         if not storms or not coordinates:
             return []
 
+        if isinstance(coordinates, dict):
+            coordinates = coordinates.get("coordinates", [])
+
         intersections = []
         for s in storms:
             min_dist_to_center = float("inf")
@@ -102,7 +105,12 @@ class StormService:
             inside_core = False
 
             for pt in coordinates:
-                lon, lat = pt[0], pt[1]
+                if not isinstance(pt, (list, tuple)) or len(pt) < 2:
+                    continue
+                try:
+                    lon, lat = float(pt[0]), float(pt[1])
+                except (ValueError, TypeError):
+                    continue
                 dist = haversine_km(lat, lon, s.center_latitude, s.center_longitude)
                 if dist < min_dist_to_center:
                     min_dist_to_center = dist
@@ -176,6 +184,48 @@ class StormService:
                 movement_direction_deg=315.0,
                 movement_speed_knots=12.0,
                 source="imd-cyclone-warning"
+            )))
+        elif scenario_preset == "pacific_typhoon":
+            # Super Typhoon in Western Pacific / Taiwan Strait fairway
+            created.append(self.create_storm(db, StormCreate(
+                name="Super Typhoon Rai",
+                storm_type="typhoon",
+                severity="critical",
+                center_latitude=20.5,
+                center_longitude=124.2,
+                radius_km=280.0,
+                wind_speed_knots=95.0,
+                movement_direction_deg=300.0,
+                movement_speed_knots=15.0,
+                source="jma-typhoon-center"
+            )))
+        elif scenario_preset == "atlantic_hurricane":
+            # Hurricane in North Atlantic transatlantic shipping lane
+            created.append(self.create_storm(db, StormCreate(
+                name="Category 4 Hurricane Lee",
+                storm_type="hurricane",
+                severity="critical",
+                center_latitude=38.5,
+                center_longitude=-50.0,
+                radius_km=310.0,
+                wind_speed_knots=110.0,
+                movement_direction_deg=45.0,
+                movement_speed_knots=16.0,
+                source="nhc-miami"
+            )))
+        elif scenario_preset == "southern_ocean_gale":
+            # Violent Roaring Forties Gale south of Australia / Great Australian Bight
+            created.append(self.create_storm(db, StormCreate(
+                name="Southern Ocean Gale Force 10",
+                storm_type="gale",
+                severity="high",
+                center_latitude=-38.0,
+                center_longitude=133.0,
+                radius_km=260.0,
+                wind_speed_knots=58.0,
+                movement_direction_deg=90.0,
+                movement_speed_knots=22.0,
+                source="bom-australia-marine"
             )))
         else:
             # Generic tropical storm

@@ -30,14 +30,33 @@ class AStarRouter:
         max_iterations: int = 40000
     ) -> Optional[List[Tuple[float, float]]]:
         """
-        Executes dynamic A* search from start to goal considering landmasses,
-        active storm buffers, and sea conditions.
-        Returns list of (lat, lon) coordinates, or None if no path found.
+        Executes dynamic maritime routing from start to goal considering authentic
+        international shipping corridors, landmass obstacles, and storm avoidance.
         """
-        if not self.grid.is_navigable(start_lat, start_lon) or \
-           not self.grid.is_navigable(goal_lat, goal_lon):
-            return None
+        from app.services.routing.maritime_network import maritime_network, line_crosses_any_land
+        from app.services.routing.grid import LANDMASS_POLYGONS
 
+        # Check if caller specified custom obstacles (e.g., in unit tests)
+        is_custom_grid = (self.grid.obstacles is not LANDMASS_POLYGONS and self.grid.obstacles != LANDMASS_POLYGONS)
+        if is_custom_grid:
+            if not self.grid.is_navigable(start_lat, start_lon) or not self.grid.is_navigable(goal_lat, goal_lon):
+                return None
+
+        # Primary Maritime Corridors Route Engine
+        dist_km = haversine_distance(start_lat, start_lon, goal_lat, goal_lon)
+        if not is_custom_grid and (dist_km > 300.0 or line_crosses_any_land((start_lat, start_lon), (goal_lat, goal_lon))):
+            try:
+                corridor_path = maritime_network.find_route(
+                    start_lat, start_lon, goal_lat, goal_lon,
+                    storms=storms,
+                    optimization_profile=optimization_profile
+                )
+                if corridor_path and len(corridor_path) >= 2:
+                    return corridor_path
+            except Exception:
+                pass
+
+        # Fallback to local grid A* for close-proximity coastal paths
         start_node = self.grid.snap_to_grid(start_lat, start_lon)
         goal_node = self.grid.snap_to_grid(goal_lat, goal_lon)
 

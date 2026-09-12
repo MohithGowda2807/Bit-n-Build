@@ -19,6 +19,7 @@ export const CleanupPage: React.FC = () => {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [basemap, setBasemap] = useState<Basemap>('night');
 
   useEffect(() => {
@@ -48,32 +49,45 @@ export const CleanupPage: React.FC = () => {
         ))}
       </BaseMap>
 
-      <div className="absolute left-4 top-4 bottom-4 z-[1000]">
-        <Panel className="w-[340px] h-full p-5 flex flex-col gap-3.5 overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-lg font-medium text-white">Debris</span>
-            <Mono className="text-xs text-os-slate">sorted by severity</Mono>
-          </div>
-          <div className="flex flex-col overflow-auto pr-1">
-            {debris.map((d, i) => {
-              const active = d.id === selectedId;
-              return (
-                <button key={d.id} onClick={() => setSelectedId(d.id)}
-                  className={`flex items-center gap-3 h-14 text-left ${active ? 'bg-os-raised rounded-row px-3 -mx-3 shadow-[inset_2px_0_0_#007afc]' : `${i < debris.length - 1 ? 'border-b border-os-raised' : ''} hover:bg-os-raised/50`}`}>
-                  <RiskNumber score={d.severity} className="w-11 shrink-0" />
-                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                    <span className="text-sm font-medium text-white truncate">{d.debris_type.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())}</span>
-                    <span className="text-xs text-os-ash truncate">{Math.round(d.estimated_size_m2)} m² · {d.density_category} · {d.status.replace(/_/g, ' ')}</span>
-                  </div>
-                  <RiskBadge level={d.clean_up_priority === 'urgent' ? 'CRITICAL' : d.clean_up_priority === 'high' ? 'HIGH' : 'MODERATE'} />
-                </button>
-              );
-            })}
-            {debris.length === 0 && <span className="text-sm text-os-fog py-2">No debris reports.</span>}
-          </div>
-          <span className="text-xs text-os-ash leading-relaxed">Autonomous cleanup allocation and drift prediction arrive with Phase 4. Reports here come from the Phase 1 debris service.</span>
-        </Panel>
+      {/* Left panel collapse toggle */}
+      <div className="absolute left-4 top-4 z-[1001]">
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="bg-os-card/90 backdrop-blur-md border border-os-border/90 rounded-xl px-3 py-1.5 text-xs font-mono text-slate-200 hover:text-white hover:border-blue-500 transition shadow-lg flex items-center gap-1.5 cursor-pointer"
+        >
+          <span>{sidebarOpen ? '◀' : '▶'}</span>
+          <span className="font-semibold">{sidebarOpen ? 'Hide Debris List' : 'Show Debris List'}</span>
+        </button>
       </div>
+
+      {sidebarOpen && (
+        <div className="absolute left-4 top-14 bottom-4 z-[1000]">
+          <Panel className="w-[340px] h-full p-5 flex flex-col gap-3.5 overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-lg font-medium text-white">Debris</span>
+              <Mono className="text-xs text-os-slate">sorted by severity</Mono>
+            </div>
+            <div className="flex flex-col overflow-auto pr-1">
+              {debris.map((d, i) => {
+                const active = d.id === selectedId;
+                return (
+                  <button key={d.id} onClick={() => setSelectedId(d.id)}
+                    className={`flex items-center gap-3 h-14 text-left ${active ? 'bg-os-raised rounded-row px-3 -mx-3 shadow-[inset_2px_0_0_#007afc]' : `${i < debris.length - 1 ? 'border-b border-os-raised' : ''} hover:bg-os-raised/50`}`}>
+                    <RiskNumber score={d.severity} className="w-11 shrink-0" />
+                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                      <span className="text-sm font-medium text-white truncate">{d.debris_type.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())}</span>
+                      <span className="text-xs text-os-ash truncate">{Math.round(d.estimated_size_m2)} m² · {d.density_category} · {d.status.replace(/_/g, ' ')}</span>
+                    </div>
+                    <RiskBadge level={d.clean_up_priority === 'urgent' ? 'CRITICAL' : d.clean_up_priority === 'high' ? 'HIGH' : 'MODERATE'} />
+                  </button>
+                );
+              })}
+              {debris.length === 0 && <span className="text-sm text-os-fog py-2">No debris reports.</span>}
+            </div>
+            <span className="text-xs text-os-ash leading-relaxed">Autonomous cleanup allocation and drift prediction arrive with Phase 4. Reports here come from the Phase 1 debris service.</span>
+          </Panel>
+        </div>
+      )}
 
       <div className="absolute right-4 top-4 bottom-4 z-[1000]">
         <Panel className="w-[376px] h-full p-6 flex flex-col gap-4 overflow-hidden">

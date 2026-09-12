@@ -164,7 +164,13 @@ class MaritimeRiskEngine:
         """
         import json
         try:
-            coords = json.loads(route.geometry_geojson)
+            parsed = json.loads(route.geometry_geojson)
+            if isinstance(parsed, dict):
+                coords = parsed.get("coordinates", [])
+            elif isinstance(parsed, list):
+                coords = parsed
+            else:
+                coords = []
         except Exception:
             coords = []
 
