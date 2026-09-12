@@ -21,10 +21,10 @@
   - [x] 24-48h drift trajectory collision detection with MPAs
   - [x] Hazard calculation for commercial shipping channels
   - [x] 0-100 composite environmental risk score and narrative
-- [ ] **Task 1.4**: Autonomous Fleet Simulator & Energy/Payload Model
-  - [ ] Battery drain model (hotel load + hydrodynamic drag $v^2$ + collection gear)
-  - [ ] Payload capacity tracking & automatic return-to-base triggers
-  - [ ] Simulation step function updating drone positions along waypoints
+- [x] **Task 1.4**: Autonomous Fleet Simulator & Energy/Payload Model
+  - [x] Battery drain model (hotel load + hydrodynamic drag $v^2$ + collection gear)
+  - [x] Payload capacity tracking & automatic return-to-base triggers
+  - [x] Simulation step function updating drone positions along waypoints
 - [ ] **Task 1.5**: Mission Planner & Multi-Target VRP Optimization Engine
   - [ ] Vehicle Routing Problem (VRP) heuristic for cleanup units
   - [ ] TSP 2-opt waypoint optimization

@@ -5,6 +5,10 @@ from app.services.debris.environmental_risk import (
     point_in_polygon,
     min_distance_to_polygon_nm,
 )
+from app.services.debris.fleet_simulator import (
+    AutonomousUnitState,
+    calculate_power_consumption_kw,
+)
 
 __all__ = [
     "calculate_leeway_drift_vector",
@@ -14,4 +18,6 @@ __all__ = [
     "evaluate_debris_environmental_risk",
     "point_in_polygon",
     "min_distance_to_polygon_nm",
+    "AutonomousUnitState",
+    "calculate_power_consumption_kw",
 ]
