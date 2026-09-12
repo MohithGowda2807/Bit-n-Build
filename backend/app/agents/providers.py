@@ -51,7 +51,8 @@ def build_llm_for(spec: ProviderSpec):
         return LLM(model=spec.model, temperature=0.2)
     if spec.name == "groq":
         # Groq speaks the OpenAI protocol; CrewAI's native OpenAI provider handles tool calling.
-        return LLM(model=f"openai/{spec.model}", api_key=spec.api_key, base_url=GROQ_BASE_URL, temperature=0.2)
+        model = spec.model[7:] if spec.model.startswith("openai/") else spec.model
+        return LLM(model=f"openai/{model}", api_key=spec.api_key, base_url=GROQ_BASE_URL, temperature=0.2)
     if spec.name == "openrouter":
         os.environ["OPENROUTER_API_KEY"] = spec.api_key
         return LLM(model=f"openrouter/{spec.model}", api_key=spec.api_key, temperature=0.2)

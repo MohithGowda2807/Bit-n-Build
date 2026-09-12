@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { OceanMap, Basemap } from '../components/OceanMap';
-import { Debris, CleanupUnit, Mission, MarineZone, DebrisCluster } from '../types';
+import { Debris, CleanupUnit, Mission, MarineZone, DebrisCluster, Vessel, Port, Storm } from '../types';
 import {
   fetchDebris,
   fetchFleetUnits,
   fetchMissions,
   fetchZones,
-  fetchDebrisClusters
+  fetchDebrisClusters,
+  fetchVessels,
+  fetchPorts,
+  fetchActiveStorms
 } from '../services/api';
 import { DebrisDetailDrawer } from '../components/cleanup/DebrisDetailDrawer';
 import { FleetControlDrawer } from '../components/cleanup/FleetControlDrawer';
@@ -18,6 +21,9 @@ export const CleanupPage: React.FC = () => {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [zones, setZones] = useState<MarineZone[]>([]);
   const [clusters, setClusters] = useState<DebrisCluster[]>([]);
+  const [vessels, setVessels] = useState<Vessel[]>([]);
+  const [ports, setPorts] = useState<Port[]>([]);
+  const [storms, setStorms] = useState<Storm[]>([]);
   const [selectedDebris, setSelectedDebris] = useState<Debris | null>(null);
   const [selectedFleetUnit, setSelectedFleetUnit] = useState<CleanupUnit | null>(null);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
@@ -41,6 +47,9 @@ export const CleanupPage: React.FC = () => {
     fetchMissions().then(setMissions).catch(() => {});
     fetchZones().then(setZones).catch(() => {});
     fetchDebrisClusters().then(setClusters).catch(() => {});
+    fetchVessels().then(setVessels).catch(() => {});
+    fetchPorts().then(setPorts).catch(() => {});
+    fetchActiveStorms().then(setStorms).catch(() => {});
   };
 
   useEffect(() => {
@@ -59,12 +68,13 @@ export const CleanupPage: React.FC = () => {
       {/* Main Unified Ocean Map */}
       <div className="flex-1 h-full relative">
         <OceanMap
-          vessels={[]}
-          ports={[]}
+          vessels={vessels}
+          ports={ports}
           zones={zones}
           debris={debris}
           fleetUnits={fleetUnits}
           missions={missions}
+          storms={storms}
           debrisClusters={clusters}
           selectedDebris={selectedDebris}
           onSelectDebris={setSelectedDebris}

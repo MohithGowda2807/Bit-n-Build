@@ -34,14 +34,14 @@ class Settings(BaseSettings):
 
     # Agents (CrewAI + Gemini)
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini/gemini-3.5-flash-lite"
-    GEMINI_MAX_RPM: int = 10  # flash-lite free tier allows more than the 5 RPM of the full flash models
+    GEMINI_MODEL: str = "gemini/gemini-2.0-flash"
+    GEMINI_MAX_RPM: int = 15
     # Fallback chain: a provider is used only when its key is set. Models are free-tier, tool-capable choices.
     LLM_PROVIDER_ORDER: str = "groq,gemini,openrouter"
     GROQ_API_KEY: str = ""
-    GROQ_MODEL: str = "openai/gpt-oss-120b"
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
     OPENROUTER_API_KEY: str = ""
-    OPENROUTER_MODEL: str = "nvidia/nemotron-3-ultra-550b-a55b:free"
+    OPENROUTER_MODEL: str = "meta-llama/llama-3.3-70b-instruct:free"
 
     @property
     def cors_origins_list(self) -> List[str]:

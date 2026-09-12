@@ -3,6 +3,8 @@ import { ImpactMetricsBar } from './ImpactMetricsBar';
 import { DemoScenarioSwitcher } from './DemoScenarioSwitcher';
 import { ReportExportModal } from '../reports/ReportExportModal';
 
+import { API_BASE } from '../../services/api';
+
 export type Domain = 'logistics' | 'environment' | 'surveillance' | 'cleanup' | 'agents';
 
 const DOMAINS: { id: Domain; label: string }[] = [
@@ -24,11 +26,22 @@ interface TopBarProps {
 
 export const TopBar: React.FC<TopBarProps> = ({ domain, onDomainChange, subtitle, live, counters = [], action }) => {
   const [reportOpen, setReportOpen] = useState(false);
+  const [connModalOpen, setConnModalOpen] = useState(false);
+  const [customUrl, setCustomUrl] = useState(API_BASE);
+
+  const handleSaveApiUrl = () => {
+    if (customUrl.trim()) {
+      localStorage.setItem('triton_api_url', customUrl.trim());
+    } else {
+      localStorage.removeItem('triton_api_url');
+    }
+    window.location.reload();
+  };
 
   return (
     <>
       <header className="h-14 flex items-center justify-between px-6 bg-os-deep/95 backdrop-blur-md border-b border-os-border/80 shrink-0 z-50">
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-center gap-3.5 shrink-0">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 p-0.5 flex items-center justify-center shadow-lg shadow-blue-500/20">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
@@ -45,7 +58,7 @@ export const TopBar: React.FC<TopBarProps> = ({ domain, onDomainChange, subtitle
           </div>
         </div>
 
-        <nav className="flex items-center gap-1 bg-os-void/70 p-1 rounded-full border border-os-border/70" aria-label="Domains">
+        <nav className="flex items-center gap-1 bg-os-void/70 p-1 rounded-full border border-os-border/70 shrink-0" aria-label="Domains">
           {DOMAINS.map(d => (
             <button
               key={d.id}
@@ -64,7 +77,7 @@ export const TopBar: React.FC<TopBarProps> = ({ domain, onDomainChange, subtitle
         {/* Live Sustainability Impact Metrics Ticker */}
         <ImpactMetricsBar />
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 shrink-0">
           {/* 1-Click Demo Scenario Switcher */}
           <DemoScenarioSwitcher
             onNavigateDomain={(dom) => onDomainChange(dom as Domain)}
@@ -80,17 +93,89 @@ export const TopBar: React.FC<TopBarProps> = ({ domain, onDomainChange, subtitle
             <span className="hidden sm:inline">Briefing</span>
           </button>
 
-          <span
-            className={`os-eyebrow flex items-center gap-1.5 px-[7px] py-1 rounded-badge text-white ${
-              live ? 'bg-os-clear' : 'bg-os-steel'
+          <button
+            onClick={() => setConnModalOpen(true)}
+            className={`os-eyebrow flex items-center gap-1.5 px-[8px] py-1 rounded-full text-white cursor-pointer transition hover:opacity-90 ${
+              live ? 'bg-emerald-600/80 hover:bg-emerald-500' : 'bg-amber-600/80 hover:bg-amber-500'
             }`}
+            title="Click to view or configure Backend API Connection"
           >
-            <span className={`w-1.5 h-1.5 rounded-full bg-white ${live ? 'os-live-dot' : ''}`} />
-            {live ? 'Live' : 'Offline'}
-          </span>
+            <span className={`w-1.5 h-1.5 rounded-full bg-white ${live ? 'os-live-dot' : 'animate-ping'}`} />
+            <span>{live ? 'Live' : 'Offline / Seed'}</span>
+          </button>
           {action}
         </div>
       </header>
+
+      {/* Backend Connection Modal */}
+      {connModalOpen && (
+        <div className="fixed inset-0 z-[2000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl font-mono text-xs">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📡</span>
+                <h3 className="font-bold text-white text-sm">TRITON Cloud Backend Link</h3>
+              </div>
+              <button
+                onClick={() => setConnModalOpen(false)}
+                className="text-slate-400 hover:text-white cursor-pointer text-base"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <span className="text-slate-400 block mb-1">Current Backend API Endpoint:</span>
+                <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-cyan-400 break-all select-all font-semibold">
+                  {API_BASE || '(Relative root / Self-hosted)'}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400">Connection State:</span>
+                <span className={`px-2 py-0.5 rounded font-bold ${live ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
+                  {live ? '● Connected (Live Uvicorn API)' : '⚠️ Booting / Standby (Seed Data Active)'}
+                </span>
+              </div>
+
+              <div>
+                <label className="text-slate-300 block mb-1 font-semibold">
+                  Custom Backend URL (Render or Local):
+                </label>
+                <input
+                  type="text"
+                  value={customUrl}
+                  onChange={(e) => setCustomUrl(e.target.value)}
+                  placeholder="https://your-backend.onrender.com"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 font-mono"
+                />
+                <span className="text-[10px] text-slate-500 block mt-1">
+                  Paste your active Render web service URL or keep blank for auto-discovery.
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('triton_api_url');
+                    window.location.reload();
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer"
+                >
+                  Reset Default
+                </button>
+                <button
+                  onClick={handleSaveApiUrl}
+                  className="px-4 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition cursor-pointer"
+                >
+                  Save & Reconnect
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Report */}
       <ReportExportModal

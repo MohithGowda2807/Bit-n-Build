@@ -16,7 +16,7 @@ export const ImpactMetricsBar: React.FC = () => {
   if (!metrics) return null;
 
   return (
-    <div className="hidden lg:flex items-center space-x-3 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800 text-[11px] font-mono shadow-inner">
+    <div className="hidden xl:flex items-center space-x-3 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800 text-[11px] font-mono shadow-inner shrink-0">
       <div className="flex items-center space-x-1.5" title="Total CO2 emissions eliminated through eco-routing">
         <span className="text-emerald-400">🌿</span>
         <span className="font-bold text-white">{metrics.co2_avoided_tonnes}t</span>

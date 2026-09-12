@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: oceansentinel-backend
+    name: oceansentinel-triton-api
     runtime: python
     plan: free
     branch: main
@@ -16,6 +16,10 @@ services:
         value: production
       - key: CORS_ORIGINS
         value: "*"
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
 
   - type: web
     name: oceansentinel-frontend
@@ -26,8 +30,9 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        value: https://oceansentinel-backend.onrender.com
+        value: https://oceansentinel-triton-api.onrender.com
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
+

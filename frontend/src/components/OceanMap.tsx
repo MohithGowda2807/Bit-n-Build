@@ -8,6 +8,7 @@ import {
   Tooltip,
   Polyline,
   Polygon,
+  ZoomControl,
   useMap,
   useMapEvents
 } from 'react-leaflet';
@@ -296,9 +297,11 @@ export const OceanMap: React.FC<OceanMapProps> = ({
         center={[15.0, 75.0]}
         zoom={4}
         scrollWheelZoom={true}
+        zoomControl={false}
         className="w-full h-full"
         style={{ background: '#070f1e' }}
       >
+        <ZoomControl position="bottomright" />
         <MapEventsHandler
           mapSelectionMode={mapSelectionMode}
           onSelectCoordinate={onSelectCoordinate}
