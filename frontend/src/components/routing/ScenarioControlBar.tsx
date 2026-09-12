@@ -88,7 +88,7 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
   };
 
  return (
-    <div className="w-full bg-os-panel border-b border-os-steel px-6 py-2 flex flex-wrap items-center justify-between gap-3 shrink-0 z-30">
+    <div className="w-full bg-os-panel border-b border-os-steel px-4 py-1.5 flex items-center justify-between gap-3 shrink-0 z-30 overflow-x-auto whitespace-nowrap os-scrollbar">
       {/* Left: Mode Selector */}
       <div className="flex items-center gap-3">
         <span className="text-[11px] uppercase font-mono font-semibold tracking-wider text-os-ash">Agent Mode</span>

@@ -119,6 +119,12 @@ export const TopBar: React.FC<TopBarProps> = ({
           )}
           <DemoScenarioSwitcher onNavigateDomain={dom => onDomainChange(dom as Domain)} />
           <GhostLink className="text-[13px]" onClick={() => setReportOpen(true)} title="Generate the executive briefing">Briefing</GhostLink>
+          {onGoToLanding && (
+            <GhostLink className="text-[13px] flex items-center gap-1" onClick={onGoToLanding} title="Return to TRITON Public Landing Page & Simulator">
+              <span>🌐</span>
+              <span>Portal</span>
+            </GhostLink>
+          )}
           <label className="flex items-center gap-2" title="Role sent with every request; the API enforces it">
             <span className="os-eyebrow text-os-slate">Role</span>
             <select
