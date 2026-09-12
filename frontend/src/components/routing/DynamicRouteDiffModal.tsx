@@ -15,22 +15,24 @@ export const DynamicRouteDiffModal: React.FC<DynamicRouteDiffModalProps> = ({
   if (!diff) return null;
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-os-raised border border-os-pewter rounded-panel w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-os-card border border-os-border rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col os-reveal">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-os-pewter flex items-center justify-between bg-os-deep/50">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">⚡</span>
+        <div className="px-6 py-4 border-b border-os-border flex items-center justify-between bg-os-surface/60">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+              ⚡
+            </div>
             <div>
-              <h3 className="text-base font-semibold text-white">Dynamic Route Recalculation</h3>
+              <h3 className="text-base font-bold text-white tracking-tight">Dynamic Route Recalculation</h3>
               <p className="text-xs text-os-ash font-mono">
-                Voyage #{diff.voyage_id} · Version {diff.version_number}
+                Voyage #{diff.voyage_id} · Route Lineage Version {diff.version_number}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-os-ash hover:text-white text-lg font-mono px-2 py-1 rounded"
+            className="w-8 h-8 rounded-lg hover:bg-white/10 text-os-ash hover:text-white flex items-center justify-center transition"
           >
             ✕
           </button>
@@ -39,14 +41,14 @@ export const DynamicRouteDiffModal: React.FC<DynamicRouteDiffModalProps> = ({
         {/* Content */}
         <div className="p-6 flex flex-col gap-5">
           {/* Status Badge */}
-          <div className="flex items-center justify-between p-3 rounded-input bg-os-deep border border-os-pewter">
-            <span className="text-xs font-mono uppercase text-os-ash">Execution Status:</span>
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-os-void/80 border border-os-border">
+            <span className="text-xs font-mono uppercase font-semibold text-os-ash">Execution Status</span>
             {diff.applied ? (
-              <span className="px-2.5 py-0.5 rounded bg-emerald-950 border border-emerald-700 text-emerald-300 font-mono text-xs font-semibold">
-                ✓ AUTO-APPLIED TO VOYAGE
+              <span className="px-3 py-1 rounded-md bg-emerald-950/80 border border-emerald-700/80 text-emerald-300 font-mono text-xs font-bold">
+                ✓ AUTO-COMMITTED TO VOYAGE
               </span>
             ) : (
-              <span className="px-2.5 py-0.5 rounded bg-yellow-950 border border-yellow-700 text-yellow-300 font-mono text-xs font-semibold">
+              <span className="px-3 py-1 rounded-md bg-amber-950/80 border border-amber-700/80 text-amber-300 font-mono text-xs font-bold">
                 PENDING OPERATOR APPROVAL
               </span>
             )}
@@ -54,38 +56,38 @@ export const DynamicRouteDiffModal: React.FC<DynamicRouteDiffModalProps> = ({
 
           {/* Differential Metrics Cards */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="p-3 rounded-input bg-os-deep border border-os-pewter flex flex-col">
-              <span className="text-[11px] font-mono text-os-ash uppercase">Risk Reduction</span>
-              <span className="text-lg font-bold text-emerald-400 font-mono mt-1">
+            <div className="p-3.5 rounded-xl bg-os-void/80 border border-os-border flex flex-col">
+              <span className="text-[10px] font-mono text-os-ash uppercase font-semibold">Risk Reduction</span>
+              <span className="text-2xl font-bold text-emerald-400 font-mono mt-1">
                 {diff.risk_reduction_pct > 0 ? `-${diff.risk_reduction_pct}%` : '0%'}
               </span>
-              <span className="text-[10px] text-os-slate mt-0.5">Hazard Clearance</span>
+              <span className="text-[11px] text-os-slate mt-0.5">Hazard Clearance</span>
             </div>
 
-            <div className="p-3 rounded-input bg-os-deep border border-os-pewter flex flex-col">
-              <span className="text-[11px] font-mono text-os-ash uppercase">Fuel Delta</span>
-              <span className="text-lg font-bold text-amber-300 font-mono mt-1">
+            <div className="p-3.5 rounded-xl bg-os-void/80 border border-os-border flex flex-col">
+              <span className="text-[10px] font-mono text-os-ash uppercase font-semibold">Fuel Delta</span>
+              <span className="text-2xl font-bold text-amber-400 font-mono mt-1">
                 {diff.fuel_change_pct >= 0 ? `+${diff.fuel_change_pct}%` : `${diff.fuel_change_pct}%`}
               </span>
-              <span className="text-[10px] text-os-slate mt-0.5">Avoidance Penalty</span>
+              <span className="text-[11px] text-os-slate mt-0.5">Avoidance Penalty</span>
             </div>
 
-            <div className="p-3 rounded-input bg-os-deep border border-os-pewter flex flex-col">
-              <span className="text-[11px] font-mono text-os-ash uppercase">ETA Impact</span>
-              <span className="text-lg font-bold text-sky-300 font-mono mt-1">
+            <div className="p-3.5 rounded-xl bg-os-void/80 border border-os-border flex flex-col">
+              <span className="text-[10px] font-mono text-os-ash uppercase font-semibold">ETA Impact</span>
+              <span className="text-2xl font-bold text-sky-400 font-mono mt-1">
                 {diff.eta_change_hours >= 0 ? `+${diff.eta_change_hours}h` : `${diff.eta_change_hours}h`}
               </span>
-              <span className="text-[10px] text-os-slate mt-0.5">Travel Time</span>
+              <span className="text-[11px] text-os-slate mt-0.5">Travel Duration</span>
             </div>
           </div>
 
           {/* Reasons List */}
           <div>
-            <h4 className="text-xs font-mono uppercase tracking-wider text-os-ash mb-2">Agent Rationale & Triggers:</h4>
-            <ul className="space-y-1.5">
+            <h4 className="text-xs font-mono uppercase font-semibold tracking-wider text-os-ash mb-2.5">Commander Rationale & Triggers:</h4>
+            <ul className="space-y-2">
               {diff.reasons.map((r, i) => (
-                <li key={i} className="text-xs text-os-fog flex items-start gap-2 bg-os-deep/60 p-2.5 rounded border border-os-pewter/60">
-                  <span className="text-yellow-400 mt-0.5">▸</span>
+                <li key={i} className="text-xs text-os-fog flex items-start gap-2.5 bg-os-void/70 p-3 rounded-lg border border-os-border/70">
+                  <span className="text-amber-400 font-bold mt-0.5">▸</span>
                   <span className="leading-relaxed">{r}</span>
                 </li>
               ))}
@@ -94,19 +96,19 @@ export const DynamicRouteDiffModal: React.FC<DynamicRouteDiffModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-os-pewter flex items-center justify-end gap-3 bg-os-deep/30">
+        <div className="px-6 py-4 border-t border-os-border flex items-center justify-end gap-3 bg-os-surface/40">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-mono text-os-ash hover:text-white transition"
+            className="px-4 py-2 text-xs font-mono font-medium text-os-fog hover:text-white rounded-lg hover:bg-white/5 transition"
           >
             Dismiss
           </button>
           {!diff.applied && onAccept && (
             <button
               onClick={() => { onAccept(); onClose(); }}
-              className="px-4 py-2 text-xs font-mono font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded transition shadow"
+              className="px-4 py-2 text-xs font-mono font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition shadow-md shadow-emerald-600/20"
             >
-              Approve & Deploy New Route
+              Approve & Deploy Route
             </button>
           )}
         </div>

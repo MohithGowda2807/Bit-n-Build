@@ -50,3 +50,33 @@
 .leaflet-control-attribution a {
   color: var(--os-ash) !important;
 }
+
+/* Custom sleek scrollbar for enterprise feel */
+.os-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.os-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.os-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+}
+.os-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.os-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+/* Form controls: ensure dark background for native selects/dropdowns */
+select {
+  background-color: var(--os-card, #121620);
+  color: #ffffff;
+}
+select option {
+  background-color: #121620;
+  color: #ffffff;
+}

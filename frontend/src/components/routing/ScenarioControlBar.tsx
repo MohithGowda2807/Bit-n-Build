@@ -81,19 +81,19 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
   };
 
   return (
-    <div className="bg-os-raised/95 backdrop-blur border border-os-pewter rounded-panel px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+    <div className="w-full bg-os-card/95 backdrop-blur-md border-b border-os-border/80 px-6 py-2 flex flex-wrap items-center justify-between gap-3 shadow-md shrink-0 z-30">
       {/* Left: Mode Selector */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs uppercase font-mono tracking-wider text-os-ash">Agent Mode:</span>
-        <div className="inline-flex rounded-input bg-os-deep p-0.5 border border-os-pewter">
+      <div className="flex items-center gap-3">
+        <span className="text-[11px] uppercase font-mono font-semibold tracking-wider text-os-ash">Agent Mode</span>
+        <div className="inline-flex rounded-lg bg-os-void/80 p-0.5 border border-os-border/80">
           {(['advisory', 'semi_autonomous', 'autonomous'] as const).map(m => (
             <button
               key={m}
               onClick={() => handleModeToggle(m)}
-              className={`px-2.5 py-1 text-xs font-mono rounded transition-colors ${
+              className={`px-3 py-1 text-xs font-mono rounded-md transition-all ${
                 operatingMode === m
-                  ? 'bg-blue-600 text-white font-semibold shadow'
-                  : 'text-os-ash hover:text-white'
+                  ? 'bg-blue-600 text-white font-bold shadow-sm'
+                  : 'text-os-fog hover:text-white hover:bg-white/5'
               }`}
             >
               {m === 'semi_autonomous' ? 'Semi-Auto' : m.toUpperCase()}
@@ -103,30 +103,30 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
       </div>
 
       {/* Middle: Scenario Preset Injection */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs uppercase font-mono tracking-wider text-os-ash">Hazard Injection:</span>
+      <div className="flex items-center gap-2.5">
+        <span className="text-[11px] uppercase font-mono font-semibold tracking-wider text-os-ash">Scenario</span>
         <select
           value={selectedPreset}
           onChange={e => setSelectedPreset(e.target.value)}
-          className="bg-os-deep border border-os-pewter text-white text-xs font-mono rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500"
+          className="bg-os-void text-white border border-os-border text-xs font-mono rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 max-w-[320px] truncate"
         >
-          <option value="bay_of_bengal_cyclone">🌀 Cyclone Vardah (Bay of Bengal / Malacca)</option>
-          <option value="malacca_squall">⛈️ Sumatra Squall (Malacca Strait Choke)</option>
-          <option value="arabian_sea_monsoon">🌊 Monsoon Depression (Arabian Sea / Gulf)</option>
+          <option value="bay_of_bengal_cyclone" className="bg-[#121620] text-white">🌀 Cyclone Vardah (Bay of Bengal / Malacca)</option>
+          <option value="malacca_squall" className="bg-[#121620] text-white">⛈️ Sumatra Squall (Malacca Strait Choke)</option>
+          <option value="arabian_sea_monsoon" className="bg-[#121620] text-white">🌊 Monsoon Depression (Arabian Sea / Gulf)</option>
         </select>
         <button
           onClick={handleInject}
           disabled={loading}
-          className="bg-red-700 hover:bg-red-600 text-white text-xs font-mono px-3 py-1.5 rounded transition disabled:opacity-50 flex items-center gap-1 font-semibold"
+          className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition disabled:opacity-50"
         >
-          <span>⚡</span> Inject Storm
+          <span>⚡</span> Inject Hazard
         </button>
         <button
           onClick={handleReset}
           disabled={loading}
-          className="bg-os-slate/40 hover:bg-os-slate/60 text-os-fog text-xs font-mono px-2.5 py-1.5 rounded border border-os-pewter transition"
+          className="bg-os-surface hover:bg-os-border/80 text-os-fog hover:text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-os-border transition"
         >
-          Reset Calm
+          Clear Ocean
         </button>
       </div>
 
@@ -135,25 +135,25 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
         <button
           onClick={handleManualCycle}
           disabled={loading}
-          className="bg-blue-600/80 hover:bg-blue-600 text-white text-xs font-mono px-3 py-1.5 rounded transition disabled:opacity-50 flex items-center gap-1"
+          className="bg-blue-600/90 hover:bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition disabled:opacity-50"
         >
-          <span>🔄</span> Run Agent Cycle
+          <span>🔄</span> Run Commander Loop
         </button>
 
         {activeStorms.length > 0 ? (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-red-950/80 border border-red-800 text-red-300 font-mono text-xs animate-pulse">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-950/80 border border-rose-800 text-rose-300 font-mono text-xs font-medium animate-pulse">
             <span>⚠️</span>
             <span>{activeStorms.length} Active Storm{activeStorms.length > 1 ? 's' : ''}</span>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-950/60 border border-emerald-800 text-emerald-300 font-mono text-xs">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950/70 border border-emerald-800 text-emerald-300 font-mono text-xs font-medium">
             <span>✓</span>
-            <span>Seas Normal</span>
+            <span>Ocean Calm</span>
           </div>
         )}
 
         {statusMessage && (
-          <span className="text-xs font-mono text-yellow-300 animate-fade-in">{statusMessage}</span>
+          <span className="text-xs font-mono text-amber-300 animate-fade-in px-2 py-0.5 rounded bg-amber-950/60 border border-amber-800/80">{statusMessage}</span>
         )}
       </div>
     </div>

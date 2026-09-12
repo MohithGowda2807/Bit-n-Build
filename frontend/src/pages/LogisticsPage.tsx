@@ -32,7 +32,9 @@ export const LogisticsPage: React.FC = () => {
   const [routeVersions, setRouteVersions] = useState<RouteVersion[]>([]);
   const [diffModal, setDiffModal] = useState<RecalculateRouteResponse | null>(null);
   const [isRerouting, setIsRerouting] = useState<boolean>(false);
-  const [basemap, setBasemap] = useState<Basemap>('chart');
+  const [basemap, setBasemap] = useState<Basemap>('night');
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<'planner' | 'lineage'>('planner');
 
   const [vesselId, setVesselId] = useState<number | null>(null);
   const [origin, setOrigin] = useState<Coordinate | null>(null);
@@ -134,26 +136,28 @@ export const LogisticsPage: React.FC = () => {
   };
 
   const selectedVessel = vessels.find(v => v.id === vesselId) ?? null;
-  const rightInset = result ? 408 : 16;
+  const rightInset = result ? 416 : 16;
 
   return (
-    <div className="relative flex-1 min-h-0 flex flex-col">
-      {/* Simulation Scenario & Mode Control Bar */}
-      <div className="absolute top-4 left-4 right-4 z-[1001]">
-        <ScenarioControlBar
-          activeStorms={storms}
-          operatingMode={operatingMode}
-          onStormsChanged={setStorms}
-          onModeChanged={setOperatingModeState}
-          onCycleExecuted={handleCycleExecuted}
-        />
-      </div>
+    <div className="relative flex-1 min-h-0 flex flex-col bg-os-void overflow-hidden">
+      {/* 1. Integrated Mission Control Strip */}
+      <ScenarioControlBar
+        activeStorms={storms}
+        operatingMode={operatingMode}
+        onStormsChanged={setStorms}
+        onModeChanged={setOperatingModeState}
+        onCycleExecuted={handleCycleExecuted}
+      />
 
-      <div className="absolute inset-0 [&>div]:!rounded-none [&>div]:!border-0 [&>div]:!shadow-none [&>div]:!min-h-0">
+      {/* 2. Interactive Map Canvas Workspace */}
+      <div className="relative flex-1 min-h-0">
         <OceanMap
-          vessels={vessels} ports={ports} zones={zones}
+          vessels={vessels}
+          ports={ports}
+          zones={zones}
           selectedVessel={selectedVessel}
-          origin={origin} destination={destination}
+          origin={origin}
+          destination={destination}
           activeRoute={result?.recommended_route ?? null}
           alternativeRoutes={result?.alternatives ?? []}
           selectedAlternativeIndex={altIndex}
@@ -161,197 +165,328 @@ export const LogisticsPage: React.FC = () => {
           mapSelectionMode={pickMode}
           onSelectCoordinate={onPick}
           replayPosition={replayPos}
-          basemap={basemap} onBasemapChange={setBasemap} showLayerBar={false}
+          basemap={basemap}
+          onBasemapChange={setBasemap}
+          showLayerBar={false}
           storms={storms}
         />
-      </div>
 
-      {pickMode && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[1000] os-reveal">
-          <Mono className="text-xs text-white bg-os-signal px-3 py-1.5 rounded-pill">Click the map to set the {pickMode}</Mono>
-        </div>
-      )}
-
-      {/* Route planner panel */}
-      <div className="absolute left-4 top-20 bottom-4 z-[1000] flex flex-col gap-4 overflow-y-auto pointer-events-none">
-        <Panel className="w-[320px] p-5 flex flex-col gap-4 pointer-events-auto">
-          <div className="flex items-center justify-between">
-            <span className="text-lg font-medium text-white">Route planner</span>
-            <span className="text-xs font-mono px-2 py-0.5 rounded bg-blue-950 border border-blue-800 text-blue-300">Phase 2 A*</span>
+        {/* Floating Pick Mode Hint */}
+        {pickMode && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] os-reveal">
+            <Mono className="text-xs text-white bg-os-signal px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+              Click anywhere on the oceanic chart to set {pickMode.toUpperCase()}
+            </Mono>
           </div>
+        )}
 
-          <label className="flex flex-col gap-1.5">
-            <Eyebrow>Vessel</Eyebrow>
-            <select
-              value={vesselId ?? ''}
-              onChange={e => setVesselId(Number(e.target.value))}
-              className="bg-os-raised text-white text-sm border border-os-pewter rounded-input px-3 py-2 focus:outline-none focus:border-os-silver"
-            >
-              {vessels.map(v => (
-                <option key={v.id} value={v.id}>{v.name} ({v.vessel_type})</option>
-              ))}
-            </select>
-          </label>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <Eyebrow>Origin</Eyebrow>
-                <GhostLink className="text-[11px]" onClick={() => setPickMode('origin')}>Pick</GhostLink>
-              </div>
-              <div className="px-3 py-2 rounded-input bg-os-raised border border-os-pewter">
-                <Mono className="text-xs text-white truncate">{origin ? `${origin.latitude.toFixed(2)}, ${origin.longitude.toFixed(2)}` : 'unset'}</Mono>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <Eyebrow>Destination</Eyebrow>
-                <GhostLink className="text-[11px]" onClick={() => setPickMode('destination')}>Pick</GhostLink>
-              </div>
-              <div className="px-3 py-2 rounded-input bg-os-raised border border-os-pewter">
-                <Mono className="text-xs text-white truncate">{destination ? `${destination.latitude.toFixed(2)}, ${destination.longitude.toFixed(2)}` : 'unset'}</Mono>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Eyebrow>Optimization Goal</Eyebrow>
-            <div className="grid grid-cols-2 gap-1.5">
-              {MODES.map(m => (
+        {/* 3. Left Operations Studio (Collapsible Dock) */}
+        {sidebarOpen ? (
+          <div className="absolute left-4 top-4 bottom-4 z-[1000] flex flex-col pointer-events-none os-reveal">
+            <div className="w-[350px] h-full bg-os-card/95 backdrop-blur-xl border border-os-border rounded-2xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden">
+              {/* Studio Header */}
+              <div className="px-5 py-3.5 border-b border-os-border flex items-center justify-between bg-os-surface/50">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-white tracking-tight">Route Operations</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/20 border border-blue-500/40 text-blue-300 font-semibold">
+                    A* v2
+                  </span>
+                </div>
                 <button
-                  key={m.id}
-                  onClick={() => setMode(m.id)}
-                  className={`px-2 py-1.5 text-xs font-mono rounded border transition text-left ${
-                    mode === m.id
-                      ? 'bg-blue-600/30 border-blue-500 text-white font-semibold'
-                      : 'bg-os-raised border-os-pewter text-os-ash hover:text-white'
+                  onClick={() => setSidebarOpen(false)}
+                  title="Collapse Panel"
+                  className="w-7 h-7 rounded-lg hover:bg-white/10 text-os-ash hover:text-white flex items-center justify-center transition"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
+                </button>
+              </div>
+
+              {/* Sub-tabs: Planner vs Lineage */}
+              <div className="px-5 pt-3 pb-1 flex border-b border-os-border/70 gap-3">
+                <button
+                  onClick={() => setActiveTab('planner')}
+                  className={`text-xs font-semibold pb-2 border-b-2 transition ${
+                    activeTab === 'planner'
+                      ? 'border-os-signal text-white'
+                      : 'border-transparent text-os-ash hover:text-white'
                   }`}
                 >
-                  {m.label}
+                  Route Planner
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {error && <span className="text-xs text-red-400">{error}</span>}
-
-          <div className="flex flex-col gap-2 pt-1">
-            <PrimaryPill className="w-full justify-center !py-2.5" onClick={generate} disabled={loading}>
-              {loading ? 'Optimizing Corridor...' : 'Calculate Routes'}
-            </PrimaryPill>
-
-            {/* Dynamic Hazard Recalculate Button */}
-            {storms.length > 0 && (
-              <button
-                onClick={handleDynamicReroute}
-                disabled={isRerouting}
-                className="w-full py-2 px-3 rounded text-xs font-mono font-semibold bg-red-700 hover:bg-red-600 text-white border border-red-500/80 shadow transition flex items-center justify-center gap-1.5 disabled:opacity-50"
-              >
-                <span>⚡</span>
-                <span>{isRerouting ? 'Rerouting...' : 'Autonomous Storm Avoidance'}</span>
-              </button>
-            )}
-          </div>
-
-          {/* Route Version Lineage */}
-          {routeVersions.length > 0 && (
-            <div className="pt-2 border-t border-os-pewter/60">
-              <VoyageTimeline versions={routeVersions} />
-            </div>
-          )}
-        </Panel>
-      </div>
-
-      {/* Inspected route details panel */}
-      {result && inspected && (
-        <div className="absolute right-4 top-20 bottom-4 z-[1000]">
-          <Panel className="w-[376px] h-full p-6 flex flex-col gap-5 overflow-hidden">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <Eyebrow>{altIndex === null ? 'Recommended' : 'Alternative'} · {inspected.optimization_mode.replace('_', ' ')}</Eyebrow>
-                <button onClick={() => { setResult(null); setPlaying(false); setProgress(0); }} className="text-os-ash hover:text-white" aria-label="Close">
-                  <svg width="20" height="20" viewBox="0 0 20 20" stroke="currentColor" strokeWidth="1.5" fill="none"><path d="M5 5l10 10M15 5L5 15" /></svg>
+                <button
+                  onClick={() => setActiveTab('lineage')}
+                  className={`text-xs font-semibold pb-2 border-b-2 transition flex items-center gap-1.5 ${
+                    activeTab === 'lineage'
+                      ? 'border-os-signal text-white'
+                      : 'border-transparent text-os-ash hover:text-white'
+                  }`}
+                >
+                  Lineage History
+                  {routeVersions.length > 0 && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-300">
+                      {routeVersions.length}
+                    </span>
+                  )}
                 </button>
               </div>
-              <span className="text-2xl font-bold text-white tracking-tight leading-[1.33]">{inspected.name}</span>
-              <Mono className="text-xs text-os-ash">ETA {formatClock(inspected.eta)} · risk {Math.round(inspected.risk_score)}/100 · env {Math.round(inspected.environmental_score)}/100</Mono>
-            </div>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-              {[
-                ['Distance', `${fmt(inspected.distance_km)} km`],
-                ['Time', `${fmt(inspected.estimated_time_hours, 1)} h`],
-                ['Fuel', `${fmt(inspected.estimated_fuel_liters)} L`],
-                ['CO₂', `${fmt(inspected.estimated_co2_kg / 1000, 1)} t`],
-                ['Cost', `$${fmt(inspected.estimated_cost)}`],
-                ['Score', `${fmt(inspected.optimization_score, 1)}`],
-              ].map(([k, v]) => (
-                <div key={k} className="flex flex-col gap-0.5">
-                  <Eyebrow>{k}</Eyebrow>
-                  <Mono className="text-[15px] text-white">{v}</Mono>
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto os-scrollbar p-5 flex flex-col gap-4">
+                {activeTab === 'planner' ? (
+                  <>
+                    <label className="flex flex-col gap-1.5">
+                      <Eyebrow>Vessel in Command</Eyebrow>
+                      <select
+                        value={vesselId ?? ''}
+                        onChange={e => setVesselId(Number(e.target.value))}
+                        className="bg-os-void text-white text-xs font-mono border border-os-border rounded-lg px-3 py-2.5 focus:outline-none focus:border-blue-500"
+                      >
+                        {vessels.map(v => (
+                          <option key={v.id} value={v.id} className="bg-[#121620] text-white">
+                            {v.name} ({v.vessel_type})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between">
+                          <Eyebrow>Origin</Eyebrow>
+                          <button
+                            onClick={() => setPickMode('origin')}
+                            className="text-[11px] font-mono text-blue-400 hover:text-blue-300 font-semibold"
+                          >
+                            Pick Map
+                          </button>
+                        </div>
+                        <div className="px-3 py-2 rounded-lg bg-os-void border border-os-border">
+                          <Mono className="text-xs text-white truncate block">
+                            {origin ? `${origin.latitude.toFixed(2)}, ${origin.longitude.toFixed(2)}` : 'Click Pick'}
+                          </Mono>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between">
+                          <Eyebrow>Destination</Eyebrow>
+                          <button
+                            onClick={() => setPickMode('destination')}
+                            className="text-[11px] font-mono text-blue-400 hover:text-blue-300 font-semibold"
+                          >
+                            Pick Map
+                          </button>
+                        </div>
+                        <div className="px-3 py-2 rounded-lg bg-os-void border border-os-border">
+                          <Mono className="text-xs text-white truncate block">
+                            {destination ? `${destination.latitude.toFixed(2)}, ${destination.longitude.toFixed(2)}` : 'Click Pick'}
+                          </Mono>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Eyebrow>Optimization Objective</Eyebrow>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {MODES.map(m => (
+                          <button
+                            key={m.id}
+                            onClick={() => setMode(m.id)}
+                            className={`px-3 py-2 text-xs font-mono rounded-lg border transition text-left flex flex-col gap-0.5 ${
+                              mode === m.id
+                                ? 'bg-blue-600/20 border-blue-500 text-white font-bold shadow-sm'
+                                : 'bg-os-void/70 border-os-border text-os-ash hover:text-white hover:border-os-silver/40'
+                            }`}
+                          >
+                            <span>{m.label}</span>
+                            <span className="text-[10px] text-os-slate font-sans truncate">{m.hint}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {error && (
+                      <div className="p-2.5 rounded-lg bg-rose-950/80 border border-rose-800 text-rose-300 text-xs font-mono">
+                        {error}
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-2 pt-2">
+                      <button
+                        onClick={generate}
+                        disabled={loading}
+                        className="w-full py-2.5 px-4 rounded-lg bg-os-signal hover:bg-os-signal-hover text-white text-xs font-bold font-mono tracking-wide shadow-lg shadow-blue-500/20 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {loading ? 'Optimizing Corridor…' : 'Calculate Routes'}
+                      </button>
+
+                      {storms.length > 0 && (
+                        <button
+                          onClick={handleDynamicReroute}
+                          disabled={isRerouting}
+                          className="w-full py-2.5 px-4 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold font-mono tracking-wide border border-rose-500 shadow-lg shadow-rose-600/20 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          <span>⚡</span>
+                          <span>{isRerouting ? 'Computing Safe Detour…' : 'Autonomous Storm Avoidance'}</span>
+                        </button>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <VoyageTimeline versions={routeVersions} />
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Collapsed Floating Toggle Button */
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="absolute left-4 top-4 z-[1000] px-4 py-2 rounded-xl bg-os-card/95 backdrop-blur-md border border-os-border text-white text-xs font-bold font-mono shadow-xl flex items-center gap-2 hover:bg-os-surface transition"
+          >
+            <span>🧭</span>
+            <span>Route Studio</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
+          </button>
+        )}
+
+        {/* 4. Right Route Details Drawer (When Calculated) */}
+        {result && inspected && (
+          <div className="absolute right-4 top-4 bottom-4 z-[1000] flex flex-col pointer-events-none os-reveal">
+            <div className="w-[390px] h-full bg-os-card/95 backdrop-blur-xl border border-os-border rounded-2xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden">
+              {/* Header */}
+              <div className="px-5 py-3.5 border-b border-os-border flex items-center justify-between bg-os-surface/50">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400">
+                    {altIndex === null ? '★ Recommended Route' : 'Alternative Path'} · {inspected.optimization_mode.replace('_', ' ')}
+                  </span>
+                  <span className="text-base font-bold text-white tracking-tight truncate max-w-[280px]">
+                    {inspected.name}
+                  </span>
                 </div>
-              ))}
-            </div>
-
-            {altIndex === null && (
-              <div className="flex items-center gap-3 px-3 py-2.5 rounded-row bg-os-raised">
-                <span className="os-eyebrow px-[7px] py-1 rounded-badge text-white" style={{ background: '#2fae6e' }}>vs {result.explanation.baseline_mode.replace('_', ' ')}</span>
-                <Mono className="text-xs text-os-fog">fuel <span className="text-white">−{fmt(result.explanation.savings_percentage_fuel, 1)}%</span> · CO₂ <span className="text-white">−{fmt(result.explanation.savings_percentage_co2, 1)}%</span></Mono>
+                <button
+                  onClick={() => { setResult(null); setPlaying(false); setProgress(0); }}
+                  className="w-7 h-7 rounded-lg hover:bg-white/10 text-os-ash hover:text-white flex items-center justify-center transition"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
               </div>
-            )}
 
-            <div className="flex flex-col gap-3 flex-1 min-h-0 overflow-auto pr-1">
-              <Eyebrow>Why this route</Eyebrow>
-              <span className="text-[15px] leading-relaxed text-os-fog">{result.explanation.recommendation}</span>
-              {result.explanation.reasons.map((r, i) => (
-                <div key={i} className="flex gap-3"><Mono className="text-[13px] w-5 shrink-0 text-os-clear">+</Mono><span className="text-sm text-os-fog leading-relaxed">{r}</span></div>
-              ))}
-              {result.explanation.tradeoffs.map((r, i) => (
-                <div key={i} className="flex gap-3"><Mono className="text-[13px] w-5 shrink-0 text-os-ash">−</Mono><span className="text-sm text-os-ash leading-relaxed">{r}</span></div>
-              ))}
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto os-scrollbar p-5 flex flex-col gap-4">
+                {/* 2x3 Metric Cards Grid */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  {[
+                    ['Distance', `${fmt(inspected.distance_km)} km`],
+                    ['Time', `${fmt(inspected.estimated_time_hours, 1)} h`],
+                    ['Fuel Burn', `${fmt(inspected.estimated_fuel_liters)} L`],
+                    ['CO₂ Footprint', `${fmt(inspected.estimated_co2_kg / 1000, 1)} t`],
+                    ['Bunker Cost', `$${fmt(inspected.estimated_cost)}`],
+                    ['Route Score', `${fmt(inspected.optimization_score, 1)} pts`],
+                  ].map(([k, v]) => (
+                    <div key={k} className="p-2.5 rounded-xl bg-os-void/80 border border-os-border flex flex-col gap-0.5">
+                      <span className="text-[10px] font-mono uppercase font-semibold text-os-ash">{k}</span>
+                      <span className="text-sm font-bold text-white font-mono">{v}</span>
+                    </div>
+                  ))}
+                </div>
 
-              <Eyebrow className="mt-2">Candidates</Eyebrow>
-              <div className="flex flex-col">
-                {result.comparison.map((c, i) => {
-                  const idx = c.is_recommended ? null : result.alternatives.findIndex(a => a.name === c.name);
-                  const active = (altIndex === null && c.is_recommended) || (altIndex !== null && idx === altIndex);
-                  return (
-                    <button key={c.name} onClick={() => setAltIndex(idx === -1 ? null : idx)}
-                      className={`flex items-center gap-3 h-11 text-left ${active ? 'bg-os-raised rounded-row px-3 -mx-3 shadow-[inset_2px_0_0_#007afc]' : `${i < result.comparison.length - 1 ? 'border-b border-os-raised' : ''}`}`}>
-                      <span className="text-sm font-medium text-white flex-1 truncate">{c.name}</span>
-                      <Mono className="text-xs text-os-ash">{fmt(c.fuel_liters / 1000)} kL</Mono>
-                      <Mono className="text-xs text-os-ash">{fmt(c.time_hours)} h</Mono>
-                      <Mono className="text-xs text-white w-9 text-right">{fmt(c.optimization_score, 1)}</Mono>
-                    </button>
-                  );
-                })}
+                {/* Savings vs Baseline Badge */}
+                {altIndex === null && (
+                  <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-950/40 border border-emerald-800/80">
+                    <span className="text-xs font-mono font-bold text-emerald-300">
+                      vs {result.explanation.baseline_mode.replace('_', ' ')}
+                    </span>
+                    <span className="text-xs font-mono text-white font-semibold">
+                      Fuel −{fmt(result.explanation.savings_percentage_fuel, 1)}% · CO₂ −{fmt(result.explanation.savings_percentage_co2, 1)}%
+                    </span>
+                  </div>
+                )}
+
+                {/* Why This Route (No Dual Scrollbars!) */}
+                <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-os-void/70 border border-os-border">
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-os-ash">Commander Rationale</span>
+                  <p className="text-xs text-os-fog leading-relaxed break-words whitespace-normal">
+                    {result.explanation.recommendation}
+                  </p>
+                  {result.explanation.reasons.map((r, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-emerald-300/90 leading-relaxed">
+                      <span className="font-bold shrink-0">+</span>
+                      <span className="break-words whitespace-normal">{r}</span>
+                    </div>
+                  ))}
+                  {result.explanation.tradeoffs.map((r, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-amber-300/90 leading-relaxed">
+                      <span className="font-bold shrink-0">−</span>
+                      <span className="break-words whitespace-normal">{r}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Candidate Selection List */}
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-os-ash">Candidate Paths</span>
+                  <div className="flex flex-col gap-1.5">
+                    {result.comparison.map((c, i) => {
+                      const idx = c.is_recommended ? null : result.alternatives.findIndex(a => a.name === c.name);
+                      const active = (altIndex === null && c.is_recommended) || (altIndex !== null && idx === altIndex);
+                      return (
+                        <button
+                          key={c.name}
+                          onClick={() => setAltIndex(idx === -1 ? null : idx)}
+                          className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition ${
+                            active
+                              ? 'bg-blue-600/20 border-blue-500 shadow-sm'
+                              : 'bg-os-void/60 border-os-border hover:border-os-silver/40'
+                          }`}
+                        >
+                          <span className="text-xs font-semibold text-white truncate flex-1">{c.name}</span>
+                          <span className="text-xs font-mono text-os-ash mr-3">{fmt(c.fuel_liters / 1000, 1)}k L</span>
+                          <span className="text-xs font-mono font-bold text-blue-400">{fmt(c.optimization_score, 1)} pts</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Simulation Player */}
+              <div className="px-5 py-3 border-t border-os-border bg-os-surface/50 flex items-center gap-3">
+                <button
+                  onClick={() => { if (progress >= 100) setProgress(0); setPlaying(p => !p); }}
+                  className="w-8 h-8 rounded-lg bg-os-void border border-os-border flex items-center justify-center text-white hover:bg-white/10 transition"
+                  aria-label={playing ? 'Pause replay' : 'Play replay'}
+                >
+                  {playing ? '⏸' : '▶'}
+                </button>
+                <div className="flex-1 h-1.5 bg-os-void rounded-full overflow-hidden relative">
+                  <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${progress}%` }} />
+                </div>
+                <Mono className="text-xs text-os-ash font-medium">{fmt(inspected.distance_km * progress / 100)} km</Mono>
+                <button
+                  onClick={() => setSpeed(s => (s >= 8 ? 1 : s * 2))}
+                  className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-os-void border border-os-border text-os-fog hover:text-white"
+                >
+                  {speed}×
+                </button>
               </div>
             </div>
+          </div>
+        )}
 
-            <div className="flex items-center gap-3">
-              <IconFrame onClick={() => { if (progress >= 100) setProgress(0); setPlaying(p => !p); }} aria-label={playing ? 'Pause replay' : 'Play replay'}>
-                {playing
-                  ? <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M2 1.5h3v9H2zM7 1.5h3v9H7z" /></svg>
-                  : <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M3 1.5l7 4.5-7 4.5z" /></svg>}
-              </IconFrame>
-              <div className="flex-1 h-0.5 bg-os-steel relative">
-                <div className="absolute left-0 top-0 h-0.5 bg-white" style={{ width: `${progress}%` }} />
-              </div>
-              <Mono className="text-xs text-os-ash w-12 text-right">{fmt(inspected.distance_km * progress / 100)} km</Mono>
-              <OutlinePill className="!py-1 !px-3 text-xs" onClick={() => setSpeed(s => (s >= 8 ? 1 : s * 2))}>{speed}×</OutlinePill>
-            </div>
-          </Panel>
-        </div>
-      )}
+        {/* Basemap Toggle (Bottom-Right) */}
+        <BasemapToggle basemap={basemap} onChange={setBasemap} style={{ right: rightInset, bottom: 16 }} />
 
-      <BasemapToggle basemap={basemap} onChange={setBasemap} style={{ right: rightInset, bottom: 16 }} />
-
-      {!result && (
-        <div className="absolute inset-x-0 bottom-8 z-[999] flex justify-center pointer-events-none">
-          <Mono className="text-xs text-os-slate bg-os-void/70 px-3 py-1.5 rounded-input">Generate a route to compare candidates on the chart</Mono>
-        </div>
-      )}
-      <GhostLink className="hidden" />
+        {!result && (
+          <div className="absolute inset-x-0 bottom-6 z-[999] flex justify-center pointer-events-none">
+            <Mono className="text-xs text-os-fog bg-os-card/90 backdrop-blur border border-os-border px-4 py-2 rounded-full shadow-lg">
+              Select origin and destination, then click Calculate Routes to optimize navigation corridor
+            </Mono>
+          </div>
+        )}
+      </div>
 
       {/* Dynamic Recalculation Diff Modal */}
       {diffModal && (

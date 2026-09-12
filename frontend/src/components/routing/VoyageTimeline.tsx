@@ -10,10 +10,10 @@ export const VoyageTimeline: React.FC<VoyageTimelineProps> = ({ versions, onSele
   if (!versions || versions.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2 p-3 bg-os-deep/80 rounded-panel border border-os-pewter">
+    <div className="flex flex-col gap-2 p-3.5 bg-os-void/80 rounded-xl border border-os-border">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-mono uppercase tracking-wider text-os-ash">Voyage Route Lineage</span>
-        <span className="text-[11px] font-mono text-os-slate">{versions.length} Version{versions.length > 1 ? 's' : ''}</span>
+        <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-os-ash">Voyage Lineage (Audit)</span>
+        <span className="text-[10px] font-mono text-os-slate">{versions.length} Version{versions.length > 1 ? 's' : ''}</span>
       </div>
 
       <div className="flex flex-col gap-2 mt-1">
@@ -23,10 +23,10 @@ export const VoyageTimeline: React.FC<VoyageTimelineProps> = ({ versions, onSele
             <div
               key={ver.id}
               onClick={() => onSelectVersion && onSelectVersion(ver)}
-              className={`p-2.5 rounded-input border transition cursor-pointer flex flex-col gap-1 ${
+              className={`p-2.5 rounded-lg border transition cursor-pointer flex flex-col gap-1.5 ${
                 isActive
-                  ? 'bg-blue-950/40 border-blue-600/70'
-                  : 'bg-os-raised/40 border-os-pewter/60 hover:border-os-silver'
+                  ? 'bg-blue-600/10 border-blue-500/60 shadow-sm'
+                  : 'bg-os-surface/40 border-os-border hover:border-os-silver/40'
               }`}
             >
               <div className="flex items-center justify-between">

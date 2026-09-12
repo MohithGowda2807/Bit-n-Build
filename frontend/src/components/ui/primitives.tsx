@@ -1,9 +1,9 @@
 import React from 'react';
 import { riskColor, riskLabel, riskLevel, riskTint, RiskLevel, CLEAR_GREEN } from '../../design/risk';
 
-/** Floating surface-1 panel, 24px radius, per DESIGN.md. */
+/** Floating surface-1 panel with glassmorphism and subtle border */
 export const Panel: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className = '', children, ...rest }) => (
-  <div className={`bg-os-panel rounded-panel os-reveal ${className}`} {...rest}>{children}</div>
+  <div className={`bg-os-card/95 backdrop-blur-md border border-os-border/90 rounded-2xl shadow-2xl os-reveal ${className}`} {...rest}>{children}</div>
 );
 
 export const Eyebrow: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (

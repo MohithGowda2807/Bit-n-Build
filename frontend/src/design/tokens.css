@@ -2,6 +2,10 @@
 :root {
   /* Surfaces */
   --os-void: #0e1012;
+  --os-deep: #0a0d14;
+  --os-card: #121620;
+  --os-surface: #161c28;
+  --os-border: #1f293d;
   --os-panel: #15171b;
   --os-raised: #1c1f24;
   --os-overlay: #23262d;
