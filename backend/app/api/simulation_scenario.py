@@ -58,7 +58,7 @@ def execute_command_cycle(db: Session = Depends(get_db)):
     return maritime_commander.run_full_command_cycle(db)
 
 
-@router.get("/scenarios")
+@router.get("/demo-scenarios")
 def get_available_scenarios():
     """Returns available 1-click turn-key presentation demo scenarios."""
     return [

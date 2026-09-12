@@ -57,6 +57,28 @@ async def lifespan(app: FastAPI):
         seed_surveillance_zones(db)
         from app.data.phase4_seed import seed_phase4_data
         seed_phase4_data(db)
+
+        # Pre-seed baseline surveillance scenario so radar, risk watchlist, and event feeds are populated immediately
+        try:
+            from app.services.ais.simulation import SimulationAISProvider, SCENARIOS
+            from app.services.surveillance.ingestion import AISIngestor
+            from app.services.surveillance.pipeline import SurveillancePipeline
+            from app.services.surveillance.risk_service import RiskService
+            from app.utils_time import utcnow
+            from datetime import timedelta
+
+            if "DARK_FISHING_COMPOSITE" in SCENARIOS:
+                dur = max(s.total_minutes() for s in SCENARIOS["DARK_FISHING_COMPOSITE"])
+                start_t = (utcnow() - timedelta(minutes=dur)).replace(tzinfo=None)
+                end_t = start_t + timedelta(minutes=dur)
+                provider = SimulationAISProvider("DARK_FISHING_COMPOSITE", start_time=start_t)
+                AISIngestor(db, settings.AIS_GAP_THRESHOLD_SECONDS).ingest(provider, now=end_t)
+                SurveillancePipeline(db).run()
+                RiskService(db).assess_all()
+                logger.info("Surveillance baseline scenario DARK_FISHING_COMPOSITE pre-seeded and scored.")
+        except Exception as sim_err:
+            logger.warning(f"Surveillance baseline pre-seed notice: {sim_err}")
+
         logger.info("TRITON Phase 1-4 seed data verified and active.")
     except Exception as e:
         logger.warning(f"Seed data initialization warning: {e}")
@@ -210,10 +232,10 @@ app.include_router(routes.router)
 app.include_router(voyages.router)
 app.include_router(risk.router)
 app.include_router(analytics.router)
+# Phase 3: maritime surveillance simulation
+app.include_router(simulation.router)
 # Phase 2 & 3: simulation, scenarios, and autonomous commander
 app.include_router(simulation_scenario.router)
-# Phase 3: maritime surveillance
-app.include_router(simulation.router)
 app.include_router(surveillance.router)
 app.include_router(fishing.router)
 app.include_router(investigations.router)

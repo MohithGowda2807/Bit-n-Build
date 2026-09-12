@@ -609,7 +609,7 @@ export async function fetchImpactMetrics(): Promise<import('../types').ImpactMet
 
 export async function fetchSimulationScenarios(): Promise<import('../types').DemoScenario[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/simulation/scenarios`);
+    const res = await fetch(`${API_BASE}/api/v1/simulation/demo-scenarios`);
     if (res.ok) return await res.json();
   } catch (err) {
     console.warn('Falling back to default demo scenarios:', err);
