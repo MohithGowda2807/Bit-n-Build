@@ -2,12 +2,15 @@ export interface Vessel {
   id: number;
   vessel_identifier: string;
   name: string;
+  mmsi?: string;
+  callsign?: string;
   vessel_type: string;
   length_m: number;
   width_m: number;
   draft_m: number;
   max_speed_knots: number;
   cruise_speed_knots: number;
+  speed_knots: number;
   fuel_capacity_liters: number;
   fuel_consumption_rate: number;
   cargo_capacity_tonnes: number;
@@ -15,7 +18,118 @@ export interface Vessel {
   latitude: number;
   longitude: number;
   heading: number;
+  destination?: string;
+  eta?: string;
   status: string;
+}
+
+export interface VesselTrack {
+  id: number;
+  vessel_id: number;
+  latitude: number;
+  longitude: number;
+  speed_knots: number;
+  heading: number;
+  status: string;
+  timestamp: string;
+}
+
+export interface Debris {
+  id: number;
+  latitude: number;
+  longitude: number;
+  debris_type: string;
+  estimated_size_m2: number;
+  density_category: string;
+  severity: number;
+  clean_up_priority: string;
+  status: string;
+  source: string;
+  description?: string;
+  detected_at: string;
+}
+
+export interface WeatherData {
+  latitude: number;
+  longitude: number;
+  temperature_c: number;
+  wind_speed_knots: number;
+  wind_direction_deg: number;
+  wave_height_m: number;
+  visibility_nm: number;
+  pressure_hpa: number;
+  conditions: string;
+  source: string;
+  timestamp: string;
+}
+
+export interface OceanCurrentData {
+  latitude: number;
+  longitude: number;
+  current_speed_knots: number;
+  current_direction_deg: number;
+  sea_surface_temp_c: number;
+  salinity_psu: number;
+  tidal_state: string;
+  source: string;
+  timestamp: string;
+}
+
+export interface Alert {
+  id: number;
+  alert_type: string;
+  severity: string;
+  vessel_id?: number;
+  message: string;
+  details?: string;
+  acknowledged: boolean;
+  status: string;
+  timestamp: string;
+}
+
+export interface Mission {
+  id: number;
+  mission_name: string;
+  mission_type: string;
+  status: string;
+  assigned_vessel_id?: number;
+  priority: string;
+  target_lat?: number;
+  target_lon?: number;
+  parameters?: string;
+  created_at: string;
+}
+
+export interface Incident {
+  id: number;
+  title: string;
+  incident_type: string;
+  severity: string;
+  location_lat: number;
+  location_lon: number;
+  description?: string;
+  status: string;
+  reported_at: string;
+}
+
+export interface AgentFinding {
+  agent_name: string;
+  role: string;
+  status: string;
+  summary: string;
+  risk_level: string;
+  details: Record<string, any>;
+}
+
+export interface OrchestratorResponse {
+  mission_id: string;
+  query: string;
+  status: string;
+  orchestrator_decision: string;
+  recommendations: string[];
+  agent_findings: AgentFinding[];
+  execution_time_ms: number;
+  timestamp: string;
 }
 
 export interface Port {

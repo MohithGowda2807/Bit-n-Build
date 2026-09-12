@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -11,10 +11,11 @@ import {
   useMapEvents
 } from 'react-leaflet';
 import L from 'leaflet';
-import { Vessel, Port, MarineZone, RouteDetail, Coordinate } from '../types';
+import { Vessel, Port, MarineZone, RouteDetail, Coordinate, Debris, VesselTrack } from '../types';
 
 // Custom SVG Icons for high-tech maritime visualization
-const createCustomIcon = (color: string, label: string, size = 28) => {
+const createCustomIcon = (color: string, label: string, size = 28, glowColor?: string) => {
+  const glow = glowColor || color;
   return L.divIcon({
     className: 'custom-map-icon',
     html: `
@@ -28,9 +29,10 @@ const createCustomIcon = (color: string, label: string, size = 28) => {
         justify-content: center;
         color: white;
         font-weight: bold;
-        font-size: 11px;
-        border: 2px solid rgba(255,255,255,0.8);
-        box-shadow: 0 0 14px ${color};
+        font-size: ${size > 28 ? '13px' : '11px'};
+        border: 2px solid rgba(255,255,255,0.85);
+        box-shadow: 0 0 14px ${glow};
+        cursor: pointer;
       ">
         ${label}
       </div>
@@ -40,12 +42,18 @@ const createCustomIcon = (color: string, label: string, size = 28) => {
   });
 };
 
-const vesselIcon = createCustomIcon('#38bdf8', '🚢', 26);
-const activeVesselIcon = createCustomIcon('#f59e0b', '🧭', 32);
-const portIcon = createCustomIcon('#0ea5e9', '⚓', 22);
-const originIcon = createCustomIcon('#10b981', 'A', 26);
-const destIcon = createCustomIcon('#ef4444', 'B', 26);
-const replayShipIcon = createCustomIcon('#ec4899', '🚢', 32);
+const vesselIcon = createCustomIcon('#38bdf8', '🚢', 26, '#0284c7');
+const underwayVesselIcon = createCustomIcon('#10b981', '🚢', 28, '#059669');
+const selectedVesselIcon = createCustomIcon('#f59e0b', '🧭', 32, '#d97706');
+const portIcon = createCustomIcon('#0ea5e9', '⚓', 22, '#0284c7');
+const originIcon = createCustomIcon('#10b981', 'A', 26, '#059669');
+const destIcon = createCustomIcon('#ef4444', 'B', 26, '#dc2626');
+const replayShipIcon = createCustomIcon('#ec4899', '🚢', 32, '#db2777');
+
+// Debris icons by severity
+const debrisCriticalIcon = createCustomIcon('#ef4444', '⚠️', 26, '#dc2626');
+const debrisHighIcon = createCustomIcon('#f97316', '♻️', 24, '#ea580c');
+const debrisMediumIcon = createCustomIcon('#eab308', '♻️', 22, '#ca8a04');
 
 interface MapEventsHandlerProps {
   mapSelectionMode: 'origin' | 'destination' | null;
@@ -71,7 +79,6 @@ const RouteBoundsController: React.FC<{ coords: [number, number][] | null }> = (
   const map = useMap();
   useEffect(() => {
     if (coords && coords.length > 0) {
-      // coords are [lon, lat], leaflet needs [lat, lon]
       const latLngs = coords.map(c => [c[1], c[0]] as [number, number]);
       const bounds = L.latLngBounds(latLngs);
       map.fitBounds(bounds, { padding: [60, 60], maxZoom: 8 });
@@ -84,6 +91,10 @@ interface OceanMapProps {
   vessels: Vessel[];
   ports: Port[];
   zones: MarineZone[];
+  debris?: Debris[];
+  selectedVessel?: Vessel | null;
+  selectedVesselTracks?: VesselTrack[];
+  onSelectVessel?: (vessel: Vessel) => void;
   origin: Coordinate | null;
   destination: Coordinate | null;
   activeRoute: RouteDetail | null;
@@ -99,6 +110,10 @@ export const OceanMap: React.FC<OceanMapProps> = ({
   vessels,
   ports,
   zones,
+  debris = [],
+  selectedVessel,
+  selectedVesselTracks = [],
+  onSelectVessel,
   origin,
   destination,
   activeRoute,
@@ -109,18 +124,67 @@ export const OceanMap: React.FC<OceanMapProps> = ({
   onSelectCoordinate,
   replayPosition
 }) => {
+  // Layer toggles
+  const [showVessels, setShowVessels] = useState(true);
+  const [showDebris, setShowDebris] = useState(true);
+  const [showZones, setShowZones] = useState(true);
+  const [showPorts, setShowPorts] = useState(true);
+
   // Convert GeoJSON coords [lon, lat] -> Leaflet [lat, lon]
   const recommendedPolyline = activeRoute
     ? activeRoute.geometry.coordinates.map(c => [c[1], c[0]] as [number, number])
     : null;
 
+  // Selected vessel track polyline
+  const vesselTrackPolyline = selectedVesselTracks.length > 1
+    ? selectedVesselTracks.map(t => [t.latitude, t.longitude] as [number, number])
+    : null;
+
   return (
-    <div className="relative w-full h-full min-h-[500px] rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-950">
+    <div className="relative w-full h-full min-h-[520px] rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-950">
+      {/* Map selection alert banner */}
       {mapSelectionMode && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-cyan-950/95 border border-cyan-500/80 px-4 py-2 rounded-lg text-xs font-mono text-cyan-200 shadow-lg animate-pulse flex items-center space-x-2">
           <span>Click anywhere on the ocean map to set {mapSelectionMode.toUpperCase()}</span>
         </div>
       )}
+
+      {/* Layer Control Bar */}
+      <div className="absolute top-4 right-4 z-[1000] bg-slate-900/90 backdrop-blur border border-slate-700/80 rounded-lg p-2 shadow-xl flex items-center space-x-2 text-xs font-mono">
+        <span className="text-slate-400 font-semibold px-1">Layers:</span>
+        <button
+          onClick={() => setShowVessels(!showVessels)}
+          className={`px-2 py-1 rounded transition-colors ${
+            showVessels ? 'bg-cyan-600/30 text-cyan-300 border border-cyan-500/50' : 'bg-slate-800 text-slate-500'
+          }`}
+        >
+          🚢 Vessels ({vessels.length})
+        </button>
+        <button
+          onClick={() => setShowDebris(!showDebris)}
+          className={`px-2 py-1 rounded transition-colors ${
+            showDebris ? 'bg-amber-600/30 text-amber-300 border border-amber-500/50' : 'bg-slate-800 text-slate-500'
+          }`}
+        >
+          ♻️ Debris ({debris.length})
+        </button>
+        <button
+          onClick={() => setShowZones(!showZones)}
+          className={`px-2 py-1 rounded transition-colors ${
+            showZones ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/50' : 'bg-slate-800 text-slate-500'
+          }`}
+        >
+          🛡️ MPAs ({zones.length})
+        </button>
+        <button
+          onClick={() => setShowPorts(!showPorts)}
+          className={`px-2 py-1 rounded transition-colors ${
+            showPorts ? 'bg-sky-600/30 text-sky-300 border border-sky-500/50' : 'bg-slate-800 text-slate-500'
+          }`}
+        >
+          ⚓ Ports
+        </button>
+      </div>
 
       <MapContainer
         center={[15.0, 75.0]}
@@ -135,15 +199,15 @@ export const OceanMap: React.FC<OceanMapProps> = ({
         />
         <RouteBoundsController coords={activeRoute ? activeRoute.geometry.coordinates : null} />
 
-        {/* High contrast Dark Ocean Tile Layer */}
+        {/* Clean OpenStreetMap Maritime Navigation Basemap */}
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          opacity={0.88}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          opacity={0.92}
         />
 
-        {/* Marine Zones Polygons */}
-        {zones.map(zone => {
+        {/* Marine Protected Areas & Restricted Zones Polygons */}
+        {showZones && zones.map(zone => {
           try {
             const geo = JSON.parse(zone.geometry_geojson);
             const rawCoords = geo.coordinates?.[0] || [];
@@ -160,13 +224,17 @@ export const OceanMap: React.FC<OceanMapProps> = ({
                   color,
                   weight: isRestricted ? 2 : 1,
                   dashArray: zone.zone_type === 'shipping_lane' ? '6, 6' : undefined,
-                  fillOpacity: 0.15
+                  fillOpacity: isRestricted ? 0.22 : 0.12
                 }}
               >
                 <Tooltip sticky className="font-mono text-xs">
                   <div>
-                    <div className="font-bold">{zone.name}</div>
-                    <div>Type: {zone.zone_type} | Risk: {zone.risk_level}%</div>
+                    <div className="font-bold flex items-center space-x-1">
+                      <span>{isRestricted ? '⛔' : '🛡️'}</span>
+                      <span>{zone.name}</span>
+                    </div>
+                    <div>Type: {zone.zone_type} | Risk Level: {zone.risk_level}%</div>
+                    <div className="text-emerald-400 font-semibold">{zone.restricted ? 'Strict Restriction / Sanctuary' : 'Permitted Corridor'}</div>
                     {zone.description && <div className="text-slate-400 mt-1">{zone.description}</div>}
                   </div>
                 </Tooltip>
@@ -178,7 +246,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
         })}
 
         {/* Ports Markers */}
-        {ports.map(port => (
+        {showPorts && ports.map(port => (
           <Marker
             key={`port-${port.id}`}
             position={[port.latitude, port.longitude]}
@@ -196,28 +264,111 @@ export const OceanMap: React.FC<OceanMapProps> = ({
           </Marker>
         ))}
 
-        {/* Vessels Markers */}
-        {vessels.map(vessel => (
-          <Marker
-            key={`vessel-${vessel.id}`}
-            position={[vessel.latitude, vessel.longitude]}
-            icon={vesselIcon}
-          >
-            <Popup className="font-mono text-xs">
-              <div className="p-1 space-y-1">
-                <div className="font-bold text-slate-900">{vessel.name}</div>
-                <div className="text-slate-600">{vessel.vessel_identifier} | {vessel.vessel_type}</div>
-                <div className="grid grid-cols-2 gap-1 text-[11px] pt-1">
-                  <div>Cruise: <span className="font-semibold">{vessel.cruise_speed_knots} kts</span></div>
-                  <div>Max: <span className="font-semibold">{vessel.max_speed_knots} kts</span></div>
-                  <div>Fuel: <span className="font-semibold">{vessel.current_fuel_liters.toLocaleString()} L</span></div>
-                  <div>Status: <span className="font-semibold uppercase text-emerald-600">{vessel.status}</span></div>
+        {/* Debris Sentinel Markers */}
+        {showDebris && debris.map(item => {
+          const icon = item.severity >= 90
+            ? debrisCriticalIcon
+            : item.severity >= 70
+            ? debrisHighIcon
+            : debrisMediumIcon;
+
+          return (
+            <Marker
+              key={`debris-${item.id}`}
+              position={[item.latitude, item.longitude]}
+              icon={icon}
+            >
+              <Popup className="font-mono text-xs">
+                <div className="p-1 space-y-1">
+                  <div className="font-bold text-amber-900 flex items-center space-x-1">
+                    <span>⚠️ Debris Cluster #{item.id}</span>
+                  </div>
+                  <div className="text-slate-700 font-semibold uppercase">{item.debris_type.replace('_', ' ')}</div>
+                  <div className="text-slate-600">Severity: <span className="font-bold text-rose-600">{item.severity}/100</span> ({item.density_category})</div>
+                  <div className="text-slate-600">Area: {item.estimated_size_m2.toLocaleString()} m²</div>
+                  <div className="text-slate-600">Priority: <span className="font-semibold uppercase text-amber-700">{item.clean_up_priority}</span></div>
+                  <div className="text-slate-500 text-[10px]">Source: {item.source}</div>
+                  {item.description && <div className="text-slate-600 italic text-[11px] pt-1">{item.description}</div>}
                 </div>
+              </Popup>
+              <Tooltip direction="top" offset={[0, -10]}>
+                <span>⚠️ {item.debris_type.replace('_', ' ')} ({item.severity}%)</span>
+              </Tooltip>
+            </Marker>
+          );
+        })}
+
+        {/* Selected Vessel Historical Track Trail */}
+        {vesselTrackPolyline && (
+          <Polyline
+            positions={vesselTrackPolyline}
+            pathOptions={{
+              color: '#f59e0b',
+              weight: 3,
+              dashArray: '4, 4',
+              opacity: 0.85
+            }}
+          >
+            <Tooltip sticky>
+              <div className="font-mono text-xs">
+                Historical Track: {selectedVessel?.name} ({selectedVesselTracks.length} breadcrumbs)
               </div>
-            </Popup>
-            <Tooltip direction="bottom" offset={[0, 10]}>{vessel.name}</Tooltip>
-          </Marker>
-        ))}
+            </Tooltip>
+          </Polyline>
+        )}
+
+        {/* Vessels Markers */}
+        {showVessels && vessels.map(vessel => {
+          const isSelected = selectedVessel?.id === vessel.id;
+          const icon = isSelected
+            ? selectedVesselIcon
+            : vessel.status === 'underway'
+            ? underwayVesselIcon
+            : vesselIcon;
+
+          return (
+            <Marker
+              key={`vessel-${vessel.id}`}
+              position={[vessel.latitude, vessel.longitude]}
+              icon={icon}
+              eventHandlers={{
+                click: () => onSelectVessel && onSelectVessel(vessel)
+              }}
+            >
+              <Popup className="font-mono text-xs">
+                <div className="p-1 space-y-1">
+                  <div className="font-bold text-slate-900 flex items-center justify-between">
+                    <span>{vessel.name}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">{vessel.vessel_type}</span>
+                  </div>
+                  <div className="text-slate-600 text-[11px]">ID: {vessel.vessel_identifier} | MMSI: {vessel.mmsi || 'N/A'}</div>
+                  <div className="grid grid-cols-2 gap-1 text-[11px] pt-1 border-t border-slate-200">
+                    <div>Speed: <span className="font-semibold text-emerald-600">{vessel.speed_knots || vessel.cruise_speed_knots} kts</span></div>
+                    <div>Heading: <span className="font-semibold">{vessel.heading}°</span></div>
+                    <div>Draft: <span className="font-semibold">{vessel.draft_m}m</span></div>
+                    <div>Status: <span className="font-semibold uppercase text-cyan-700">{vessel.status}</span></div>
+                  </div>
+                  {vessel.destination && (
+                    <div className="text-[10px] text-slate-500 pt-1">
+                      Destination: <span className="font-semibold text-slate-800">{vessel.destination}</span>
+                    </div>
+                  )}
+                  <div className="pt-1">
+                    <button
+                      onClick={() => onSelectVessel && onSelectVessel(vessel)}
+                      className="w-full text-center py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[11px] font-semibold"
+                    >
+                      {isSelected ? 'Viewing Track History' : 'Select & View Track'}
+                    </button>
+                  </div>
+                </div>
+              </Popup>
+              <Tooltip direction="bottom" offset={[0, 10]}>
+                <span>{vessel.name} ({vessel.speed_knots || 0} kts)</span>
+              </Tooltip>
+            </Marker>
+          );
+        })}
 
         {/* Selected Origin & Destination */}
         {origin && (

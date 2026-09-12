@@ -41,7 +41,7 @@ def create_vessel(payload: VesselCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"code": "VESSEL_EXISTS", "message": "Vessel identifier already exists."}
         )
-    vessel = Vessel(**payload.dict())
+    vessel = Vessel(**payload.model_dump())
     db.add(vessel)
     db.commit()
     db.refresh(vessel)
@@ -56,7 +56,7 @@ def update_vessel(vessel_id: int, payload: VesselUpdate, db: Session = Depends(g
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"code": "VESSEL_NOT_FOUND", "message": f"Vessel with ID {vessel_id} not found."}
         )
-    for field, val in payload.dict(exclude_unset=True).items():
+    for field, val in payload.model_dump(exclude_unset=True).items():
         setattr(vessel, field, val)
     db.commit()
     db.refresh(vessel)
