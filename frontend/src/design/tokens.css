@@ -61,7 +61,10 @@
 }
 
 .os-reveal {
-  animation: os-reveal var(--os-reveal) both;
+  animation-name: os-reveal;
+  animation-duration: 240ms;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation-fill-mode: none; /* a pending animation must never leave the panel invisible */
 }
 
 @keyframes os-pulse {

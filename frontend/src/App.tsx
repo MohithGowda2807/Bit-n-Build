@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { CommandCenter } from './pages/CommandCenter';
+import { LogisticsPage } from './pages/LogisticsPage';
+import { AgentsPage } from './pages/AgentsPage';
+import { EnvironmentPage } from './pages/EnvironmentPage';
+import { CleanupPage } from './pages/CleanupPage';
 import { SurveillancePage } from './pages/SurveillancePage';
 import { CasePage } from './pages/CasePage';
 import { TopBar, Domain } from './components/shell/TopBar';
@@ -7,9 +10,9 @@ import { telemetry } from './services/telemetry';
 
 const SUBTITLES: Record<Domain, string> = {
   logistics: 'Logistics · Route optimization',
-  environment: 'Environment · Phase 2',
+  environment: 'Environment · Conditions and advisories',
   surveillance: 'Surveillance · Eastern Arabian Sea',
-  cleanup: 'Cleanup · Phase 4',
+  cleanup: 'Cleanup · Debris and missions',
   agents: 'Agents · TRITON orchestrator',
 };
 
@@ -39,10 +42,14 @@ export function App() {
         ) : (
           <SurveillancePage initialSelectedId={focusVessel} onOpenCase={setCaseId} />
         )
+      ) : domain === 'logistics' ? (
+        <LogisticsPage />
+      ) : domain === 'agents' ? (
+        <AgentsPage />
+      ) : domain === 'environment' ? (
+        <EnvironmentPage />
       ) : (
-        <div className="flex-1 min-h-0 overflow-auto">
-          <CommandCenter />
-        </div>
+        <CleanupPage />
       )}
     </div>
   );

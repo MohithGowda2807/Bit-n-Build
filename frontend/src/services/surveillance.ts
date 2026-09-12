@@ -81,3 +81,10 @@ export const fetchAssistantStatus = () =>
   );
 
 export type { Evidence };
+
+/** Phase 1 alerts: PATCH /api/v1/alerts/{id}/ack */
+export async function acknowledgeAlert(alertId: number): Promise<{ acknowledged: boolean }> {
+  const res = await fetch(`${API_BASE}/api/v1/alerts/${alertId}/ack`, { method: 'PATCH' });
+  if (!res.ok) throw new Error(`acknowledge failed with ${res.status}`);
+  return res.json();
+}
