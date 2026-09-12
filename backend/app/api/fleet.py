@@ -119,7 +119,9 @@ def step_unit_simulation(
         speed_knots=unit.speed_knots,
         status=unit.status,
         waypoints=waypoints,
-        home_port_coords=(unit.latitude, unit.longitude)
+        home_port_coords=(unit.latitude, unit.longitude),
+        current_waypoint_index=unit.current_waypoint_index or 0,
+        collection_timer_hours=unit.collection_timer_hours or 0.0,
     )
 
     new_state = sim.step(dt_hours=dt_hours)
@@ -129,6 +131,8 @@ def step_unit_simulation(
     unit.battery_pct = new_state["battery_pct"]
     unit.current_load_kg = new_state["current_load_kg"]
     unit.status = new_state["status"]
+    unit.current_waypoint_index = new_state["current_waypoint_index"]
+    unit.collection_timer_hours = sim.collection_timer_hours
 
     db.commit()
     db.refresh(unit)

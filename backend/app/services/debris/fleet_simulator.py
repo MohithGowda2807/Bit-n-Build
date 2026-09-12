@@ -43,7 +43,9 @@ class AutonomousUnitState:
         speed_knots: float = 8.0,
         status: str = "idle",
         waypoints: Optional[List[Dict[str, Any]]] = None,
-        home_port_coords: Optional[Tuple[float, float]] = None
+        home_port_coords: Optional[Tuple[float, float]] = None,
+        current_waypoint_index: int = 0,
+        collection_timer_hours: float = 0.0,
     ):
         self.unit_id = unit_id
         self.unit_name = unit_name
@@ -58,9 +60,9 @@ class AutonomousUnitState:
         self.speed_knots = speed_knots
         self.status = status  # idle, transit, collecting, returning, docked, hold
         self.waypoints = waypoints or []
-        self.current_waypoint_index = 0
+        self.current_waypoint_index = current_waypoint_index
         self.home_port_coords = home_port_coords or (latitude, longitude)
-        self.collection_timer_hours = 0.0
+        self.collection_timer_hours = collection_timer_hours
 
     def step(self, dt_hours: float = 0.25) -> Dict[str, Any]:
         """
