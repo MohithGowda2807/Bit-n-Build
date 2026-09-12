@@ -13,6 +13,9 @@ class Vessel(Base):
     mmsi = Column(String(20), unique=True, index=True, nullable=True)
     callsign = Column(String(20), nullable=True)
     vessel_type = Column(String(50), nullable=False)  # container, tanker, bulk_carrier, cargo, research, cleanup, patrol, other
+    # MMSI and IMO are distinct identifiers and must never be conflated.
+    imo_number = Column(String(7), unique=True, index=True, nullable=True)
+    flag = Column(String(3), nullable=True)  # ISO country code
     length_m = Column(Float, nullable=False, default=100.0)
     width_m = Column(Float, nullable=False, default=20.0)
     draft_m = Column(Float, nullable=False, default=8.0)

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, status
@@ -8,6 +9,8 @@ from fastapi.exceptions import RequestValidationError
 from app.config import settings
 from app.database import engine, Base, SessionLocal
 from app.data.seed_data import seed_database
+from app.data.surveillance_seed import seed_surveillance_zones
+from app.agents.commander_hook import run_surveillance_cycle
 from app.services.websocket.hub import ws_hub
 from app.api import (
     health,
@@ -22,7 +25,12 @@ from app.api import (
     weather,
     agents,
     alerts,
-    ais
+    ais,
+    simulation,
+    surveillance,
+    fishing,
+    investigations,
+    assistant,
 )
 
 logging.basicConfig(
@@ -40,18 +48,36 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed_database(db)
+        seed_surveillance_zones(db)
         logger.info("TRITON Phase 1 seed data verified and active.")
     except Exception as e:
         logger.warning(f"Seed data initialization warning: {e}")
     finally:
         db.close()
+    loop_task = None
+    if settings.SURVEILLANCE_CYCLE_SECONDS > 0:
+        loop_task = asyncio.create_task(surveillance_loop(settings.SURVEILLANCE_CYCLE_SECONDS))
     yield
+    if loop_task:
+        loop_task.cancel()
     logger.info("TRITON application shutting down.")
+
+
+async def surveillance_loop(interval_seconds: int):
+    """Background autonomous mode: rerun detection and risk assessment on a fixed interval."""
+    while True:
+        await asyncio.sleep(interval_seconds)
+        try:
+            with SessionLocal() as db:
+                summary = await asyncio.to_thread(run_surveillance_cycle, db)
+            logger.info("Surveillance cycle: %s", summary.as_dict())
+        except Exception as exc:
+            logger.warning("Surveillance cycle failed: %s", exc)
 
 
 app = FastAPI(
     title="TRITON / OceanSentinel — Maritime Intelligence Platform",
-    description="Multi-agent maritime logistics intelligence, autonomous route optimization, and ocean preservation platform (Phase 1 Foundation).",
+    description="Multi-agent maritime logistics intelligence, autonomous route optimization, maritime surveillance, and ocean preservation platform.",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -120,13 +146,19 @@ app.include_router(zones.router)
 app.include_router(routes.router)
 app.include_router(voyages.router)
 app.include_router(analytics.router)
+# Phase 3: maritime surveillance
+app.include_router(simulation.router)
+app.include_router(surveillance.router)
+app.include_router(fishing.router)
+app.include_router(investigations.router)
+app.include_router(assistant.router)
 
 
 @app.get("/")
 def root():
     return {
         "platform": "TRITON / OceanSentinel",
-        "phase": 1,
+        "phase": 3,
         "name": "Maritime Intelligence & Autonomous Multi-Agent Platform",
         "status": "operational",
         "docs_url": "/docs",

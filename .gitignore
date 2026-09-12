@@ -58,3 +58,4 @@ Desktop.ini
 .vscode/
 *.sublime-project
 *.sublime-workspace
+test_oceansentinel.db

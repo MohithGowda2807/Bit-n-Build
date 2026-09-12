@@ -70,6 +70,19 @@ USER / OPERATOR
 
 ---
 
+## Phase 3: Maritime Surveillance (backend)
+
+- **AIS ingestion** behind a provider interface, with eight scripted simulation scenarios for demos.
+- **Detection**: AIS gaps (dark periods), fishing-zone and protected-area geofencing, loitering, fishing-pattern and rendezvous detectors.
+- **Explainable risk**: weighted 0-100 score with per-factor explanations, evidence rows, and configurable alert and case thresholds.
+- **Investigation cases** with assign, escalate, resolve, and dismiss workflow, frozen evidence snapshots, and an audit log.
+- **CrewAI agents**: a four-agent investigation crew and a natural-language assistant, restricted to deterministic tools, running on Gemini with automatic fallback to Groq and OpenRouter.
+- Run a scenario: `POST /api/v1/simulation/run {"scenario": "DARK_FISHING_COMPOSITE"}`, then open `GET /api/v1/investigations`.
+
+Details in [docs/surveillance.md](./docs/surveillance.md).
+
+---
+
 ## Getting Started
 
 ### 1. Prerequisites
@@ -95,12 +108,13 @@ The Command Center will be available at `http://localhost:5173` and the API at `
 ```bash
 cd backend
 
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies (uv creates .venv from pyproject.toml)
+uv sync
 
 # Run FastAPI backend server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+Set `GEMINI_API_KEY` (optionally `GROQ_API_KEY` and `OPENROUTER_API_KEY` as fallbacks) in `.env` to enable the Phase 3 agent layer; everything else runs without it.
 API Documentation will be active at: `http://localhost:8000/docs`.
 
 #### Frontend Setup
@@ -122,7 +136,7 @@ Open `http://localhost:5173` in your browser.
 Run the automated backend test suite:
 ```bash
 cd backend
-python -m pytest app/tests/ -v
+uv run pytest -q
 ```
 
 Tests include:
@@ -178,3 +192,4 @@ Detailed technical documents are available in the [`docs/`](./docs) folder:
 - [Routing & Optimization Algorithms](./docs/routing.md)
 - [Database Schema & Data Dictionary](./docs/database.md)
 - [API Reference](./docs/api.md)
+- [Phase 3 Surveillance Backend](./docs/surveillance.md)

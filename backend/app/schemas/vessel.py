@@ -9,6 +9,8 @@ class VesselBase(BaseModel):
     mmsi: Optional[str] = Field(None, max_length=20)
     callsign: Optional[str] = Field(None, max_length=20)
     vessel_type: str = Field("container")
+    imo_number: Optional[str] = Field(None, min_length=7, max_length=7)
+    flag: Optional[str] = Field(None, max_length=3)
     length_m: float = Field(..., gt=0)
     width_m: float = Field(..., gt=0)
     draft_m: float = Field(..., gt=0)
