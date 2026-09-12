@@ -63,3 +63,18 @@ def test_whoami_reports_role_and_permissions(client):
     assert me["permissions"]["manage_system"] is False
     roles = client.get("/api/v1/auth/roles").json()
     assert roles == ["VIEWER", "ANALYST", "OPERATOR", "ADMIN"]
+
+
+def test_phase2_hazards_and_cycle_need_operator_and_mode_needs_admin(client):
+    analyst, operator, admin = _as("ANALYST"), _as("OPERATOR"), _as("ADMIN")
+    storm = {"scenario_preset": "bay_of_bengal_cyclone"}
+    assert client.post("/api/v1/simulation/scenarios/inject-storm", json=storm, headers=analyst).status_code == 403
+    assert client.post("/api/v1/simulation/scenarios/inject-storm", json=storm, headers=operator).status_code == 200
+    assert client.post("/api/v1/simulation/scenarios/reset-environment", headers=analyst).status_code == 403
+    assert client.post("/api/v1/simulation/scenarios/reset-environment", headers=operator).status_code == 200
+    assert client.post("/api/v1/simulation/cycle", headers=analyst).status_code == 403
+    assert client.post("/api/v1/simulation/mode", json={"mode": "advisory"}, headers=operator).status_code == 403
+    assert client.post("/api/v1/simulation/mode", json={"mode": "autonomous"}, headers=admin).status_code == 200
+    assert client.get("/api/v1/simulation/mode").json()["mode"] == "autonomous"
+    assert client.delete("/api/v1/storms", headers=analyst).status_code == 403
+    assert client.delete("/api/v1/storms", headers=operator).status_code == 200

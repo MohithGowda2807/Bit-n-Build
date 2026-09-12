@@ -19,7 +19,16 @@ import {
   OptimizationWeights
 } from '../types';
 
+import { session } from './session';
+
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+/** Message from a FastAPI error body, falling back to the given text. */
+async function failure(res: Response, fallback: string): Promise<Error> {
+  const body = await res.json().catch(() => ({}));
+  const detail = body?.detail;
+  return new Error((typeof detail === 'string' ? detail : detail?.message) || fallback);
+}
 
 export async function fetchHealth(): Promise<any> {
   const res = await fetch(`${API_BASE}/health`);
@@ -181,18 +190,18 @@ export async function fetchActiveStorms(): Promise<import('../types').Storm[]> {
 export async function injectStormScenario(scenario_preset: string = 'bay_of_bengal_cyclone'): Promise<import('../types').Storm[]> {
   const res = await fetch(`${API_BASE}/api/v1/simulation/scenarios/inject-storm`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...session.headers() },
     body: JSON.stringify({ scenario_preset })
   });
-  if (!res.ok) throw new Error('Failed to inject storm scenario');
+  if (!res.ok) throw await failure(res, 'Failed to inject storm scenario');
   return res.json();
 }
 
 export async function resetEnvironment(): Promise<{ message: string; storms_cleared: number }> {
   const res = await fetch(`${API_BASE}/api/v1/simulation/scenarios/reset-environment`, {
-    method: 'POST'
+    method: 'POST', headers: session.headers()
   });
-  if (!res.ok) throw new Error('Failed to reset environment');
+  if (!res.ok) throw await failure(res, 'Failed to reset environment');
   return res.json();
 }
 
@@ -206,19 +215,19 @@ export async function getOperatingMode(): Promise<string> {
 export async function setOperatingMode(mode: string): Promise<string> {
   const res = await fetch(`${API_BASE}/api/v1/simulation/mode`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...session.headers() },
     body: JSON.stringify({ mode })
   });
-  if (!res.ok) throw new Error('Failed to set operating mode');
+  if (!res.ok) throw await failure(res, 'Failed to set operating mode');
   const data = await res.json();
   return data.mode;
 }
 
 export async function triggerCommandCycle(): Promise<any> {
   const res = await fetch(`${API_BASE}/api/v1/simulation/cycle`, {
-    method: 'POST'
+    method: 'POST', headers: session.headers()
   });
-  if (!res.ok) throw new Error('Failed to trigger commander cycle');
+  if (!res.ok) throw await failure(res, 'Failed to trigger commander cycle');
   return res.json();
 }
 
@@ -236,7 +245,7 @@ export async function recalculateVoyageRoute(
 ): Promise<import('../types').RecalculateRouteResponse> {
   const res = await fetch(`${API_BASE}/api/v1/routes/recalculate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...session.headers() },
     body: JSON.stringify({ voyage_id, reason, mode, candidate_profile })
   });
   if (!res.ok) {

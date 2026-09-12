@@ -7,11 +7,12 @@ from app.models.agent_decision import AgentDecisionLog
 from app.schemas.storm import StormResponse, StormScenarioInject
 from app.services.storm.service import storm_service
 from app.agents.commander import maritime_commander
+from app.security import require
 
 router = APIRouter(prefix="/api/v1/simulation", tags=["Simulation & Scenario Injection"])
 
 
-@router.post("/scenarios/inject-storm", response_model=List[StormResponse])
+@router.post("/scenarios/inject-storm", response_model=List[StormResponse], dependencies=[Depends(require("OPERATOR"))])
 def inject_storm_scenario(payload: StormScenarioInject, db: Session = Depends(get_db)):
     """
     Injects a preset maritime storm disturbance directly onto an active corridor
@@ -21,7 +22,7 @@ def inject_storm_scenario(payload: StormScenarioInject, db: Session = Depends(ge
     return storms
 
 
-@router.post("/scenarios/reset-environment")
+@router.post("/scenarios/reset-environment", dependencies=[Depends(require("OPERATOR"))])
 def reset_environment(db: Session = Depends(get_db)):
     """
     Clears all active storms and resets the oceanic environment to calm baseline conditions.
@@ -39,7 +40,7 @@ def get_operating_mode():
     return {"mode": maritime_commander.get_mode()}
 
 
-@router.post("/mode")
+@router.post("/mode", dependencies=[Depends(require("ADMIN"))])
 def set_operating_mode(payload: Dict[str, str] = Body(..., example={"mode": "autonomous"})):
     """Set commander operating mode."""
     mode = payload.get("mode", "autonomous")
@@ -49,7 +50,7 @@ def set_operating_mode(payload: Dict[str, str] = Body(..., example={"mode": "aut
     return {"message": f"Commander mode set to {mode}", "mode": mode}
 
 
-@router.post("/cycle")
+@router.post("/cycle", dependencies=[Depends(require("OPERATOR"))])
 def execute_command_cycle(db: Session = Depends(get_db)):
     """
     Triggers an autonomous monitoring & decision cycle across both Environmental

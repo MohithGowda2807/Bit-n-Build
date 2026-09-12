@@ -16,7 +16,7 @@ from app.services.routing.service import routing_service
 from app.agents.commander import maritime_commander
 
 
-client = TestClient(app)
+client = TestClient(app, headers={"X-Role": "ADMIN", "X-User": "test.admin"})
 
 
 def test_weather_service_sea_state_classification():

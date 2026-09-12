@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { session } from '../../services/session';
+import { Role, can } from '../../design/roles';
 import { injectStormScenario, resetEnvironment, setOperatingMode, triggerCommandCycle } from '../../services/api';
 import { Storm } from '../../types';
 
@@ -20,6 +22,10 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
  const [selectedPreset, setSelectedPreset] = useState<string>('bay_of_bengal_cyclone');
  const [loading, setLoading] = useState<boolean>(false);
  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+ const [role, setRole] = useState<Role>(session.role);
+ useEffect(() => session.subscribe(setRole), []);
+ const mayRun = can(role, 'run_scenarios');
+ const mayManage = can(role, 'manage_system');
 
  const showMsg = (msg: string) => {
  setStatusMessage(msg);
@@ -90,7 +96,9 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
             <button
  key={m}
  onClick={() => handleModeToggle(m)}
- className={`px-3 py-1 text-xs font-mono rounded-input transition-all ${
+ disabled={!mayManage}
+ title={mayManage ? undefined : 'Requires the Admin role'}
+ className={`px-3 py-1 text-xs font-mono rounded-input transition-all disabled:cursor-not-allowed ${
  operatingMode === m
                   ? 'bg-os-signal text-white font-bold'
                   : 'text-os-fog hover:text-white hover:bg-white/5'
@@ -110,26 +118,28 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
  onChange={e => setSelectedPreset(e.target.value)}
  className="bg-os-void text-white border border-os-steel text-xs font-mono rounded-input px-3 py-1.5 focus:outline-none max-w-[320px] truncate"
         >
-          <option value="bay_of_bengal_cyclone" className="bg-[#15171b] text-white">🌀 Cyclone Vardah (Bay of Bengal / Malacca)</option>
-          <option value="malacca_squall" className="bg-[#15171b] text-white">⛈️ Sumatra Squall (Malacca Strait Choke)</option>
-          <option value="arabian_sea_monsoon" className="bg-[#15171b] text-white">🌊 Monsoon Depression (Arabian Sea / Gulf)</option>
-          <option value="pacific_typhoon" className="bg-[#15171b] text-white">🌪️ Super Typhoon Rai (Pacific / East Asia)</option>
-          <option value="atlantic_hurricane" className="bg-[#15171b] text-white">🌀 Hurricane Lee (North Atlantic Trans-oceanic)</option>
-          <option value="southern_ocean_gale" className="bg-[#15171b] text-white">🌊 Southern Ocean Gale (Australia / Bass Strait)</option>
+          <option value="bay_of_bengal_cyclone">Cyclone Vardah (Bay of Bengal / Malacca)</option>
+          <option value="malacca_squall">Sumatra Squall (Malacca Strait Choke)</option>
+          <option value="arabian_sea_monsoon">Monsoon Depression (Arabian Sea / Gulf)</option>
+          <option value="pacific_typhoon">Super Typhoon Rai (Pacific / East Asia)</option>
+          <option value="atlantic_hurricane">Hurricane Lee (North Atlantic Trans-oceanic)</option>
+          <option value="southern_ocean_gale">Southern Ocean Gale (Australia / Bass Strait)</option>
         </select>
         <button
  onClick={handleInject}
- disabled={loading}
- className="bg-risk-critical hover:bg-risk-high text-white text-xs font-semibold px-3 py-1.5 rounded-input flex items-center gap-1.5 transition disabled:opacity-50"
+ disabled={loading || !mayRun}
+ title={mayRun ? undefined : 'Requires the Operator role'}
+ className="bg-risk-critical hover:bg-risk-high text-white text-xs font-semibold px-3 py-1.5 rounded-input flex items-center gap-1.5 transition disabled:opacity-50 disabled:hover:bg-risk-critical"
         >
-          <span>⚡</span> Inject Hazard
+ Inject hazard
         </button>
         <button
  onClick={handleReset}
- disabled={loading}
- className="bg-os-raised hover:bg-os-overlay text-os-fog hover:text-white text-xs font-medium px-3 py-1.5 rounded-input border border-os-steel transition"
+ disabled={loading || !mayRun}
+ title={mayRun ? undefined : 'Requires the Operator role'}
+ className="bg-os-raised hover:bg-os-overlay text-os-fog hover:text-white text-xs font-medium px-3 py-1.5 rounded-input border border-os-steel transition disabled:opacity-50"
         >
- Clear Ocean
+ Clear ocean
         </button>
       </div>
 
@@ -137,21 +147,20 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
       <div className="flex items-center gap-3">
         <button
  onClick={handleManualCycle}
- disabled={loading}
- className="bg-os-signal hover:bg-os-signal-hover text-white text-xs font-semibold px-3 py-1.5 rounded-input flex items-center gap-1.5 transition disabled:opacity-50"
+ disabled={loading || !mayRun}
+ title={mayRun ? undefined : 'Requires the Operator role'}
+ className="bg-os-signal hover:bg-os-signal-hover text-white text-xs font-semibold px-3 py-1.5 rounded-input flex items-center gap-1.5 transition disabled:opacity-50 disabled:hover:bg-os-signal"
         >
-          <span>🔄</span> Run Commander Loop
+ Run commander loop
         </button>
 
         {activeStorms.length > 0 ? (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-input bg-os-raised border border-risk-critical text-risk-critical font-mono text-xs font-medium animate-pulse">
-            <span>⚠️</span>
-            <span>{activeStorms.length} Active Storm{activeStorms.length > 1 ? 's' : ''}</span>
+            <span>{activeStorms.length} active storm{activeStorms.length > 1 ? 's' : ''}</span>
           </div>
         ) : (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-input bg-os-raised border border-os-clear text-os-clear font-mono text-xs font-medium">
-            <span>✓</span>
-            <span>Ocean Calm</span>
+            <span>Ocean calm</span>
           </div>
         )}
 

@@ -3,6 +3,7 @@ import logging
 import time
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from app.security import require
 from sqlalchemy.orm import Session
 
 try:
@@ -135,7 +136,7 @@ def get_route(route_id: int, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/recalculate", response_model=RecalculateRouteResponse)
+@router.post("/recalculate", response_model=RecalculateRouteResponse, dependencies=[Depends(require("OPERATOR"))])
 def recalculate_route(payload: RecalculateRouteRequest, db: Session = Depends(get_db)):
     """
     Dynamically recalculate a voyage route avoiding detected storms or extreme sea-states.

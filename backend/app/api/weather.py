@@ -1,6 +1,7 @@
 import json
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, HTTPException, status
+from app.security import require
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -71,13 +72,13 @@ def get_storm(storm_id: int, db: Session = Depends(get_db)):
     return storm
 
 
-@router.post("/storms", response_model=StormResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/storms", response_model=StormResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require("OPERATOR"))])
 def create_storm(payload: StormCreate, db: Session = Depends(get_db)):
     """Inject or report an active storm."""
     return storm_service.create_storm(db, payload)
 
 
-@router.delete("/storms/{storm_id}")
+@router.delete("/storms/{storm_id}", dependencies=[Depends(require("OPERATOR"))])
 def deactivate_storm(storm_id: int, db: Session = Depends(get_db)):
     """Deactivate a storm."""
     success = storm_service.deactivate_storm(db, storm_id)
@@ -86,7 +87,7 @@ def deactivate_storm(storm_id: int, db: Session = Depends(get_db)):
     return {"message": f"Storm {storm_id} deactivated successfully"}
 
 
-@router.delete("/storms")
+@router.delete("/storms", dependencies=[Depends(require("OPERATOR"))])
 def clear_all_storms(db: Session = Depends(get_db)):
     """Clear all active storms (restore calm conditions)."""
     count = storm_service.clear_all_storms(db)
