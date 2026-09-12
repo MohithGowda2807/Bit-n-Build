@@ -62,25 +62,33 @@
 ---
 
 ### Phase 4D: Frontend Command Center & UI Components
-- [ ] **Task 4.1**: Unified Ocean Map Multi-Layer Overlays (Leaflet)
-  - [ ] Commercial vessels, dark vessels, MPAs, debris clusters, drift arrows, drone paths
-  - [ ] Layer toggle switcher HUD
-- [ ] **Task 4.2**: Autonomous Debris & Cleanup Fleet Mission Studio
-  - [ ] Interactive debris details drawer
-  - [ ] Mission planner dialog with 1-click dispatch
-  - [ ] Live fleet status (battery, payload, current task)
-- [ ] **Task 4.3**: Ask TRITON Agent Console with Visual Trace & Explainability
-  - [ ] Interactive multi-agent thought trace tree
-  - [ ] Pre-set demo prompt chips
-- [ ] **Task 4.4**: Human-in-the-Loop Approval Flow & Incident/Mission Reports
-  - [ ] Approval modal (Authorize / Replan / Reject)
-  - [ ] Printable Executive Intelligence Briefing modal
-- [ ] **Task 4.5**: Global Impact & Sustainability Metrics HUD + Scenario Quick-Switcher
-  - [ ] Sustainability KPI ticker (CO2 saved, fuel saved, plastic retrieved)
-  - [ ] 1-click demo scenario buttons in TopBar
+- [x] **Task 4.1**: Unified Ocean Map Multi-Layer Overlays (Leaflet)
+  - [x] Commercial vessels, dark vessels, MPAs, debris clusters, drift arrows, drone paths
+  - [x] Layer toggle switcher HUD
+- [x] **Task 4.2**: Autonomous Debris & Cleanup Fleet Mission Studio
+  - [x] Interactive debris details drawer with 12h leeway drift forecast
+  - [x] Mission planner dialog with 1-click dispatch & TSP 2-opt trajectory solver
+  - [x] Live fleet status (battery, payload, speed, heading, quick command overrides)
+- [x] **Task 4.3**: Ask TRITON Agent Console with Visual Trace & Explainability
+  - [x] Interactive multi-agent thought trace tree (`AgentTraceVisualizer.tsx`)
+  - [x] Pre-set demo prompt chips for Ghost Net intercept, dark vessel spill, eco-corridors
+- [x] **Task 4.4**: Human-in-the-Loop Approval Flow & Incident/Mission Reports
+  - [x] Approval modal (Authorize / Replan / Reject)
+  - [x] Printable Executive Intelligence Briefing modal (`ReportExportModal.tsx`)
+- [x] **Task 4.5**: Global Impact & Sustainability Metrics HUD + Scenario Quick-Switcher
+  - [x] Sustainability KPI ticker (CO2 saved, fuel saved, plastic retrieved) in `ImpactMetricsBar.tsx`
+  - [x] 1-click demo scenario buttons in TopBar (`DemoScenarioSwitcher.tsx`)
+
 
 ---
 
 ### Phase 4E: Verification, Polish, Documentation
-- [ ] **Task 5.1**: Automated E2E Test Suite & 100% Offline Synthetic Fallbacks
-- [ ] **Task 5.2**: Final Architecture Documentation & README Polish
+- [x] **Task 5.1**: Automated E2E Test Suite & 100% Offline Synthetic Fallbacks
+  - [x] All Phase 4 backend APIs verified with `test_phase4_api.py`
+  - [x] All 3 turnkey scenario injections tested and verified
+  - [x] High-fidelity offline synthetic fallbacks in `frontend/src/services/api.ts`
+  - [x] Full production frontend build verified with `npm run build` (0 errors)
+- [x] **Task 5.2**: Final Architecture Documentation & README Polish
+  - [x] Updated `README.md` with Phase 4 architecture, fleet models, and demo workflow
+  - [x] Maintained structured checklist across all 5 phases
+

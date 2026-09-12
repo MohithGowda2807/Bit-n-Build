@@ -49,7 +49,83 @@ export interface Debris {
   source: string;
   description?: string;
   detected_at: string;
+  cluster_id?: string | null;
+  estimated_mass_kg?: number;
+  estimated_volume_m3?: number;
+  confidence?: number;
+  drift_heading_deg?: number;
+  drift_speed_knots?: number;
+  target_species_threatened?: string;
+  environmental_risk_score?: number;
+  nearest_mpa_distance_nm?: number;
 }
+
+export interface CleanupUnit {
+  id: number;
+  unit_name: string;
+  unit_type: 'asv_skimmer' | 'autonomous_drone' | 'robotic_interceptor' | 'collection_boom';
+  latitude: number;
+  longitude: number;
+  heading_deg: number;
+  speed_knots: number;
+  battery_pct: number;
+  max_range_nm: number;
+  capacity_kg: number;
+  current_load_kg: number;
+  status: 'idle' | 'transit' | 'collecting' | 'returning' | 'maintenance' | 'docked';
+  assigned_mission_id?: number | null;
+  operator_override?: string | null;
+  last_ping?: string;
+}
+
+export interface DebrisCluster {
+  cluster_id: string;
+  center_lat: number;
+  center_lon: number;
+  member_count: number;
+  total_mass_kg: number;
+  mean_severity: number;
+  risk_level: string;
+  debris_ids: number[];
+}
+
+export interface DebrisDriftForecast {
+  debris_id: number;
+  forecast_hours: number;
+  drift_speed_knots: number;
+  drift_heading_deg: number;
+  trajectory: Array<{
+    hour: number;
+    latitude: number;
+    longitude: number;
+    timestamp: string;
+    uncertainty_radius_nm: number;
+  }>;
+}
+
+export interface ImpactMetrics {
+  co2_avoided_tonnes: number;
+  fuel_saved_liters: number;
+  debris_cleared_kg: number;
+  protected_areas_shielded: number;
+  dark_vessels_intercepted: number;
+  active_cleanup_sorties: number;
+  avg_mission_success_rate: number;
+}
+
+export interface DemoScenario {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  category: 'preservation' | 'surveillance' | 'routing';
+  threat_level: 'critical' | 'high' | 'medium';
+  target_entity: string;
+  focus: { latitude: number; longitude: number; zoom: number };
+  suggested_unit: string;
+  badge_color: string;
+}
+
 
 export interface WeatherData {
   latitude: number;

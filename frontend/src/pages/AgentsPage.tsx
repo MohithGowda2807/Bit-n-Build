@@ -4,13 +4,17 @@ import { dispatchOrchestrator, fetchAgentStatus, fetchVessels, submitHumanDecisi
 import { HumanApprovalResponse, OrchestratorResponse, Vessel } from '../types';
 import { RiskLevel } from '../design/risk';
 import { renderMarkdownLite } from '../design/markdownLite';
+import { AgentTraceVisualizer } from '../components/agents/AgentTraceVisualizer';
 
 const PRESETS = [
   'Assess navigation safety and MPA compliance for the active vessel',
   'Scan the fleet for speed violations, drift and dark-vessel anomalies',
   'Evaluate marine debris collision hazards along the current corridor',
+  'Deploy autonomous cleanup ASV for Lakshadweep ghost net intercept',
+  'Simulate dark trawler rendezvous and chemical slick containment',
   'Why is the highest-risk vessel suspicious right now?',
 ];
+
 
 const FINDING_LEVEL: Record<string, RiskLevel> = { low: 'LOW', medium: 'ELEVATED', high: 'HIGH', critical: 'CRITICAL' };
 
@@ -153,7 +157,15 @@ export const AgentsPage: React.FC = () => {
                   <div className="text-sm text-os-fog leading-relaxed">{renderMarkdownLite(result.assistant_answer, { monoNumbers: true })}</div>
                 </>
               )}
+
+              <div className="pt-2 border-t border-os-raised">
+                <AgentTraceVisualizer
+                  traces={(result as any).agent_traces}
+                  domainImpact={(result as any).domain_impact}
+                />
+              </div>
             </Panel>
+
 
             <Panel className="col-span-5 p-6 flex flex-col gap-4 overflow-auto">
               <span className="text-lg font-medium text-white">Human approval</span>
