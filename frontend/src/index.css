@@ -1,38 +1,52 @@
+@import './design/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-[#050B14] text-slate-100;
+    background: var(--os-void);
+    color: var(--os-fog);
+    font-family: var(--os-font-sans);
   }
 }
 
-/* Custom leaflet tweaks for dark theme */
+/* Leaflet: the map is the light source; chrome around it stays in the system. */
 .leaflet-container {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  background-color: #070f1e !important;
+  font-family: var(--os-font-sans);
+  background-color: #10141a !important;
 }
 
 .leaflet-popup-content-wrapper {
-  background: rgba(15, 23, 42, 0.95) !important;
-  color: #f8fafc !important;
-  border: 1px solid #334155;
-  border-radius: 8px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
-  backdrop-filter: blur(8px);
+  background: var(--os-panel) !important;
+  color: var(--os-fog) !important;
+  border: 1px solid var(--os-raised);
+  border-radius: 12px !important;
+  box-shadow: none !important;
 }
 
 .leaflet-popup-tip {
-  background: rgba(15, 23, 42, 0.95) !important;
+  background: var(--os-panel) !important;
 }
 
 .leaflet-tooltip {
-  background: rgba(15, 23, 42, 0.9) !important;
-  color: #e2e8f0 !important;
-  border: 1px solid #475569 !important;
+  background: var(--os-panel) !important;
+  color: var(--os-white) !important;
+  border: 1px solid var(--os-raised) !important;
   border-radius: 6px !important;
-  font-family: 'JetBrains Mono', monospace !important;
+  font-family: var(--os-font-mono) !important;
   font-size: 11px !important;
   padding: 3px 8px !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(14, 16, 18, 0.7) !important;
+  color: var(--os-slate) !important;
+  font-family: var(--os-font-sans);
+  font-size: 10px !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--os-ash) !important;
 }

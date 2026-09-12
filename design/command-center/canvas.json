@@ -1,0 +1,23 @@
+{
+  "pages": [
+    { "id": "page-1", "name": "Screens" },
+    { "id": "page-2", "name": "System" },
+    { "id": "page-3", "name": "Explorations" }
+  ],
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Command Center", "x": 0, "y": 0, "w": 1440, "h": 900, "page": "page-1" },
+    { "file": "CaseDetail.dc.html", "title": "Investigation case", "x": 1560, "y": 0, "w": 1440, "h": 900, "page": "page-1" },
+    { "file": "Analyst.dc.html", "title": "Ask the analyst", "x": 0, "y": 1040, "w": 1440, "h": 900, "page": "page-1" },
+    { "file": "Replay.dc.html", "title": "Replay", "x": 1560, "y": 1040, "w": 1440, "h": 900, "page": "page-1" },
+    { "file": "System.dc.html", "title": "Design system sheet", "x": 0, "y": 0, "w": 1440, "h": 1160, "page": "page-2" },
+    { "file": "DirectionB.dc.html", "title": "B · Chart Room (not chosen)", "x": 0, "y": 0, "w": 1440, "h": 900, "page": "page-3" },
+    { "file": "DirectionC.dc.html", "title": "C · War Room (not chosen)", "x": 1560, "y": 0, "w": 1440, "h": 900, "page": "page-3" }
+  ],
+  "annotations": [
+    { "id": "brief", "x": 0, "y": -220, "w": 560, "page": "page-1", "text": "OceanSentinel command center in the Mapbox system, with three borrowings from Checkly (mono data, hairline rows, status pills) and one documented deviation: a risk color scale used only on risk.\n\nAll four screens show the real composite scenario: FV Night Hauler, risk 100, four evidence lines, the dark segment, the closure." },
+    { "id": "screens-note", "x": 1560, "y": -220, "w": 480, "page": "page-1", "text": "Command Center: map is the light source; watchlist and events left, vessel panel right, replay bar bottom.\nCase: three columns, evidence snapshot frozen at creation, audit log, dismiss reasons as chips.\nAnalyst: grounded answers with mono data and a provider badge.\nReplay: scenario picker, the agents' story as a timeline, uncertainty ring while dark." },
+    { "id": "system-note", "x": 1560, "y": 0, "w": 420, "page": "page-2", "text": "Source of truth for implementation is design/DESIGN.md in the repo. This sheet is the visual companion: surfaces, text, the one blue, the risk scale, type, controls, rows, map legend." },
+    { "id": "explorations-note", "x": 0, "y": -200, "w": 520, "page": "page-3", "text": "Earlier direction sketches kept for the record. The chosen direction became the Mapbox-based system on the Screens page." }
+  ],
+  "launch": { "view": "canvas", "page": "page-1" }
+}

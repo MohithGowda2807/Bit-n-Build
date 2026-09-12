@@ -7,6 +7,31 @@ export default {
   theme: {
     extend: {
       colors: {
+        // OceanSentinel system (design/DESIGN.md)
+        os: {
+          void: '#0e1012',
+          panel: '#15171b',
+          raised: '#1c1f24',
+          overlay: '#23262d',
+          fog: '#a0aaba',
+          ash: '#8b96aa',
+          slate: '#566171',
+          steel: '#333943',
+          pewter: '#444d5a',
+          silver: '#bbc2ce',
+          signal: '#007afc',
+          'signal-hover': '#3d9bff',
+          'signal-deep': '#0062ca',
+          clear: '#2fae6e',
+        },
+        risk: {
+          low: '#a0aaba',
+          moderate: '#e2a33a',
+          elevated: '#f0873a',
+          high: '#f2643e',
+          critical: '#f0483e',
+        },
+        // Phase 1 palette, kept so the logistics page renders unchanged
         ocean: {
           950: '#030712',
           900: '#081225',
@@ -25,7 +50,21 @@ export default {
           400: '#34d399',
           500: '#10b981'
         }
-      }
+      },
+      fontFamily: {
+        sans: ['Plus Jakarta Sans', 'DM Sans', 'Segoe UI', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Consolas', 'SFMono-Regular', 'Menlo', 'monospace'],
+      },
+      borderRadius: {
+        badge: '4px',
+        input: '6px',
+        row: '12px',
+        panel: '24px',
+        pill: '100px',
+      },
+      letterSpacing: {
+        eyebrow: '1px',
+      },
     },
   },
   plugins: [],

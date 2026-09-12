@@ -1,0 +1,249 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; background: #0e1012; font-family: 'Plus Jakarta Sans', 'DM Sans', 'Segoe UI', system-ui, sans-serif; color: #a0aaba; }
+    a { color: #007afc; } a:hover { color: #3d9bff; }
+    .mono { font-family: 'JetBrains Mono', 'Consolas', 'SFMono-Regular', monospace; font-variant-numeric: tabular-nums; }
+    .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 900px; background: #0e1012; position: relative; overflow: hidden; display: flex; flex-direction: column; font-family: 'Plus Jakarta Sans', 'DM Sans', 'Segoe UI', system-ui, sans-serif; color: #a0aaba;">
+
+  <!-- Top bar -->
+  <div style="height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: #0e1012; flex-shrink: 0;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18M3 12h18"></path><circle cx="12" cy="12" r="3" fill="#007afc" stroke="none"></circle></svg>
+      <div style="display: flex; flex-direction: column; gap: 1px;">
+        <span style="font-size: 15px; font-weight: 700; color: #ffffff; letter-spacing: -0.01em;">OceanSentinel</span>
+        <span class="eyebrow" style="color: #566171;">Surveillance · Eastern Arabian Sea</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 4px;">
+      <span style="font-size: 14px; font-weight: 500; color: #a0aaba; padding: 8px 16px; border-radius: 100px;">Logistics</span>
+      <span style="font-size: 14px; font-weight: 500; color: #a0aaba; padding: 8px 16px; border-radius: 100px;">Environment</span>
+      <span style="font-size: 14px; font-weight: 500; color: #ffffff; padding: 8px 16px; border-radius: 100px; background: #007afc;">Surveillance</span>
+      <span style="font-size: 14px; font-weight: 500; color: #a0aaba; padding: 8px 16px; border-radius: 100px;">Cleanup</span>
+      <span style="font-size: 14px; font-weight: 500; color: #a0aaba; padding: 8px 16px; border-radius: 100px;">Agents</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div class="mono" style="display: flex; align-items: center; gap: 16px; font-size: 12px; color: #8b96aa;">
+        <span>22 <span style="color: #566171;">vessels</span></span>
+        <span>3 <span style="color: #566171;">AIS gaps</span></span>
+        <span style="color: #f0483e;">1 <span style="color: #566171;">open case</span></span>
+      </div>
+      <span class="eyebrow" style="display: flex; align-items: center; gap: 6px; padding: 4px 7px; border-radius: 4px; background: #2fae6e; color: #ffffff;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #ffffff;"></span>Live</span>
+      <span style="font-size: 14px; font-weight: 500; color: #ffffff; padding: 8px 18px; border-radius: 100px; border: 1px solid #bbc2ce;">Run scenario</span>
+    </div>
+  </div>
+
+  <!-- Map stage -->
+  <div style="flex: 1; position: relative; background-color: #10141a; background-image: radial-gradient(ellipse at 55% 40%, #171c24 0%, #10141a 55%, #0e1012 100%); overflow: hidden;">
+    <!-- land masses -->
+    <svg style="position: absolute; left: 0; top: 0;" width="1440" height="844" viewBox="0 0 1440 844" fill="none">
+      <path d="M0 0 H520 C480 120 430 190 400 300 C370 420 330 520 300 620 C270 700 240 780 220 844 H0 Z" fill="#1a1f27"></path>
+      <path d="M1240 0 H1440 V420 C1400 380 1360 330 1330 260 C1300 180 1270 90 1240 0 Z" fill="#1a1f27"></path>
+      <path d="M0 0 H520 C480 120 430 190 400 300 C370 420 330 520 300 620 C270 700 240 780 220 844" stroke="#262c36" stroke-width="1"></path>
+      <path d="M1240 0 C1270 90 1300 180 1330 260 C1360 330 1400 380 1440 420" stroke="#262c36" stroke-width="1"></path>
+      <!-- graticule -->
+      <path d="M0 211 H1440 M0 422 H1440 M0 633 H1440 M360 0 V844 M720 0 V844 M1080 0 V844" stroke="#1c1f24" stroke-width="1"></path>
+      <!-- authorized ground -->
+      <rect x="880" y="120" width="150" height="110" rx="2" stroke="#2fae6e" stroke-width="1" fill="rgba(47,174,110,0.06)"></rect>
+      <!-- restricted ground -->
+      <rect x="470" y="600" width="130" height="90" rx="2" stroke="#e2a33a" stroke-width="1" fill="rgba(226,163,58,0.06)"></rect>
+      <!-- closure -->
+      <rect x="640" y="300" width="210" height="190" rx="2" stroke="#f0483e" stroke-width="1" fill="rgba(240,72,62,0.08)"></rect>
+      <!-- other vessels -->
+      <circle cx="420" cy="180" r="4" fill="#a0aaba" stroke="#0e1012" stroke-width="2"></circle>
+      <circle cx="960" cy="640" r="4" fill="#a0aaba" stroke="#0e1012" stroke-width="2"></circle>
+      <circle cx="1120" cy="520" r="4" fill="#a0aaba" stroke="#0e1012" stroke-width="2"></circle>
+      <circle cx="540" cy="760" r="4" fill="#f0873a" stroke="#0e1012" stroke-width="2"></circle>
+      <circle cx="930" cy="180" r="4" fill="#e2a33a" stroke="#0e1012" stroke-width="2"></circle>
+      <!-- grey broker track -->
+      <path d="M1000 300 L900 420 L820 452 L790 470" stroke="#8b96aa" stroke-width="1.5" stroke-opacity="0.8"></path>
+      <circle cx="790" cy="470" r="4" fill="#a0aaba" stroke="#0e1012" stroke-width="2"></circle>
+      <!-- night hauler observed track -->
+      <path d="M430 700 L560 560 L655 470 L675 448 L640 430 L695 412 L660 392 L700 378" stroke="#ffffff" stroke-width="1.5"></path>
+      <path d="M700 378 L770 440" stroke="#e2a33a" stroke-width="1.5" stroke-dasharray="4 6"></path>
+      <path d="M770 440 L784 462 L900 560" stroke="#ffffff" stroke-width="1.5"></path>
+      <circle cx="700" cy="378" r="3" fill="#e2a33a"></circle>
+      <circle cx="770" cy="440" r="3" fill="#e2a33a"></circle>
+      <circle cx="900" cy="560" r="6" fill="#f0483e" stroke="#0e1012" stroke-width="2"></circle>
+      <circle cx="900" cy="560" r="12" stroke="#007afc" stroke-width="1.5"></circle>
+    </svg>
+    <span class="mono" style="position: absolute; left: 744px; top: 392px; font-size: 11px; color: #e2a33a;">no AIS · 60 min · estimated</span>
+    <span class="eyebrow" style="position: absolute; left: 642px; top: 282px; color: #f0483e;">Silent Bank seasonal closure</span>
+    <span class="eyebrow" style="position: absolute; left: 882px; top: 102px; color: #2fae6e;">Coastal fishing ground</span>
+    <span style="position: absolute; left: 918px; top: 552px; font-size: 13px; font-weight: 500; color: #ffffff;">FV Night Hauler</span>
+    <span style="position: absolute; left: 802px; top: 462px; font-size: 12px; color: #8b96aa;">MV Grey Broker</span>
+
+    <!-- layer chips -->
+    <div style="position: absolute; left: 352px; top: 16px; display: flex; gap: 8px;">
+      <span style="font-size: 13px; font-weight: 500; color: #ffffff; padding: 6px 14px; border-radius: 100px; background: #007afc;">Vessels</span>
+      <span style="font-size: 13px; font-weight: 500; color: #ffffff; padding: 6px 14px; border-radius: 100px; background: #007afc;">Trails</span>
+      <span style="font-size: 13px; font-weight: 500; color: #ffffff; padding: 6px 14px; border-radius: 100px; background: #007afc;">Zones</span>
+      <span style="font-size: 13px; font-weight: 500; color: #a0aaba; padding: 6px 14px; border-radius: 100px; border: 1px solid #444d5a; background: rgba(14,16,18,0.6);">AIS gaps</span>
+      <span style="font-size: 13px; font-weight: 500; color: #a0aaba; padding: 6px 14px; border-radius: 100px; border: 1px solid #444d5a; background: rgba(14,16,18,0.6);">Heatmap</span>
+      <span style="font-size: 13px; font-weight: 500; color: #a0aaba; padding: 6px 14px; border-radius: 100px; border: 1px solid #444d5a; background: rgba(14,16,18,0.6);">Weather</span>
+    </div>
+
+    <!-- zoom -->
+    <div style="position: absolute; right: 408px; top: 16px; display: flex; flex-direction: column; gap: 8px;">
+      <span style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #444d5a; background: rgba(14,16,18,0.7); display: flex; align-items: center; justify-content: center;"><svg width="14" height="14" viewBox="0 0 14 14" stroke="#a0aaba" stroke-width="1.5"><path d="M7 2v10M2 7h10"></path></svg></span>
+      <span style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #444d5a; background: rgba(14,16,18,0.7); display: flex; align-items: center; justify-content: center;"><svg width="14" height="14" viewBox="0 0 14 14" stroke="#a0aaba" stroke-width="1.5"><path d="M2 7h10"></path></svg></span>
+    </div>
+
+    <!-- Watchlist panel -->
+    <div style="position: absolute; left: 16px; top: 16px; width: 320px; background: #15171b; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 18px; font-weight: 500; color: #ffffff;">Watchlist</span>
+        <span class="mono" style="font-size: 12px; color: #566171;">sorted by risk</span>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <span style="font-size: 12px; font-weight: 500; color: #ffffff; padding: 4px 12px; border-radius: 100px; background: #007afc;">All</span>
+        <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">Cases</span>
+        <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">AIS gaps</span>
+        <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">Fishing</span>
+      </div>
+      <div style="display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 12px; margin: 0 -12px; border-radius: 12px; background: #1c1f24; box-shadow: inset 2px 0 0 #007afc;">
+          <span class="mono" style="font-size: 20px; font-weight: 500; color: #f0483e; width: 44px;">100</span>
+          <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+            <span style="font-size: 14px; font-weight: 500; color: #ffffff;">FV Night Hauler</span>
+            <span style="font-size: 12px; color: #8b96aa;">Fishing pattern inside closed bank</span>
+          </div>
+          <span class="eyebrow" style="padding: 4px 7px; border-radius: 4px; background: rgba(240,72,62,0.12); color: #f0483e;">Critical</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; height: 56px; border-bottom: 1px solid #1c1f24;">
+          <span class="mono" style="font-size: 20px; font-weight: 500; color: #f0873a; width: 44px;">55</span>
+          <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+            <span style="font-size: 14px; font-weight: 500; color: #ffffff;">FV Boundary Runner</span>
+            <span style="font-size: 12px; color: #8b96aa;">Worked the protected reef slowly</span>
+          </div>
+          <span class="eyebrow" style="padding: 4px 7px; border-radius: 4px; background: rgba(240,135,58,0.12); color: #f0873a;">Elevated</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; height: 56px; border-bottom: 1px solid #1c1f24;">
+          <span class="mono" style="font-size: 20px; font-weight: 500; color: #f0873a; width: 44px;">53</span>
+          <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+            <span style="font-size: 14px; font-weight: 500; color: #ffffff;">FV Silent Tide</span>
+            <span style="font-size: 12px; color: #8b96aa;">Reappeared inside a closure after 60 min dark</span>
+          </div>
+          <span class="eyebrow" style="padding: 4px 7px; border-radius: 4px; background: rgba(240,135,58,0.12); color: #f0873a;">Elevated</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; height: 56px;">
+          <span class="mono" style="font-size: 20px; font-weight: 500; color: #e2a33a; width: 44px;">38</span>
+          <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+            <span style="font-size: 14px; font-weight: 500; color: #ffffff;">MV Grey Broker</span>
+            <span style="font-size: 12px; color: #8b96aa;">Met a fishing vessel inside the closure</span>
+          </div>
+          <span class="eyebrow" style="padding: 4px 7px; border-radius: 4px; background: rgba(226,163,58,0.12); color: #e2a33a;">Moderate</span>
+        </div>
+      </div>
+      <span style="font-size: 13px; font-weight: 500; color: #007afc;">All 22 vessels →</span>
+    </div>
+
+    <!-- Live events panel -->
+    <div style="position: absolute; left: 16px; bottom: 16px; width: 320px; background: #15171b; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 18px; font-weight: 500; color: #ffffff;">Events</span>
+        <span class="eyebrow" style="display: flex; align-items: center; gap: 6px; color: #2fae6e;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #2fae6e;"></span>Streaming</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span class="mono" style="font-size: 12px; color: #566171; width: 40px;">10:30</span>
+          <span class="eyebrow" style="padding: 3px 6px; border-radius: 4px; background: rgba(240,72,62,0.12); color: #f0483e;">Case</span>
+          <span style="font-size: 13px; color: #a0aaba;">Opened for FV Night Hauler</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span class="mono" style="font-size: 12px; color: #566171; width: 40px;">10:20</span>
+          <span class="eyebrow" style="padding: 3px 6px; border-radius: 4px; background: rgba(226,163,58,0.12); color: #e2a33a;">Meet</span>
+          <span style="font-size: 13px; color: #a0aaba;">Grey Broker within <span class="mono">0.78 km</span></span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span class="mono" style="font-size: 12px; color: #566171; width: 40px;">10:15</span>
+          <span class="eyebrow" style="padding: 3px 6px; border-radius: 4px; background: rgba(226,163,58,0.12); color: #e2a33a;">AIS</span>
+          <span style="font-size: 13px; color: #a0aaba;">Reappeared <span class="mono">15.6 km</span> from last fix</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Replay bar -->
+    <div style="position: absolute; left: 352px; right: 408px; bottom: 16px; height: 56px; background: #15171b; border-radius: 24px; display: flex; align-items: center; gap: 14px; padding: 0 12px 0 12px;">
+      <span style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #444d5a; display: flex; align-items: center; justify-content: center;"><svg width="12" height="12" viewBox="0 0 12 12" fill="#ffffff"><path d="M3 1.5l7 4.5-7 4.5z"></path></svg></span>
+      <span class="mono" style="font-size: 12px; color: #8b96aa;">08:00</span>
+      <div style="flex: 1; height: 2px; background: #333943; position: relative;">
+        <div style="position: absolute; left: 0; top: 0; height: 2px; width: 52%; background: #ffffff;"></div>
+        <div style="position: absolute; left: 26%; top: 0; height: 2px; width: 21%; background: #e2a33a;"></div>
+        <div style="position: absolute; left: 52%; top: -5px; width: 12px; height: 12px; border-radius: 50%; background: #ffffff;"></div>
+      </div>
+      <span class="mono" style="font-size: 12px; color: #8b96aa;">12:50</span>
+      <span class="mono" style="font-size: 12px; font-weight: 500; color: #ffffff;">10:30</span>
+      <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">4×</span>
+    </div>
+
+    <!-- Vessel panel -->
+    <div style="position: absolute; right: 16px; top: 16px; bottom: 16px; width: 376px; background: #15171b; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span class="eyebrow" style="color: #566171;">Vessel 11 · Fishing · Flag IN</span>
+          <svg width="20" height="20" viewBox="0 0 20 20" stroke="#8b96aa" stroke-width="1.5"><path d="M5 5l10 10M15 5L5 15"></path></svg>
+        </div>
+        <span style="font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.01em; line-height: 1.33;">FV Night Hauler</span>
+        <span class="mono" style="font-size: 12px; color: #8b96aa;">MMSI 419000801 · 12.4500 N 72.4500 E · 12.8 kn · 041°</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: baseline; gap: 12px;">
+          <span style="font-size: 44px; font-weight: 700; color: #f0483e; letter-spacing: -0.88px; line-height: 1.14;">100</span>
+          <span class="eyebrow" style="padding: 4px 7px; border-radius: 4px; background: rgba(240,72,62,0.12); color: #f0483e;">Critical</span>
+          <span class="mono" style="font-size: 12px; color: #566171; margin-left: auto;">computed 10:30</span>
+        </div>
+        <div style="display: flex; height: 4px; gap: 2px;">
+          <div style="flex: 35; background: #f0483e; border-radius: 2px;"></div>
+          <div style="flex: 30; background: #f2643e; border-radius: 2px;"></div>
+          <div style="flex: 23; background: #f0873a; border-radius: 2px;"></div>
+          <div style="flex: 13; background: #e2a33a; border-radius: 2px;"></div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; flex: 1;">
+        <span class="eyebrow" style="color: #566171;">Evidence, strongest first</span>
+        <div style="display: flex; gap: 12px;">
+          <span class="mono" style="font-size: 13px; color: #f0483e; width: 32px;">+35</span>
+          <span style="font-size: 15px; line-height: 1.6; color: #a0aaba;">Fishing-like movement inside a prohibited zone</span>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <span class="mono" style="font-size: 13px; color: #f2643e; width: 32px;">+30</span>
+          <span style="font-size: 15px; line-height: 1.6; color: #a0aaba;">Entered Silent Bank closure and stayed 190 minutes</span>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <span class="mono" style="font-size: 13px; color: #f0873a; width: 32px;">+23</span>
+          <span style="font-size: 15px; line-height: 1.6; color: #a0aaba;">AIS silent for 60 minutes, reappeared <span class="mono">15.6 km</span> away</span>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <span class="mono" style="font-size: 13px; color: #e2a33a; width: 32px;">+13</span>
+          <span style="font-size: 15px; line-height: 1.6; color: #a0aaba;">Met MV Grey Broker within <span class="mono">0.78 km</span> for 30 minutes</span>
+        </div>
+        <span style="font-size: 13px; line-height: 1.5; color: #566171; margin-top: 4px;">A suspicion indicator for human review. Equipment failure, coverage loss or an authorized transfer would explain parts of this pattern.</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; gap: 8px;">
+          <span style="flex: 1; text-align: center; font-size: 14px; font-weight: 500; color: #ffffff; padding: 10px 0; border-radius: 100px; background: #007afc;">Open case</span>
+          <span style="flex: 1; text-align: center; font-size: 14px; font-weight: 500; color: #ffffff; padding: 10px 0; border-radius: 100px; border: 1px solid #bbc2ce;">Timeline</span>
+        </div>
+        <span style="font-size: 14px; font-weight: 500; color: #007afc; text-align: center;">Ask the analyst why →</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

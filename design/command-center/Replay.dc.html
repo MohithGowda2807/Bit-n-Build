@@ -1,0 +1,165 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; background: #0e1012; font-family: 'Plus Jakarta Sans', 'DM Sans', 'Segoe UI', system-ui, sans-serif; color: #a0aaba; }
+    a { color: #007afc; } a:hover { color: #3d9bff; }
+    .mono { font-family: 'JetBrains Mono', 'Consolas', 'SFMono-Regular', monospace; font-variant-numeric: tabular-nums; }
+    .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 900px; background: #0e1012; position: relative; overflow: hidden; display: flex; flex-direction: column; font-family: 'Plus Jakarta Sans', 'DM Sans', 'Segoe UI', system-ui, sans-serif; color: #a0aaba;">
+
+  <div style="height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18M3 12h18"></path><circle cx="12" cy="12" r="3" fill="#007afc" stroke="none"></circle></svg>
+      <div style="display: flex; flex-direction: column; gap: 1px;">
+        <span style="font-size: 15px; font-weight: 700; color: #ffffff; letter-spacing: -0.01em;">OceanSentinel</span>
+        <span class="eyebrow" style="color: #566171;">Replay · Dark fishing composite</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <span class="mono" style="font-size: 32px; font-weight: 500; color: #ffffff; line-height: 1;">09:40<span style="color: #566171;">:00</span></span>
+      <span class="eyebrow" style="color: #566171;">12 Sep · sim time</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="eyebrow" style="padding: 4px 7px; border-radius: 4px; background: #0062ca; color: #ffffff;">Replay</span>
+      <span style="font-size: 14px; font-weight: 500; color: #ffffff; padding: 8px 18px; border-radius: 100px; border: 1px solid #bbc2ce;">Exit replay</span>
+    </div>
+  </div>
+
+  <div style="flex: 1; position: relative; background-color: #10141a; background-image: radial-gradient(ellipse at 55% 40%, #171c24 0%, #10141a 55%, #0e1012 100%); overflow: hidden;">
+    <svg style="position: absolute; left: 0; top: 0;" width="1440" height="844" viewBox="0 0 1440 844" fill="none">
+      <path d="M0 0 H520 C480 120 430 190 400 300 C370 420 330 520 300 620 C270 700 240 780 220 844 H0 Z" fill="#1a1f27"></path>
+      <path d="M1240 0 H1440 V420 C1400 380 1360 330 1330 260 C1300 180 1270 90 1240 0 Z" fill="#1a1f27"></path>
+      <path d="M0 211 H1440 M0 422 H1440 M0 633 H1440 M360 0 V844 M720 0 V844 M1080 0 V844" stroke="#1c1f24" stroke-width="1"></path>
+      <rect x="640" y="300" width="210" height="190" rx="2" stroke="#f0483e" stroke-width="1" fill="rgba(240,72,62,0.08)"></rect>
+      <!-- track so far -->
+      <path d="M430 700 L560 560 L655 470 L675 448 L640 430 L695 412 L660 392 L700 378" stroke="#ffffff" stroke-width="1.5"></path>
+      <!-- currently dark: last fix with expanding uncertainty ring -->
+      <circle cx="700" cy="378" r="4" fill="#e2a33a"></circle>
+      <circle cx="700" cy="378" r="26" stroke="#e2a33a" stroke-width="1" stroke-dasharray="3 5" fill="rgba(226,163,58,0.06)"></circle>
+      <!-- grey broker approaching -->
+      <path d="M1000 300 L940 372" stroke="#8b96aa" stroke-width="1.5" stroke-opacity="0.8"></path>
+      <circle cx="940" cy="372" r="4" fill="#a0aaba" stroke="#0e1012" stroke-width="2"></circle>
+      <circle cx="420" cy="180" r="4" fill="#a0aaba" stroke="#0e1012" stroke-width="2"></circle>
+      <circle cx="540" cy="760" r="4" fill="#f0873a" stroke="#0e1012" stroke-width="2"></circle>
+    </svg>
+    <span class="mono" style="position: absolute; left: 734px; top: 360px; font-size: 11px; color: #e2a33a;">last fix 09:15 · dark 25 min</span>
+    <span style="position: absolute; left: 954px; top: 364px; font-size: 12px; color: #8b96aa;">MV Grey Broker</span>
+    <span class="eyebrow" style="position: absolute; left: 642px; top: 282px; color: #f0483e;">Silent Bank seasonal closure</span>
+
+    <!-- Scenario panel -->
+    <div style="position: absolute; left: 16px; top: 16px; width: 320px; background: #15171b; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      <span style="font-size: 18px; font-weight: 500; color: #ffffff;">Scenarios</span>
+      <div style="display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 12px; margin: 0 -12px; border-radius: 12px; background: #1c1f24; box-shadow: inset 2px 0 0 #007afc;">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+            <span style="font-size: 14px; font-weight: 500; color: #ffffff;">Dark fishing composite</span>
+            <span style="font-size: 12px; color: #8b96aa;">Closure, fishing, gap, rendezvous, case</span>
+          </div>
+          <span class="mono" style="font-size: 12px; color: #a0aaba;">290 min</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; height: 52px; border-bottom: 1px solid #1c1f24;">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+            <span style="font-size: 14px; font-weight: 500; color: #ffffff;">AIS gap</span>
+            <span style="font-size: 12px; color: #8b96aa;">Goes dark, reappears in a closure</span>
+          </div>
+          <span class="mono" style="font-size: 12px; color: #566171;">240 min</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; height: 52px; border-bottom: 1px solid #1c1f24;">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+            <span style="font-size: 14px; font-weight: 500; color: #ffffff;">Vessel rendezvous</span>
+            <span style="font-size: 12px; color: #8b96aa;">Fishing and cargo ships meet at sea</span>
+          </div>
+          <span class="mono" style="font-size: 12px; color: #566171;">160 min</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; height: 52px;">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+            <span style="font-size: 14px; font-weight: 500; color: #ffffff;">Normal vessel</span>
+            <span style="font-size: 12px; color: #8b96aa;">Cargo transit, nothing to see</span>
+          </div>
+          <span class="mono" style="font-size: 12px; color: #566171;">240 min</span>
+        </div>
+      </div>
+      <span style="font-size: 13px; font-weight: 500; color: #007afc;">All 8 scenarios →</span>
+    </div>
+
+    <!-- Story panel -->
+    <div style="position: absolute; right: 16px; top: 16px; width: 376px; background: #15171b; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 18px; font-weight: 500; color: #ffffff;">What the agents saw</span>
+        <span class="mono" style="font-size: 12px; color: #566171;">step 118 / 174</span>
+      </div>
+      <div style="display: flex; flex-direction: column;">
+        <div style="display: flex; gap: 14px; padding: 10px 0;">
+          <span class="mono" style="font-size: 12px; color: #566171; width: 40px;">08:00</span>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 14px; font-weight: 500; color: #a0aaba;">Entered the closure</span>
+            <span style="font-size: 12px; color: #566171;">Zone agent · Silent Bank, NO_FISHING</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 14px; padding: 10px 0;">
+          <span class="mono" style="font-size: 12px; color: #566171; width: 40px;">08:30</span>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 14px; font-weight: 500; color: #a0aaba;">Fishing-like pattern</span>
+            <span style="font-size: 12px; color: #566171;">Fishing agent · slow zig-zag, <span class="mono">97/100</span></span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 14px; padding: 10px 12px; margin: 0 -12px; border-radius: 12px; background: #1c1f24; box-shadow: inset 2px 0 0 #e2a33a;">
+          <span class="mono" style="font-size: 12px; color: #e2a33a; width: 40px;">09:15</span>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 14px; font-weight: 500; color: #ffffff;">AIS went silent</span>
+            <span style="font-size: 12px; color: #8b96aa;">AIS agent · watching for reappearance</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 14px; padding: 10px 0;">
+          <span class="mono" style="font-size: 12px; color: #333943; width: 40px;">10:15</span>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 14px; font-weight: 500; color: #566171;">Reappears 15.6 km away</span>
+            <span style="font-size: 12px; color: #333943;">AIS agent</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 14px; padding: 10px 0;">
+          <span class="mono" style="font-size: 12px; color: #333943; width: 40px;">10:20</span>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 14px; font-weight: 500; color: #566171;">Meets MV Grey Broker</span>
+            <span style="font-size: 12px; color: #333943;">Anomaly agent</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 14px; padding: 10px 0;">
+          <span class="mono" style="font-size: 12px; color: #333943; width: 40px;">10:30</span>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 14px; font-weight: 500; color: #566171;">Risk 100, case opened</span>
+            <span style="font-size: 12px; color: #333943;">Risk engine · Commander</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Replay bar -->
+    <div style="position: absolute; left: 352px; right: 408px; bottom: 16px; height: 56px; background: #15171b; border-radius: 24px; display: flex; align-items: center; gap: 14px; padding: 0 12px;">
+      <span style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #444d5a; display: flex; align-items: center; justify-content: center;"><svg width="12" height="12" viewBox="0 0 12 12" fill="#ffffff"><path d="M2 1.5h3v9H2zM7 1.5h3v9H7z"></path></svg></span>
+      <span class="mono" style="font-size: 12px; color: #8b96aa;">08:00</span>
+      <div style="flex: 1; height: 2px; background: #333943; position: relative;">
+        <div style="position: absolute; left: 0; top: 0; height: 2px; width: 34%; background: #ffffff;"></div>
+        <div style="position: absolute; left: 26%; top: 0; height: 2px; width: 21%; background: #e2a33a;"></div>
+        <div style="position: absolute; left: 34%; top: -5px; width: 12px; height: 12px; border-radius: 50%; background: #ffffff;"></div>
+        <div style="position: absolute; left: 52%; top: -2px; width: 6px; height: 6px; border-radius: 50%; background: #f0483e;"></div>
+      </div>
+      <span class="mono" style="font-size: 12px; color: #8b96aa;">12:50</span>
+      <span style="font-size: 12px; font-weight: 500; color: #ffffff; padding: 4px 12px; border-radius: 100px; background: #007afc;">4×</span>
+      <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">16×</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

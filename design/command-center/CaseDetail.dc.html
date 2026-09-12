@@ -1,0 +1,196 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; background: #0e1012; font-family: 'Plus Jakarta Sans', 'DM Sans', 'Segoe UI', system-ui, sans-serif; color: #a0aaba; }
+    a { color: #007afc; } a:hover { color: #3d9bff; }
+    .mono { font-family: 'JetBrains Mono', 'Consolas', 'SFMono-Regular', monospace; font-variant-numeric: tabular-nums; }
+    .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 900px; background: #0e1012; position: relative; overflow: hidden; display: flex; flex-direction: column; font-family: 'Plus Jakarta Sans', 'DM Sans', 'Segoe UI', system-ui, sans-serif; color: #a0aaba;">
+
+  <!-- Top bar -->
+  <div style="height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18M3 12h18"></path><circle cx="12" cy="12" r="3" fill="#007afc" stroke="none"></circle></svg>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500;">
+        <span style="color: #a0aaba;">Surveillance</span>
+        <span style="color: #566171;">/</span>
+        <span style="color: #a0aaba;">Investigations</span>
+        <span style="color: #566171;">/</span>
+        <span style="color: #ffffff;">Case 1</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 14px; font-weight: 500; color: #ffffff; padding: 8px 18px; border-radius: 100px; border: 1px solid #bbc2ce;">Escalate</span>
+      <span style="font-size: 14px; font-weight: 500; color: #ffffff; padding: 8px 18px; border-radius: 100px; border: 1px solid #bbc2ce;">Dismiss</span>
+      <span style="font-size: 14px; font-weight: 500; color: #ffffff; padding: 8px 18px; border-radius: 100px; background: #007afc;">Resolve case</span>
+    </div>
+  </div>
+
+  <div style="flex: 1; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; padding: 0 16px 16px; min-height: 0;">
+
+    <!-- Case summary -->
+    <div style="grid-column: span 4; background: #15171b; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 22px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="eyebrow" style="padding: 4px 7px; border-radius: 4px; background: #0062ca; color: #ffffff;">Under review</span>
+          <span class="eyebrow" style="color: #566171;">Case 1 · opened 12 Sep 10:30</span>
+        </div>
+        <span style="font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.01em; line-height: 1.33;">FV Night Hauler</span>
+        <span class="mono" style="font-size: 12px; color: #8b96aa;">Fishing · MMSI 419000801 · IMO — · flag IN</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: baseline; gap: 12px;">
+          <span style="font-size: 44px; font-weight: 700; color: #f0483e; letter-spacing: -0.88px; line-height: 1.14;">100</span>
+          <span class="eyebrow" style="padding: 4px 7px; border-radius: 4px; background: rgba(240,72,62,0.12); color: #f0483e;">Critical</span>
+        </div>
+        <div style="display: flex; height: 4px; gap: 2px;">
+          <div style="flex: 35; background: #f0483e; border-radius: 2px;"></div>
+          <div style="flex: 30; background: #f2643e; border-radius: 2px;"></div>
+          <div style="flex: 23; background: #f0873a; border-radius: 2px;"></div>
+          <div style="flex: 13; background: #e2a33a; border-radius: 2px;"></div>
+        </div>
+        <div class="mono" style="display: flex; justify-content: space-between; font-size: 11px; color: #566171;">
+          <span>fishing 35</span><span>zone 30</span><span>ais 23</span><span>meet 13</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <span class="eyebrow" style="color: #566171;">Assigned to</span>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px; background: #1c1f24; border: 1px solid #444d5a;">
+          <span style="width: 24px; height: 24px; border-radius: 50%; background: #23262d; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #ffffff;">A</span>
+          <span style="font-size: 14px; font-weight: 500; color: #ffffff;">analyst.a</span>
+          <svg style="margin-left: auto;" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8b96aa" stroke-width="1.5"><path d="M4 6l4 4 4-4"></path></svg>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <span class="eyebrow" style="color: #566171;">Summary</span>
+        <span style="font-size: 15px; line-height: 1.6; color: #a0aaba;">Scored 100/100. Fishing-like movement inside a prohibited zone; entered Silent Bank Seasonal Closure and stayed 190 minutes with fishing-like behavior; AIS gap of 60 minutes; possible transshipment with MV Grey Broker at <span class="mono">0.78 km</span>.</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: auto;">
+        <span class="eyebrow" style="color: #566171;">Dismiss reason</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+          <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">AIS equipment failure</span>
+          <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">Coverage issue</span>
+          <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">Authorized activity</span>
+          <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">Weather</span>
+          <span style="font-size: 12px; font-weight: 500; color: #a0aaba; padding: 4px 12px; border-radius: 100px; border: 1px solid #444d5a;">Data error</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Evidence -->
+    <div style="grid-column: span 5; display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+      <div style="background: #15171b; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 16px; flex: 1;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 18px; font-weight: 500; color: #ffffff;">Evidence</span>
+          <span class="mono" style="font-size: 12px; color: #566171;">snapshot frozen at 10:30</span>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <div style="display: grid; grid-template-columns: 56px 72px minmax(0, 1fr) 48px; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid #1c1f24;">
+            <span class="mono" style="font-size: 12px; color: #566171;">08:00</span>
+            <span class="eyebrow" style="padding: 3px 6px; border-radius: 4px; background: rgba(242,100,62,0.12); color: #f2643e; text-align: center;">Zone</span>
+            <span style="font-size: 15px; line-height: 1.5; color: #a0aaba;">Entered Silent Bank Seasonal Closure (NO_FISHING)</span>
+            <span class="mono" style="font-size: 13px; color: #f2643e; text-align: right;">+30</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 56px 72px minmax(0, 1fr) 48px; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid #1c1f24;">
+            <span class="mono" style="font-size: 12px; color: #566171;">08:30</span>
+            <span class="eyebrow" style="padding: 3px 6px; border-radius: 4px; background: rgba(240,72,62,0.12); color: #f0483e; text-align: center;">Fishing</span>
+            <span style="font-size: 15px; line-height: 1.5; color: #a0aaba;">Slow zig-zag passes, <span class="mono">97/100</span> fishing-like, inside the closure</span>
+            <span class="mono" style="font-size: 13px; color: #f0483e; text-align: right;">+35</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 56px 72px minmax(0, 1fr) 48px; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid #1c1f24;">
+            <span class="mono" style="font-size: 12px; color: #566171;">09:15</span>
+            <span class="eyebrow" style="padding: 3px 6px; border-radius: 4px; background: rgba(240,135,58,0.12); color: #f0873a; text-align: center;">AIS gap</span>
+            <span style="font-size: 15px; line-height: 1.5; color: #a0aaba;">Silent for 60 minutes, reappeared <span class="mono">15.6 km</span> from the last fix</span>
+            <span class="mono" style="font-size: 13px; color: #f0873a; text-align: right;">+23</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 56px 72px minmax(0, 1fr) 48px; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid #1c1f24;">
+            <span class="mono" style="font-size: 12px; color: #566171;">10:20</span>
+            <span class="eyebrow" style="padding: 3px 6px; border-radius: 4px; background: rgba(226,163,58,0.12); color: #e2a33a; text-align: center;">Meet</span>
+            <span style="font-size: 15px; line-height: 1.5; color: #a0aaba;">Within <span class="mono">0.78 km</span> of MV Grey Broker for 30 minutes, both slow</span>
+            <span class="mono" style="font-size: 13px; color: #e2a33a; text-align: right;">+13</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 56px 72px minmax(0, 1fr) 48px; gap: 12px; align-items: center; padding: 12px 0;">
+            <span class="mono" style="font-size: 12px; color: #566171;">11:10</span>
+            <span class="eyebrow" style="padding: 3px 6px; border-radius: 4px; background: rgba(160,170,186,0.12); color: #a0aaba; text-align: center;">Zone</span>
+            <span style="font-size: 15px; line-height: 1.5; color: #a0aaba;">Left the closure after 190 minutes</span>
+            <span class="mono" style="font-size: 13px; color: #566171; text-align: right;">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #15171b; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 18px; font-weight: 500; color: #ffffff;">Analyst narrative</span>
+          <span class="eyebrow" style="padding: 4px 7px; border-radius: 4px; background: #0062ca; color: #ffffff;">Groq</span>
+        </div>
+        <span style="font-size: 15px; line-height: 1.6; color: #a0aaba;"><span style="color: #ffffff; font-weight: 500;">Headline.</span> A fishing vessel worked a closed bank for over three hours, went dark for an hour, and met a cargo ship on reappearing. <span style="color: #ffffff; font-weight: 500;">Recommended action:</span> ESCALATE. Benign explanations to rule out: transceiver fault, satellite coverage loss, an authorized transfer.</span>
+        <span style="font-size: 14px; font-weight: 500; color: #007afc;">Read the full narrative →</span>
+      </div>
+    </div>
+
+    <!-- Map snapshot and audit -->
+    <div style="grid-column: span 3; display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+      <div style="background: #15171b; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="height: 220px; position: relative; background: radial-gradient(ellipse at 50% 45%, #171c24 0%, #10141a 70%);">
+          <svg style="position: absolute; left: 0; top: 0;" width="328" height="220" viewBox="0 0 328 220" fill="none">
+            <rect x="110" y="60" width="130" height="110" rx="2" stroke="#f0483e" stroke-width="1" fill="rgba(240,72,62,0.08)"></rect>
+            <path d="M20 200 L110 120 L150 95 L160 84 L140 76 L170 66 L150 56 L176 48" stroke="#ffffff" stroke-width="1.5"></path>
+            <path d="M176 48 L222 88" stroke="#e2a33a" stroke-width="1.5" stroke-dasharray="4 6"></path>
+            <path d="M222 88 L232 104 L300 160" stroke="#ffffff" stroke-width="1.5"></path>
+            <circle cx="300" cy="160" r="5" fill="#f0483e" stroke="#0e1012" stroke-width="2"></circle>
+          </svg>
+          <span style="position: absolute; left: 16px; top: 14px; font-size: 13px; font-weight: 500; color: #ffffff;">Track, 08:00 to 12:50</span>
+        </div>
+        <div style="padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 14px; font-weight: 500; color: #007afc;">Open on map →</span>
+          <span style="font-size: 14px; font-weight: 500; color: #007afc;">Replay →</span>
+        </div>
+      </div>
+
+      <div style="background: #15171b; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 14px; flex: 1;">
+        <span style="font-size: 18px; font-weight: 500; color: #ffffff;">Audit log</span>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; gap: 12px;">
+            <span class="mono" style="font-size: 12px; color: #566171; width: 40px;">10:30</span>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 13px; font-weight: 500; color: #ffffff;">Case created</span>
+              <span style="font-size: 12px; color: #8b96aa;">risk engine · score 100</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <span class="mono" style="font-size: 12px; color: #566171; width: 40px;">10:32</span>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 13px; font-weight: 500; color: #ffffff;">Assigned</span>
+              <span style="font-size: 12px; color: #8b96aa;">operator → analyst.a</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <span class="mono" style="font-size: 12px; color: #566171; width: 40px;">10:34</span>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 13px; font-weight: 500; color: #ffffff;">Narrative generated</span>
+              <span style="font-size: 12px; color: #8b96aa;">investigation agent · groq</span>
+            </div>
+          </div>
+        </div>
+        <span style="font-size: 13px; line-height: 1.5; color: #566171; margin-top: auto;">Every decision here is logged with who made it and why. Dismissals feed the false-positive dataset.</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

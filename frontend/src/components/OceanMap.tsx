@@ -104,7 +104,28 @@ interface OceanMapProps {
   mapSelectionMode: 'origin' | 'destination' | null;
   onSelectCoordinate: (coord: Coordinate) => void;
   replayPosition: [number, number] | null;
+  /** Chart keeps the light OpenStreetMap look; Night is the dark basemap the surveillance view uses. */
+  basemap?: Basemap;
+  onBasemapChange?: (basemap: Basemap) => void;
+  /** Hide the Phase 1 layer bar when a page supplies its own chips. */
+  showLayerBar?: boolean;
 }
+
+export type Basemap = 'chart' | 'night';
+
+export const BASEMAPS: Record<Basemap, { url: string; attribution: string; opacity: number }> = {
+  chart: {
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    opacity: 0.92,
+  },
+  night: {
+    // Esri Dark Gray Canvas: free, no key, dark land with quiet labels. Max zoom 16.
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+    opacity: 1,
+  },
+};
 
 export const OceanMap: React.FC<OceanMapProps> = ({
   vessels,
@@ -122,8 +143,18 @@ export const OceanMap: React.FC<OceanMapProps> = ({
   onSelectAlternative,
   mapSelectionMode,
   onSelectCoordinate,
-  replayPosition
+  replayPosition,
+  basemap: basemapProp,
+  onBasemapChange,
+  showLayerBar = true
 }) => {
+  const [basemapState, setBasemapState] = useState<Basemap>('chart');
+  const basemap = basemapProp ?? basemapState;
+  const setBasemap = (next: Basemap) => {
+    setBasemapState(next);
+    onBasemapChange?.(next);
+  };
+  const tiles = BASEMAPS[basemap];
   // Layer toggles
   const [showVessels, setShowVessels] = useState(true);
   const [showDebris, setShowDebris] = useState(true);
@@ -150,7 +181,15 @@ export const OceanMap: React.FC<OceanMapProps> = ({
       )}
 
       {/* Layer Control Bar */}
+      {showLayerBar && (
       <div className="absolute top-4 right-4 z-[1000] bg-slate-900/90 backdrop-blur border border-slate-700/80 rounded-lg p-2 shadow-xl flex items-center space-x-2 text-xs font-mono">
+        <button
+          onClick={() => setBasemap(basemap === 'chart' ? 'night' : 'chart')}
+          className="px-2 py-1 rounded border border-slate-600 text-slate-300 hover:text-white"
+          title="Switch basemap"
+        >
+          {basemap === 'chart' ? 'Chart' : 'Night'}
+        </button>
         <span className="text-slate-400 font-semibold px-1">Layers:</span>
         <button
           onClick={() => setShowVessels(!showVessels)}
@@ -185,6 +224,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
           ⚓ Ports
         </button>
       </div>
+      )}
 
       <MapContainer
         center={[15.0, 75.0]}
@@ -199,11 +239,12 @@ export const OceanMap: React.FC<OceanMapProps> = ({
         />
         <RouteBoundsController coords={activeRoute ? activeRoute.geometry.coordinates : null} />
 
-        {/* Clean OpenStreetMap Maritime Navigation Basemap */}
+        {/* Basemap: Chart (OpenStreetMap) or Night (CARTO dark) */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-          opacity={0.92}
+          key={basemap}
+          attribution={tiles.attribution}
+          url={tiles.url}
+          opacity={tiles.opacity}
         />
 
         {/* Marine Protected Areas & Restricted Zones Polygons */}
