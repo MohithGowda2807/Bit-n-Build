@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { OceanMap, Basemap } from '../components/OceanMap';
 import { BasemapToggle } from '../components/map/BaseMap';
 import { Eyebrow, FilterPill, GhostLink, IconFrame, Mono, OutlinePill, Panel, PrimaryPill, RiskBadge } from '../components/ui/primitives';
-import { fetchAlerts, fetchPorts, fetchVessels, fetchZones, optimizeRoute, fetchActiveStorms, getOperatingMode, recalculateVoyageRoute, fetchVoyageRouteVersions } from '../services/api';
+import { fetchAlerts, fetchPorts, fetchRoute, fetchVessels, fetchZones, optimizeRoute, fetchActiveStorms, getOperatingMode, recalculateVoyageRoute, fetchVoyageRouteVersions } from '../services/api';
 import { Alert, Coordinate, MarineZone, OptimizationWeights, Port, RouteDetail, RouteOptimizeResponse, Vessel, Storm, RouteVersion, RecalculateRouteResponse } from '../types';
 import { formatClock } from '../design/format';
 import { ScenarioControlBar } from '../components/routing/ScenarioControlBar';
@@ -31,6 +31,8 @@ export const LogisticsPage: React.FC = () => {
  const [operatingMode, setOperatingModeState] = useState<string>('autonomous');
  const [routeVersions, setRouteVersions] = useState<RouteVersion[]>([]);
  const [diffModal, setDiffModal] = useState<RecalculateRouteResponse | null>(null);
+ // The route the commander switched the live voyage to; shown on the map until the operator plans afresh.
+ const [hazardRoute, setHazardRoute] = useState<RouteDetail | null>(null);
  const [isRerouting, setIsRerouting] = useState<boolean>(false);
  const [basemap, setBasemap] = useState<Basemap>('night');
  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
@@ -79,7 +81,8 @@ export const LogisticsPage: React.FC = () => {
  setOriginPortId(mumbai.id);
  setDestPortId(singapore.id);
  setLoading(true);
- optimizeRoute({ vessel_id: v[0]?.id ?? 1, origin: orig, destination: dest, mode: 'fuel_efficient', optimization: MODES[0].weights })
+        // Opening the tab previews the default corridor; only an explicit plan or the commander changes the live voyage.
+ optimizeRoute({ vessel_id: v[0]?.id ?? 1, origin: orig, destination: dest, mode: 'fuel_efficient', optimization: MODES[0].weights, record_version: false })
           .then(res => setResult(res))
           .catch(() => {})
           .finally(() => setLoading(false));
@@ -107,7 +110,7 @@ export const LogisticsPage: React.FC = () => {
 
  const generate = async () => {
  if (!origin || !destination) { setError('Choose an origin and a destination first.'); return; }
- setLoading(true); setError(null); setAltIndex(null); setProgress(0); setPlaying(false);
+ setLoading(true); setError(null); setAltIndex(null); setProgress(0); setPlaying(false); setHazardRoute(null);
  try {
  const chosen = MODES.find(m => m.id === mode)!;
  setResult(await optimizeRoute({ vessel_id: vesselId ?? 1, origin, destination, mode, optimization: chosen.weights }));
@@ -123,10 +126,8 @@ export const LogisticsPage: React.FC = () => {
  setIsRerouting(true);
  const res = await recalculateVoyageRoute(1, 'DYNAMIC_STORM_AVOIDANCE', operatingMode, 'safest');
  setDiffModal(res);
-      // Refresh route versions and route display
- const vers = await fetchVoyageRouteVersions(1);
- setRouteVersions(vers);
- generate();
+ setRouteVersions(await fetchVoyageRouteVersions(1));
+ if (res.applied) setHazardRoute(await fetchRoute(res.new_route_id));
     } catch (err: any) {
  setError(`Dynamic recalculation failed: ${err.message}`);
     } finally {
@@ -137,8 +138,10 @@ export const LogisticsPage: React.FC = () => {
  const handleCycleExecuted = (cycleRes: any) => {
  fetchActiveStorms().then(setStorms).catch(() => {});
  fetchVoyageRouteVersions(1).then(setRouteVersions).catch(() => {});
- if (cycleRes?.environmental_routing?.recalculations?.length > 0) {
- generate();
+    // Show the route the commander applied. Re-planning here would supersede it with a storm-blind corridor.
+ const applied = (cycleRes?.environmental_routing?.recalculations ?? []).find((r: any) => r.applied);
+ if (applied) {
+ fetchRoute(applied.new_route_id).then(r => { setHazardRoute(r); setActiveTab('lineage'); }).catch(() => {});
     }
   };
 
@@ -222,7 +225,7 @@ export const LogisticsPage: React.FC = () => {
  selectedVessel={selectedVessel}
  origin={origin}
  destination={destination}
- activeRoute={result?.recommended_route ?? null}
+ activeRoute={hazardRoute ?? result?.recommended_route ?? null}
  alternativeRoutes={result?.alternatives ?? []}
  selectedAlternativeIndex={altIndex}
  onSelectAlternative={setAltIndex}

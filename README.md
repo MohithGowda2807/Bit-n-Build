@@ -92,6 +92,18 @@ Details in [docs/surveillance.md](./docs/surveillance.md).
 
 ---
 
+## Demo walkthrough
+
+Start both servers with a fresh database (delete `oceansentinel.db` in the directory you launch from), then, as the Operator role in the top bar:
+
+1. **Surveillance**: run the *Dark fishing composite* scenario. Two cases open; select FV Night Hauler to see the five risk factors, the baseline block and the Timeline.
+2. **Case 1**: Generate narrative (Groq answers in about two minutes), then Escalate. The audit log records who did what and in which role.
+3. **Replay**: back on Surveillance, press Replay and watch the cursor jump across the amber dark window.
+4. **Logistics**: Inject hazard with the default *Sumatra Squall* preset. The commander reroutes the live voyage; the map shows the avoidance route and Lineage History gains a HAZARD AVOIDANCE version. Clear ocean and run the loop again to see it settle.
+5. **Roles**: switch to Viewer or Analyst and watch the run, hazard and case actions lock; the API refuses them too.
+
+---
+
 ## Getting Started
 
 ### 1. Prerequisites

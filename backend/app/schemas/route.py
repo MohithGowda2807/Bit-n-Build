@@ -36,6 +36,7 @@ class RouteOptimizeRequest(BaseModel):
     mode: Optional[str] = "balanced"  # fastest, fuel_efficient, green, balanced, custom
     cargo_weight_tonnes: Optional[float] = None
     departure_time: Optional[datetime] = None
+    record_version: bool = True  # False plans only: the live voyage and its lineage are left alone
 
 
 class GeoJSONGeometry(BaseModel):

@@ -154,6 +154,8 @@ export interface OptimizePayload {
   mode?: string;
   optimization?: OptimizationWeights;
   cargo_weight_tonnes?: number;
+  /** false plans a corridor without rewriting the live voyage's route and lineage. */
+  record_version?: boolean;
 }
 
 export async function optimizeRoute(payload: OptimizePayload): Promise<RouteOptimizeResponse> {
@@ -180,6 +182,22 @@ export async function createVoyage(vessel_id: number, route_id: number): Promise
 }
 
 // --- Phase 2 Environmental Intelligence & Dynamic Routing APIs ---
+
+/** One stored route as the map draws it; metrics the optimizer response carries but a stored row lacks default to zero. */
+export async function fetchRoute(routeId: number): Promise<import('../types').RouteDetail> {
+  const res = await fetch(`${API_BASE}/api/v1/routes/${routeId}`);
+  if (!res.ok) throw await failure(res, `Route ${routeId} could not be loaded`);
+  const r = await res.json();
+  return {
+    id: r.id, name: r.name, optimization_mode: r.optimization_mode ?? 'safest',
+    distance_km: r.distance_km ?? 0, estimated_time_hours: r.estimated_time_hours ?? 0,
+    estimated_fuel_liters: r.estimated_fuel_liters ?? 0, estimated_co2_kg: r.estimated_co2_kg ?? 0,
+    estimated_cost: r.estimated_cost ?? 0, risk_score: r.risk_score ?? 0, environmental_score: r.environmental_score ?? 0,
+    optimization_score: r.optimization_score ?? 0, fuel_saved_liters: 0, co2_avoided_kg: 0, eta: r.eta ?? '',
+    // Recalculated routes store a bare coordinate list; the optimizer stores a GeoJSON LineString.
+    geometry: Array.isArray(r.geometry) ? { type: 'LineString', coordinates: r.geometry } : r.geometry,
+  };
+}
 
 export async function fetchActiveStorms(): Promise<import('../types').Storm[]> {
   const res = await fetch(`${API_BASE}/api/v1/storms/active`);

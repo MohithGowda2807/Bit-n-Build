@@ -19,7 +19,8 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
  onModeChanged,
  onCycleExecuted
 }) => {
- const [selectedPreset, setSelectedPreset] = useState<string>('bay_of_bengal_cyclone');
+ // The Malacca squall sits on the seeded Mumbai to Singapore corridor, so it is the preset that visibly reroutes.
+ const [selectedPreset, setSelectedPreset] = useState<string>('malacca_squall');
  const [loading, setLoading] = useState<boolean>(false);
  const [statusMessage, setStatusMessage] = useState<string | null>(null);
  const [role, setRole] = useState<Role>(session.role);
@@ -118,8 +119,8 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
  onChange={e => setSelectedPreset(e.target.value)}
  className="bg-os-void text-white border border-os-steel text-xs font-mono rounded-input px-3 py-1.5 focus:outline-none max-w-[320px] truncate"
         >
-          <option value="bay_of_bengal_cyclone">Cyclone Vardah (Bay of Bengal / Malacca)</option>
-          <option value="malacca_squall">Sumatra Squall (Malacca Strait Choke)</option>
+          <option value="malacca_squall">Sumatra Squall (Malacca Strait, on the active corridor)</option>
+          <option value="bay_of_bengal_cyclone">Cyclone Vardah (Bay of Bengal)</option>
           <option value="arabian_sea_monsoon">Monsoon Depression (Arabian Sea / Gulf)</option>
           <option value="pacific_typhoon">Super Typhoon Rai (Pacific / East Asia)</option>
           <option value="atlantic_hurricane">Hurricane Lee (North Atlantic Trans-oceanic)</option>

@@ -166,6 +166,8 @@ class RoutingService:
         # Build GeoJSON [[lon, lat], ...]
         geojson_coords = [[pt[1], pt[0]] for pt in new_path_coords]
         geojson_str = json.dumps(geojson_coords)
+        # Stored routes carry a GeoJSON LineString, the same shape the optimizer writes.
+        geometry_geojson = json.dumps({"type": "LineString", "coordinates": geojson_coords})
 
         # Pre-assess risk of new route
         # Temporarily instantiate route object to evaluate with risk engine
@@ -181,7 +183,7 @@ class RoutingService:
             estimated_co2_kg=co2_kg,
             estimated_cost=cost_est,
             risk_score=20.0,
-            geometry_geojson=geojson_str
+            geometry_geojson=geometry_geojson
         )
         new_assessment = risk_engine.assess_route_risk(temp_route, db, vessel)
         new_risk = new_assessment.overall_score
