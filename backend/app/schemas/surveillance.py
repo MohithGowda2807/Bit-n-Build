@@ -227,6 +227,21 @@ class VesselBaselineResponse(BaseModel):
     deviation: Optional[BehaviorDeviationResponse] = None
 
 
+class HeatCellResponse(BaseModel):
+    lat: float  # south-west corner of the cell
+    lon: float
+    positions: int
+    events: int
+    max_risk: float
+    intensity: float  # 0-1, relative to the hottest cell
+
+
+class HeatmapResponse(BaseModel):
+    cell_degrees: float
+    hours: Optional[float] = None
+    cells: List[HeatCellResponse]
+
+
 class ReplayDarkWindow(BaseModel):
     mmsi: str
     name: str

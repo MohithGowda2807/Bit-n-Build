@@ -10,14 +10,14 @@ import { ReplayBar, ReplayState } from '../components/surveillance/ReplayBar';
 import { FilterPill, Mono, OutlinePill, PrimaryPill } from '../components/ui/primitives';
 import { fetchVessels } from '../services/api';
 import {
-  fetchAisGaps, fetchFishingZones, fetchInvestigations, fetchProtectedAreas, fetchRiskList, fetchScenarios,
+  fetchAisGaps, fetchFishingZones, fetchHeatmap, fetchInvestigations, fetchProtectedAreas, fetchRiskList, fetchScenarios,
   fetchSurveillanceEvents, fetchVesselAisTrack, fetchVesselBaseline, fetchVesselRisk, runScenario, startReplay,
 } from '../services/surveillance';
 import { telemetry } from '../services/telemetry';
 import { session } from '../services/session';
 import { Vessel } from '../types';
 import {
-  DarkPeriod, FishingZone, InvestigationCase, LiveSurveillanceEvent, ProtectedArea, ReplayStep, ScenarioInfo, VesselBaseline, VesselRisk, VesselRiskSummary,
+  DarkPeriod, FishingZone, Heatmap, InvestigationCase, LiveSurveillanceEvent, ProtectedArea, ReplayStep, ScenarioInfo, VesselBaseline, VesselRisk, VesselRiskSummary,
 } from '../types/surveillance';
 import { splitTrackAtGaps, TrackSegment } from '../design/track';
 import { darkSpans, timeProgress } from '../design/replay';
@@ -52,7 +52,8 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
 
   const [basemap, setBasemap] = useState<Basemap>('night');
   const [feedsOpen, setFeedsOpen] = useState(true);
-  const [layers, setLayers] = useState<LayerState>({ vessels: true, trails: true, zones: true, gaps: true });
+  const [layers, setLayers] = useState<LayerState>({ vessels: true, trails: true, zones: true, gaps: true, heat: false });
+  const [heatmap, setHeatmap] = useState<Heatmap | null>(null);
 
   const [selectedId, setSelectedId] = useState<number | null>(initialSelectedId);
   const [panel, setPanel] = useState<'vessel' | 'analyst' | 'timeline'>('vessel');
@@ -76,6 +77,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
     setVessels(v);
     setRisks(r);
     setCases(c);
+    fetchHeatmap().then(setHeatmap).catch(() => setHeatmap(null));
     setEvents(e.map(ev => ({
       key: `db-${ev.id}`, event_type: ev.event_type, vessel_id: ev.vessel_id, timestamp: ev.timestamp,
       payload: { ...ev.payload, score: ev.score, other_vessel_id: ev.other_vessel_id }, zone_name: ev.zone_name,
@@ -213,6 +215,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
         gaps={gaps}
         layers={layers}
         replayPositions={replay ? replayPositions : undefined}
+        heatmap={heatmap}
       />
 
       {/* Feeds toggle, layer chips and scenario runner */}
@@ -225,6 +228,7 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
         <FilterPill active={layers.trails} onClick={() => toggleLayer('trails')}>Trails</FilterPill>
         <FilterPill active={layers.zones} onClick={() => toggleLayer('zones')}>Zones</FilterPill>
         <FilterPill active={layers.gaps} onClick={() => toggleLayer('gaps')}>AIS gaps</FilterPill>
+        <FilterPill active={layers.heat} onClick={() => toggleLayer('heat')}>Heat</FilterPill>
         <span className="w-px h-6 bg-os-pewter mx-1" />
         <select
           value={scenario}

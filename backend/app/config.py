@@ -28,6 +28,11 @@ class Settings(BaseSettings):
 
     # Surveillance (Phase 3)
     AIS_GAP_THRESHOLD_SECONDS: int = 1800
+    # AIS source: 'simulation' (scripted scenarios) or 'aisstream' (live, needs a free key from aisstream.io)
+    AIS_PROVIDER: str = "simulation"
+    AISSTREAM_API_KEY: str = ""
+    AIS_BOUNDING_BOX: str = "10,68,16,76"  # min_lat,min_lon,max_lat,max_lon (eastern Arabian Sea)
+    AIS_COLLECT_SECONDS: int = 30            # how long one live ingest listens to the stream
     RISK_ALERT_THRESHOLD: int = 60   # score above this is an alert
     RISK_CASE_THRESHOLD: int = 80    # score above this opens an investigation case
     SURVEILLANCE_CYCLE_SECONDS: int = 0  # 0 disables the background analysis loop

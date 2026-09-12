@@ -64,6 +64,10 @@ Every tracked vessel gets one `vessel_behavior_profiles` row: average speed, spe
 
 The last `BASELINE_CURRENT_HOURS` (6) of the track are scored against the profile: speed z-score (full 60 points at 3 sd, with a 1 kn floor on the spread), turning rate against the usual rate (20 points at 3x) and new AIS gaps for a vessel with none in its history (20 points). A score above 40 emits a `BEHAVIOR_DEVIATION` event with a plain-language explanation; the latest comparison is always kept on the profile and served by `GET /api/v1/vessels/{id}/baseline`.
 
+## AIS sources
+
+`AIS_PROVIDER` selects where ingestion pulls from. `simulation` (default) replays the scripted scenarios. `aisstream` connects to the free aisstream.io websocket with `AISSTREAM_API_KEY`, listens for `AIS_COLLECT_SECONDS` inside `AIS_BOUNDING_BOX` (min_lat,min_lon,max_lat,max_lon), and normalises position reports and static data onto the same `AISReport` and `AISVesselInfo` shapes; ship-type codes collapse onto FISHING, CARGO, TANKER and the other types the risk engine knows. `POST /api/v1/ais/ingest` (ADMIN) pulls one batch from the configured provider and runs detection and risk on it; `GET /api/v1/ais/provider` reports which source is active and whether it is configured. With a live source the behavior baseline learns from stored history once at least `BASELINE_MIN_HISTORY_HOURS` exist; until then vessels have no baseline factor, which is honest rather than invented.
+
 ## Access control
 
 Roles are VIEWER < ANALYST < OPERATOR < ADMIN (spec sections 92-93). The caller sends `X-Role` and `X-User` headers; a missing role means VIEWER and an unknown one is a 400. Guards live in `backend/app/security.py` and every guarded route declares its minimum:
@@ -83,9 +87,10 @@ A refused call answers 403 with code `FORBIDDEN`, the required role and the call
 GET  /api/v1/auth/roles               GET /api/v1/auth/me
 GET  /api/v1/vessels?mmsi=            GET /api/v1/vessels/{id}/track?hours=   GET /api/v1/vessels/{id}/risk
 GET  /api/v1/vessels/{id}/baseline
-GET  /api/v1/ais/gaps                 GET /api/v1/ais/gaps/{id}
+GET  /api/v1/ais/gaps                 GET /api/v1/ais/gaps/{id}               GET /api/v1/ais/provider   POST /api/v1/ais/ingest
 GET  /api/v1/fishing/zones            GET /api/v1/fishing/protected-areas     GET /api/v1/fishing/events
 GET  /api/v1/surveillance/events      GET /api/v1/surveillance/risk           POST /api/v1/surveillance/run-cycle
+GET  /api/v1/surveillance/heatmap?cell_degrees=0.25&hours=   (positions, detections, max risk per grid cell)
 GET  /api/v1/investigations           GET /api/v1/investigations/{id}         GET /api/v1/investigations/dismiss-reasons
 POST /api/v1/investigations/{id}/assign|escalate|resolve|dismiss|analyze
 GET  /api/v1/simulation/scenarios     POST /api/v1/simulation/run             POST /api/v1/simulation/reset

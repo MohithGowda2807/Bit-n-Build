@@ -1,6 +1,6 @@
 import {
   AISPosition, DarkPeriod, Evidence, FishingZone, InvestigationCase, InvestigationCaseDetail, ProtectedArea,
-  ReplayStart, ScenarioInfo, SimulationRunResult, SurveillanceEvent, VesselBaseline, VesselRisk, VesselRiskSummary,
+  Heatmap, ReplayStart, ScenarioInfo, SimulationRunResult, SurveillanceEvent, VesselBaseline, VesselRisk, VesselRiskSummary,
 } from '../types/surveillance';
 
 import { API_BASE } from './api';
@@ -42,6 +42,8 @@ export const fetchAisGaps = (vesselId?: number) =>
 
 export const fetchSurveillanceEvents = (limit = 40, vesselId?: number) =>
   getJson<SurveillanceEvent[]>(`/api/v1/surveillance/events?limit=${limit}${vesselId ? `&vessel_id=${vesselId}` : ''}`);
+
+export const fetchHeatmap = (cellDegrees = 0.25) => getJson<Heatmap>(`/api/v1/surveillance/heatmap?cell_degrees=${cellDegrees}`);
 
 export const fetchFishingZones = () => getJson<FishingZone[]>('/api/v1/fishing/zones');
 
