@@ -11,9 +11,20 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from app.services.ais.provider import AISReport
-from app.services.ais.simulation import SimulationAISProvider
+from app.services.ais.simulation import SCENARIOS, SimulationAISProvider
 
 logger = logging.getLogger("oceansentinel.replay")
+
+
+def dark_window_fractions(scenario: str) -> List[Dict]:
+    """Each scripted dark window as start/end fractions of the scenario's full duration."""
+    scripts = SCENARIOS[scenario]
+    span = max(script.total_minutes() for script in scripts)
+    return [
+        {"mmsi": script.info.mmsi, "name": script.info.name, "start": start / span, "end": end / span}
+        for script in scripts
+        for start, end in script.dark_windows
+    ]
 
 
 def _steps(provider: SimulationAISProvider) -> List[List[AISReport]]:

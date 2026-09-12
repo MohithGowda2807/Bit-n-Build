@@ -13,13 +13,14 @@ interface Props {
   onClose: () => void;
   onOpenCase: () => void;
   onAsk: () => void;
+  onTimeline: () => void;
 }
 
 const CloseIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" stroke="currentColor" strokeWidth="1.5" fill="none" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" /></svg>
 );
 
-export const VesselPanel: React.FC<Props> = ({ vessel, risk, openCase, loading, onClose, onOpenCase, onAsk }) => {
+export const VesselPanel: React.FC<Props> = ({ vessel, risk, openCase, loading, onClose, onOpenCase, onAsk, onTimeline }) => {
   const factors = risk?.factors ?? [];
   return (
     <Panel className="w-[376px] h-full p-6 flex flex-col gap-5 overflow-hidden">
@@ -70,7 +71,7 @@ export const VesselPanel: React.FC<Props> = ({ vessel, risk, openCase, loading, 
           <PrimaryPill className="flex-1" onClick={onOpenCase} disabled={!openCase && !(risk && risk.score > 80)}>
             {openCase ? `Case ${openCase.id}` : 'Open case'}
           </PrimaryPill>
-          <OutlinePill className="flex-1" disabled>Timeline</OutlinePill>
+          <OutlinePill className="flex-1" onClick={onTimeline} disabled={!risk}>Timeline</OutlinePill>
         </div>
         <GhostLink className="text-center" onClick={onAsk}>Ask the analyst why →</GhostLink>
       </div>

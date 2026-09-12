@@ -7,10 +7,13 @@ export interface ReplayState {
   simTime: string | null;
   step: number;
   totalSteps: number;
+  /** Position along the scenario's time span, 0 to 1. */
   progress: number;
   done: boolean;
-  /** Fraction of the timeline covered by dark windows, for the amber marker. */
-  darkWindows: { start: number; width: number }[];
+  startTime: string | null;
+  endTime: string | null;
+  /** Dark windows as fractions of the time span, drawn as the amber marker. */
+  darkWindows: { start: number; width: number; label?: string }[];
 }
 
 interface Props {
@@ -32,7 +35,8 @@ export const ReplayBar: React.FC<Props> = ({ replay, startLabel, endLabel, onClo
     <Mono className="text-xs text-os-ash">{startLabel}</Mono>
     <div className="flex-1 h-0.5 bg-os-steel relative">
       {replay.darkWindows.map((w, i) => (
-        <div key={i} className="absolute top-0 h-0.5" style={{ left: `${w.start * 100}%`, width: `${w.width * 100}%`, background: '#e2a33a' }} />
+        <div key={i} title={w.label} className="absolute -top-[3px] h-2 rounded-badge"
+          style={{ left: `${w.start * 100}%`, width: `${w.width * 100}%`, background: '#e2a33a', opacity: 0.85 }} />
       ))}
       <div className="absolute left-0 top-0 h-0.5 bg-white transition-[width] duration-200 ease-linear" style={{ width: `${replay.progress * 100}%` }} />
       <div className="absolute -top-[5px] w-3 h-3 rounded-full bg-white transition-[left] duration-200 ease-linear" style={{ left: `calc(${replay.progress * 100}% - 6px)` }} />

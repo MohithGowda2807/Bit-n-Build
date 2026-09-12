@@ -8,7 +8,7 @@ from app.database import get_db
 from app.schemas.surveillance import (
     ReplayRequest, ReplayStartResponse, ScenarioInfo, SimulationRunRequest, SimulationRunResponse,
 )
-from app.services.surveillance.replay import replay_runner
+from app.services.surveillance.replay import dark_window_fractions, replay_runner
 import asyncio
 from app.services.ais.simulation import SCENARIOS, SimulationAISProvider
 from app.services.surveillance.ingestion import AISIngestor
@@ -90,7 +90,11 @@ async def start_replay(payload: ReplayRequest, db: Session = Depends(get_db)):
         run = await asyncio.to_thread(run_scenario, SimulationRunRequest(scenario=payload.scenario), db)
     start_time = run.start_time if run else utcnow() - timedelta(minutes=_duration_minutes(payload.scenario))
     steps = replay_runner.start(payload.scenario, start_time, payload.step_seconds)
-    return ReplayStartResponse(status="started", scenario=payload.scenario, steps=steps, step_seconds=payload.step_seconds)
+    return ReplayStartResponse(
+        status="started", scenario=payload.scenario, steps=steps, step_seconds=payload.step_seconds,
+        start_time=start_time, end_time=start_time + timedelta(minutes=_duration_minutes(payload.scenario)),
+        dark_windows=dark_window_fractions(payload.scenario),
+    )
 
 
 @router.get("/replay/status")

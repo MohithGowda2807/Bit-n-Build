@@ -1,6 +1,6 @@
 import {
   AISPosition, DarkPeriod, Evidence, FishingZone, InvestigationCase, InvestigationCaseDetail, ProtectedArea,
-  ScenarioInfo, SimulationRunResult, SurveillanceEvent, VesselRisk, VesselRiskSummary,
+  ReplayStart, ScenarioInfo, SimulationRunResult, SurveillanceEvent, VesselRisk, VesselRiskSummary,
 } from '../types/surveillance';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -52,9 +52,7 @@ export const runScenario = (scenario: string, reset = true) =>
   postJson<SimulationRunResult>('/api/v1/simulation/run', { scenario, reset });
 
 export const startReplay = (scenario: string, stepSeconds = 0.5) =>
-  postJson<{ status: string; scenario: string; steps: number; step_seconds: number }>('/api/v1/simulation/replay', {
-    scenario, step_seconds: stepSeconds,
-  });
+  postJson<ReplayStart>('/api/v1/simulation/replay', { scenario, step_seconds: stepSeconds });
 
 export const resetSimulation = () => postJson<{ vessels_removed: number }>('/api/v1/simulation/reset');
 

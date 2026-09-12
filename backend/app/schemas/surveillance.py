@@ -194,8 +194,18 @@ class ReplayRequest(BaseModel):
     run_analysis: bool = True  # ingest, detect and score before animating
 
 
+class ReplayDarkWindow(BaseModel):
+    mmsi: str
+    name: str
+    start: float  # fraction of the scenario span
+    end: float
+
+
 class ReplayStartResponse(BaseModel):
     status: str
     scenario: str
     steps: int
     step_seconds: float
+    start_time: datetime
+    end_time: datetime
+    dark_windows: List[ReplayDarkWindow] = []

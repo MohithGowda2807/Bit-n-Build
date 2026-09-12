@@ -162,3 +162,13 @@ export interface ReplayStep {
   progress: number;
   vessels: { mmsi: string; vessel_id: number | null; latitude: number; longitude: number; speed_knots: number; course: number }[];
 }
+
+export interface ReplayStart {
+  status: string;
+  scenario: string;
+  steps: number;
+  step_seconds: number;
+  start_time: string;
+  end_time: string;
+  dark_windows: { mmsi: string; name: string; start: number; end: number }[];
+}
