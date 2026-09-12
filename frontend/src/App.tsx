@@ -10,6 +10,8 @@ import { telemetry } from './services/telemetry';
 import { session } from './services/session';
 import { Role, can } from './design/roles';
 
+import { LandingPage } from './pages/LandingPage';
+
 const SUBTITLES: Record<Domain, string> = {
   logistics: 'Logistics · Route optimization',
   environment: 'Environment · Conditions and advisories',
@@ -30,7 +32,26 @@ function useTelemetryLive(): boolean {
 }
 
 export function App() {
-  const [domain, setDomain] = useState<Domain>('surveillance');
+  const [view, setView] = useState<'landing' | 'app'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('view') === 'app' || window.location.hash.includes('app')) {
+        return 'app';
+      }
+    }
+    return 'landing';
+  });
+
+  const [domain, setDomain] = useState<Domain>(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.replace('#', '') as Domain;
+      if (['logistics', 'environment', 'surveillance', 'cleanup', 'agents'].includes(hash)) {
+        return hash;
+      }
+    }
+    return 'logistics';
+  });
+
   const [caseId, setCaseId] = useState<number | null>(null);
   const [focusVessel, setFocusVessel] = useState<number | null>(null);
   const [role, setRole] = useState<Role>(session.role);
@@ -42,9 +63,30 @@ export function App() {
     if (!can(next, 'view_cases')) setCaseId(null);
   };
 
+  // If user is on landing page view, render full animated landing page
+  if (view === 'landing') {
+    return (
+      <LandingPage
+        onLaunchApp={(targetDomain?: Domain) => {
+          if (targetDomain) setDomain(targetDomain);
+          setView('app');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col bg-os-void text-os-fog">
-      <TopBar domain={domain} onDomainChange={setDomain} subtitle={SUBTITLES[domain]} live={live} role={role} onRoleChange={changeRole} />
+      <TopBar
+        domain={domain}
+        onDomainChange={setDomain}
+        subtitle={SUBTITLES[domain]}
+        live={live}
+        role={role}
+        onRoleChange={changeRole}
+        onGoToLanding={() => setView('landing')}
+      />
       {domain === 'surveillance' ? (
         caseId !== null ? (
           <CasePage caseId={caseId} role={role} onBack={() => setCaseId(null)} onShowOnMap={v => { setFocusVessel(v); setCaseId(null); }} />

@@ -41,7 +41,7 @@ export function describeEvent(e: FeedEvent, vesselName: string): React.ReactNode
     case 'CASE_CREATED':
       return <>Case opened for {vesselName}</>;
     default:
-      return <>{vesselName} · {e.event_type.replace(/_/g, ' ').toLowerCase()}</>;
+      return <>{vesselName} · {(e.event_type || '').replace(/_/g, ' ').toLowerCase()}</>;
   }
 }
 

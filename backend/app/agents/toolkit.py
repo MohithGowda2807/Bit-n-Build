@@ -176,3 +176,113 @@ class SurveillanceToolkit:
             "confidence": event.confidence, "zone_kind": event.zone_kind, "zone_name": event.zone_name,
             "other_vessel_id": event.other_vessel_id, "details": event.payload,
         }
+
+    # Phase 4 Marine Preservation & Autonomous Fleet Tools
+
+    def list_debris_hazards(self, min_severity: float = 40.0, limit: int = 20) -> List[Dict]:
+        """Lists active debris clusters sorted by severity and environmental risk."""
+        from app.models.debris import Debris
+        rows = (
+            self.db.query(Debris)
+            .filter(Debris.severity >= min_severity)
+            .order_by(Debris.severity.desc())
+            .limit(limit).all()
+        )
+        return [{
+            "id": d.id, "debris_type": d.debris_type, "latitude": d.latitude, "longitude": d.longitude,
+            "severity": d.severity, "estimated_mass_kg": d.estimated_mass_kg, "priority": d.clean_up_priority,
+            "status": d.status, "target_species_threatened": d.target_species_threatened,
+            "environmental_risk_score": d.environmental_risk_score, "nearest_mpa_distance_nm": d.nearest_mpa_distance_nm
+        } for d in rows]
+
+    def get_debris_drift_forecast(self, debris_id: int, hours: int = 24) -> Dict:
+        """Calculates forward leeway drift and checks against Marine Protected Areas."""
+        from app.models.debris import Debris
+        from app.models.marine_protected_area import MarineProtectedArea
+        from app.models.marine_zone import MarineZone
+        from app.services.debris.drift import predict_drift_trajectory
+        from app.services.debris.environmental_risk import evaluate_debris_environmental_risk
+
+        debris = self.db.get(Debris, debris_id)
+        if not debris:
+            return {"error": f"Debris {debris_id} not found"}
+
+        trajectory = predict_drift_trajectory(
+            start_lat=debris.latitude,
+            start_lon=debris.longitude,
+            forecast_hours=hours,
+            current_speed_knots=debris.drift_speed_knots or 1.4,
+            current_heading_deg=debris.drift_heading_deg or 82.0,
+            debris_type=debris.debris_type
+        )
+
+        mpas = [{"name": m.name, "geometry_geojson": m.geometry_geojson} for m in self.db.query(MarineProtectedArea).all()]
+        zones = [{"name": z.name, "geometry_geojson": z.geometry_geojson} for z in self.db.query(MarineZone).filter_by(zone_type="shipping_lane").all()]
+
+        risk_eval = evaluate_debris_environmental_risk(
+            debris_lat=debris.latitude,
+            debris_lon=debris.longitude,
+            debris_type=debris.debris_type,
+            estimated_mass_kg=debris.estimated_mass_kg,
+            trajectory=trajectory,
+            mpas=mpas,
+            shipping_zones=zones
+        )
+
+        return {
+            "debris_id": debris.id,
+            "debris_type": debris.debris_type,
+            "start_coords": [debris.latitude, debris.longitude],
+            "drift_speed_knots": debris.drift_speed_knots or 1.4,
+            "drift_heading_deg": debris.drift_heading_deg or 82.0,
+            "forecast_hours": hours,
+            "environmental_risk": risk_eval,
+            "trajectory_sample": trajectory[::max(1, len(trajectory) // 8)]
+        }
+
+    def list_cleanup_fleet(self) -> List[Dict]:
+        """Lists autonomous cleanup units (ASVs and marine drones) with live battery and payload status."""
+        from app.models.cleanup_unit import CleanupUnit
+        units = self.db.query(CleanupUnit).order_by(CleanupUnit.id).all()
+        return [{
+            "id": u.id, "unit_name": u.unit_name, "unit_type": u.unit_type,
+            "latitude": u.latitude, "longitude": u.longitude, "speed_knots": u.speed_knots,
+            "battery_pct": u.battery_pct, "capacity_kg": u.capacity_kg, "current_load_kg": u.current_load_kg,
+            "status": u.status, "assigned_mission_id": u.assigned_mission_id
+        } for u in units]
+
+    def plan_cleanup_mission_tool(self, debris_ids: List[int], unit_id: Optional[int] = None) -> Dict:
+        """Generates an optimal autonomous cleanup mission with VRP waypoint routing and battery budget."""
+        from app.models.debris import Debris
+        from app.models.cleanup_unit import CleanupUnit
+        from app.services.debris.mission_planner import plan_autonomous_cleanup_mission
+
+        # Select unit
+        if unit_id:
+            unit = self.db.get(CleanupUnit, unit_id)
+        else:
+            unit = self.db.query(CleanupUnit).filter(CleanupUnit.status.in_(["idle", "docked"])).first()
+            if not unit:
+                unit = self.db.query(CleanupUnit).first()
+
+        if not unit:
+            return {"error": "No autonomous cleanup units registered in fleet"}
+
+        debris_list = self.db.query(Debris).filter(Debris.id.in_(debris_ids)).all()
+        if not debris_list:
+            return {"error": "None of the specified debris IDs exist"}
+
+        unit_dict = {
+            "id": unit.id, "unit_name": unit.unit_name, "unit_type": unit.unit_type,
+            "latitude": unit.latitude, "longitude": unit.longitude, "speed_knots": unit.speed_knots,
+            "capacity_kg": unit.capacity_kg, "current_load_kg": unit.current_load_kg,
+            "home_port_lat": unit.latitude, "home_port_lon": unit.longitude
+        }
+        debris_dicts = [{
+            "id": d.id, "latitude": d.latitude, "longitude": d.longitude,
+            "debris_type": d.debris_type, "estimated_mass_kg": d.estimated_mass_kg,
+            "severity": d.severity, "environmental_risk_score": d.environmental_risk_score
+        } for d in debris_list]
+
+        plan = plan_autonomous_cleanup_mission(unit_dict, debris_dicts)
+        return plan

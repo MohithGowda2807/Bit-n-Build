@@ -55,14 +55,14 @@ def _session_tools() -> Tuple[List, object]:
 
 
 def _agent(role: str, goal: str, backstory: str, tools: List, llm):
-    from crewai import Agent
+    from crewai import Agent  # type: ignore
     return Agent(role=role, goal=goal, backstory=f"{backstory} {SAFETY_RULES}", tools=tools, llm=llm,
                  verbose=False, allow_delegation=False, max_iter=8)
 
 
 def build_surveillance_crew(vessel_id: int, llm=None, tools: Optional[List] = None):
     """Four specialists investigate one vessel in sequence and hand the lead a structured summary."""
-    from crewai import Crew, Process, Task
+    from crewai import Crew, Process, Task  # type: ignore
 
     llm = llm or build_llm()
     tools = tools or _session_tools()[0]
@@ -128,7 +128,7 @@ def build_surveillance_crew(vessel_id: int, llm=None, tools: Optional[List] = No
 
 def build_assistant_crew(question: str, llm=None, tools: Optional[List] = None):
     """One assistant agent with every tool answers a natural-language operator question."""
-    from crewai import Crew, Process, Task
+    from crewai import Crew, Process, Task  # type: ignore
 
     llm = llm or build_llm()
     tools = tools or _session_tools()[0]

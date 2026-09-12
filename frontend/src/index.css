@@ -5,78 +5,98 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    background: var(--os-void);
-    color: var(--os-fog);
-    font-family: var(--os-font-sans);
+ body {
+ background: var(--os-void);
+ color: var(--os-fog);
+ font-family: var(--os-font-sans);
   }
 }
 
 /* Leaflet: the map is the light source; chrome around it stays in the system. */
 .leaflet-container {
-  font-family: var(--os-font-sans);
-  background-color: #10141a !important;
+ font-family: var(--os-font-sans);
+ background-color: #10141a !important;
 }
 
 .leaflet-popup-content-wrapper {
-  background: var(--os-panel) !important;
-  color: var(--os-fog) !important;
-  border: 1px solid var(--os-raised);
-  border-radius: 12px !important;
-  box-shadow: none !important;
+ background: #15171b !important;
+ color: #ffffff !important;
+ border: 1px solid rgba(0, 122, 252, 0.35) !important;
+ border-radius: 12px !important;
+ box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.75) !important;
+ padding: 0 !important;
+ overflow: hidden;
+}
+
+.leaflet-popup-content {
+ margin: 0 !important;
+ line-height: 1.4 !important;
+ color: #ffffff !important;
 }
 
 .leaflet-popup-tip {
-  background: var(--os-panel) !important;
+ background: #15171b !important;
+ border: 1px solid rgba(0, 122, 252, 0.35) !important;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+ color: #8b96aa !important;
+ padding: 6px 10px 0 0 !important;
+ font-size: 16px !important;
+ font-weight: bold !important;
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover {
+ color: #3d9bff !important;
 }
 
 .leaflet-tooltip {
-  background: var(--os-panel) !important;
-  color: var(--os-white) !important;
-  border: 1px solid var(--os-raised) !important;
-  border-radius: 6px !important;
-  font-family: var(--os-font-mono) !important;
-  font-size: 11px !important;
-  padding: 3px 8px !important;
+ background: var(--os-panel) !important;
+ color: var(--os-white) !important;
+ border: 1px solid var(--os-raised) !important;
+ border-radius: 6px !important;
+ font-family: var(--os-font-mono) !important;
+ font-size: 11px !important;
+ padding: 3px 8px !important;
 }
 
 .leaflet-control-attribution {
-  background: rgba(14, 16, 18, 0.7) !important;
-  color: var(--os-slate) !important;
-  font-family: var(--os-font-sans);
-  font-size: 10px !important;
+ background: rgba(14, 16, 18, 0.7) !important;
+ color: var(--os-slate) !important;
+ font-family: var(--os-font-sans);
+ font-size: 10px !important;
 }
 
 .leaflet-control-attribution a {
-  color: var(--os-ash) !important;
+ color: var(--os-ash) !important;
 }
 
 /* Custom sleek scrollbar for enterprise feel */
 .os-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+ width: 5px;
+ height: 5px;
 }
 .os-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+ background: transparent;
 }
 .os-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.16);
-  border-radius: 4px;
+ background: rgba(255, 255, 255, 0.16);
+ border-radius: 4px;
 }
 .os-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+ background: rgba(255, 255, 255, 0.3);
 }
 .os-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+ scrollbar-width: thin;
+ scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
 }
 
 /* Form controls: ensure dark background for native selects/dropdowns */
 select {
-  background-color: var(--os-raised);
-  color: #ffffff;
+ background-color: var(--os-raised);
+ color: #ffffff;
 }
 select option {
-  background-color: var(--os-raised);
-  color: #ffffff;
+ background-color: var(--os-raised);
+ color: #ffffff;
 }

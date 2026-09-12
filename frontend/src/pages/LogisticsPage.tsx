@@ -8,6 +8,7 @@ import { formatClock } from '../design/format';
 import { ScenarioControlBar } from '../components/routing/ScenarioControlBar';
 import { DynamicRouteDiffModal } from '../components/routing/DynamicRouteDiffModal';
 import { VoyageTimeline } from '../components/routing/VoyageTimeline';
+import { ReportExportModal } from '../components/reports/ReportExportModal';
 
 const MODES: { id: string; label: string; hint: string; weights: OptimizationWeights }[] = [
   { id: 'fuel_efficient', label: 'Fuel efficient', hint: 'Least consumption', weights: { fuel: 0.55, time: 0.15, safety: 0.15, environment: 0.15 } },
@@ -31,12 +32,13 @@ export const LogisticsPage: React.FC = () => {
  const [operatingMode, setOperatingModeState] = useState<string>('autonomous');
  const [routeVersions, setRouteVersions] = useState<RouteVersion[]>([]);
  const [diffModal, setDiffModal] = useState<RecalculateRouteResponse | null>(null);
- // The route the commander switched the live voyage to; shown on the map until the operator plans afresh.
+  // The route the commander switched the live voyage to; shown on the map until the operator plans afresh.
  const [hazardRoute, setHazardRoute] = useState<RouteDetail | null>(null);
  const [isRerouting, setIsRerouting] = useState<boolean>(false);
  const [basemap, setBasemap] = useState<Basemap>('night');
  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
  const [activeTab, setActiveTab] = useState<'planner' | 'lineage'>('planner');
+ const [isManifestOpen, setIsManifestOpen] = useState<boolean>(false);
 
  const [vesselId, setVesselId] = useState<number | null>(null);
  const [origin, setOrigin] = useState<Coordinate | null>(null);
@@ -277,13 +279,23 @@ export const LogisticsPage: React.FC = () => {
  A* Global
                   </span>
                 </div>
-                <button
+                <div className="flex items-center gap-1.5">
+                  <button
+ onClick={() => setIsManifestOpen(true)}
+ className="px-2 py-1 bg-os-raised border border-os-signal hover:border-os-silver text-os-signal hover:text-white rounded text-[10px] font-mono font-bold flex items-center gap-1 transition cursor-pointer"
+ title="Generate Stage 1 Voyage Manifest"
+                  >
+                    <span>📑</span>
+                    <span>Manifest</span>
+                  </button>
+                  <button
  onClick={() => setSidebarOpen(false)}
  title="Collapse Panel"
- className="w-7 h-7 rounded-input hover:bg-white/10 text-os-ash hover:text-white flex items-center justify-center transition"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
-                </button>
+ className="w-7 h-7 rounded-input hover:bg-os-overlay text-os-ash hover:text-white flex items-center justify-center transition cursor-pointer"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
+                  </button>
+                </div>
               </div>
 
               {/* Sub-tabs: Planner vs Lineage */}
@@ -343,7 +355,7 @@ export const LogisticsPage: React.FC = () => {
  className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded transition flex items-center gap-1 ${
  pickMode === 'origin'
                               ? 'bg-os-signal text-white'
-                              : 'text-os-signal hover:text-os-signal hover:bg-os-signal-hover/10'
+                              : 'text-os-signal hover:text-os-signal hover:bg-os-signal-hover'
                           }`}
                         >
                           <span>📍</span>
@@ -379,7 +391,7 @@ export const LogisticsPage: React.FC = () => {
  className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded transition flex items-center gap-1 ${
  pickMode === 'destination'
                               ? 'bg-os-signal text-white'
-                              : 'text-os-signal hover:text-os-signal hover:bg-os-signal-hover/10'
+                              : 'text-os-signal hover:text-os-signal hover:bg-os-signal-hover'
                           }`}
                         >
                           <span>📍</span>
@@ -487,7 +499,7 @@ export const LogisticsPage: React.FC = () => {
                 </div>
                 <button
  onClick={() => { setResult(null); setPlaying(false); setProgress(0); }}
- className="w-7 h-7 rounded-input hover:bg-white/10 text-os-ash hover:text-white flex items-center justify-center transition"
+ className="w-7 h-7 rounded-input hover:bg-os-overlay text-os-ash hover:text-white flex items-center justify-center transition"
  aria-label="Close"
                 >
                   ✕
@@ -576,7 +588,7 @@ export const LogisticsPage: React.FC = () => {
               <div className="px-5 py-3 border-t border-os-steel bg-os-raised flex items-center gap-3">
                 <button
  onClick={() => { if (progress >= 100) setProgress(0); setPlaying(p => !p); }}
- className="w-8 h-8 rounded-input bg-os-void border border-os-steel flex items-center justify-center text-white hover:bg-white/10 transition"
+ className="w-8 h-8 rounded-input bg-os-void border border-os-steel flex items-center justify-center text-white hover:bg-os-overlay transition"
  aria-label={playing ? 'Pause replay' : 'Play replay'}
                 >
                   {playing ? '⏸' : '▶'}
@@ -616,6 +628,13 @@ export const LogisticsPage: React.FC = () => {
  onAccept={() => setDiffModal(null)}
         />
       )}
+
+      {/* Stage 1 Logistics Voyage Manifest Modal */}
+      <ReportExportModal
+ isOpen={isManifestOpen}
+ onClose={() => setIsManifestOpen(false)}
+ initialStage="logistics"
+      />
     </div>
   );
 };

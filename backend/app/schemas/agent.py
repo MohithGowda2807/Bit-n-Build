@@ -21,6 +21,15 @@ class AgentFinding(BaseModel):
     details: Dict[str, Any] = Field(default_factory=dict)
 
 
+class AgentTraceStep(BaseModel):
+    step_number: int
+    agent: str
+    action: str
+    input: Optional[str] = None
+    output: Optional[str] = None
+    timestamp: Optional[str] = None
+
+
 class OrchestratorResponse(BaseModel):
     mission_id: str
     query: str
@@ -36,6 +45,9 @@ class OrchestratorResponse(BaseModel):
     assistant_provider: Optional[str] = None
     execution_time_ms: float
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+    agent_traces: List[AgentTraceStep] = Field(default_factory=list)
+    actions_proposed: List[Dict[str, Any]] = Field(default_factory=list)
+    domain_impact: Dict[str, Any] = Field(default_factory=dict)
 
 
 class HumanApprovalRequest(BaseModel):
@@ -50,4 +62,3 @@ class HumanApprovalResponse(BaseModel):
     approval_status: str
     action_result: str
     execution_timestamp: datetime = Field(default_factory=datetime.utcnow)
-

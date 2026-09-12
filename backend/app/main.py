@@ -36,6 +36,8 @@ from app.api import (
     investigations,
     assistant,
     auth,
+    fleet,
+    missions,
 )
 
 logging.basicConfig(
@@ -54,7 +56,31 @@ async def lifespan(app: FastAPI):
     try:
         seed_database(db)
         seed_surveillance_zones(db)
-        logger.info("TRITON Phase 1 seed data verified and active.")
+        from app.data.phase4_seed import seed_phase4_data
+        seed_phase4_data(db)
+
+        # Pre-seed baseline surveillance scenario so radar, risk watchlist, and event feeds are populated immediately
+        try:
+            from app.services.ais.simulation import SimulationAISProvider, SCENARIOS
+            from app.services.surveillance.ingestion import AISIngestor
+            from app.services.surveillance.pipeline import SurveillancePipeline
+            from app.services.surveillance.risk_service import RiskService
+            from app.utils_time import utcnow
+            from datetime import timedelta
+
+            if "DARK_FISHING_COMPOSITE" in SCENARIOS:
+                dur = max(s.total_minutes() for s in SCENARIOS["DARK_FISHING_COMPOSITE"])
+                start_t = (utcnow() - timedelta(minutes=dur)).replace(tzinfo=None)
+                end_t = start_t + timedelta(minutes=dur)
+                provider = SimulationAISProvider("DARK_FISHING_COMPOSITE", start_time=start_t)
+                AISIngestor(db, settings.AIS_GAP_THRESHOLD_SECONDS).ingest(provider, now=end_t)
+                SurveillancePipeline(db).run()
+                RiskService(db).assess_all()
+                logger.info("Surveillance baseline scenario DARK_FISHING_COMPOSITE pre-seeded and scored.")
+        except Exception as sim_err:
+            logger.warning(f"Surveillance baseline pre-seed notice: {sim_err}")
+
+        logger.info("TRITON Phase 1-4 seed data verified and active.")
     except Exception as e:
         logger.warning(f"Seed data initialization warning: {e}")
     finally:
@@ -62,12 +88,65 @@ async def lifespan(app: FastAPI):
     # Surveillance events (AIS gaps, high risk, cases) stream to WebSocket clients alongside telemetry.
     set_publisher(WebSocketEventPublisher(ws_hub, asyncio.get_running_loop()))
     loop_task = None
+    fleet_task = None
     if settings.SURVEILLANCE_CYCLE_SECONDS > 0:
         loop_task = asyncio.create_task(surveillance_loop(settings.SURVEILLANCE_CYCLE_SECONDS))
+    fleet_task = asyncio.create_task(fleet_simulation_loop(10))
     yield
     if loop_task:
         loop_task.cancel()
+    if fleet_task:
+        fleet_task.cancel()
     logger.info("TRITON application shutting down.")
+
+
+async def fleet_simulation_loop(interval_seconds: int = 10):
+    """Background autonomous mode: advance active cleanup units and broadcast live telemetry."""
+    from app.services.debris.fleet_simulator import AutonomousUnitState
+    import json
+    while True:
+        await asyncio.sleep(interval_seconds)
+        try:
+            with SessionLocal() as db:
+                from app.models.cleanup_unit import CleanupUnit
+                from app.models.mission import Mission
+                active_units = db.query(CleanupUnit).filter(CleanupUnit.status.in_(["transit", "collecting", "returning"])).all()
+                if active_units:
+                    telemetry_payload = []
+                    for unit in active_units:
+                        waypoints = []
+                        if unit.assigned_mission_id:
+                            m = db.query(Mission).filter(Mission.id == unit.assigned_mission_id).first()
+                            if m and m.waypoints_json:
+                                try:
+                                    waypoints = json.loads(m.waypoints_json)
+                                except Exception:
+                                    pass
+                        sim = AutonomousUnitState(
+                            unit_id=unit.id,
+                            unit_name=unit.unit_name,
+                            unit_type=unit.unit_type,
+                            latitude=unit.latitude,
+                            longitude=unit.longitude,
+                            battery_pct=unit.battery_pct,
+                            capacity_kg=unit.capacity_kg,
+                            current_load_kg=unit.current_load_kg,
+                            speed_knots=unit.speed_knots,
+                            status=unit.status,
+                            waypoints=waypoints
+                        )
+                        new_state = sim.step(dt_hours=0.05)
+                        unit.latitude = new_state["latitude"]
+                        unit.longitude = new_state["longitude"]
+                        unit.heading_deg = new_state["heading_deg"]
+                        unit.battery_pct = new_state["battery_pct"]
+                        unit.current_load_kg = new_state["current_load_kg"]
+                        unit.status = new_state["status"]
+                        telemetry_payload.append(new_state)
+                    db.commit()
+                    await ws_hub.broadcast("cleanup_telemetry", {"units": telemetry_payload})
+        except Exception as exc:
+            logger.debug("Fleet simulation step notice: %s", exc)
 
 
 async def surveillance_loop(interval_seconds: int):
@@ -154,23 +233,26 @@ app.include_router(routes.router)
 app.include_router(voyages.router)
 app.include_router(risk.router)
 app.include_router(analytics.router)
+# Phase 3: maritime surveillance simulation
+app.include_router(simulation.router)
 # Phase 2 & 3: simulation, scenarios, and autonomous commander
 app.include_router(simulation_scenario.router)
-# Phase 3: maritime surveillance
-app.include_router(simulation.router)
 app.include_router(surveillance.router)
 app.include_router(fishing.router)
 app.include_router(investigations.router)
 app.include_router(assistant.router)
 app.include_router(auth.router)
+# Phase 4: autonomous cleanup fleet & missions
+app.include_router(fleet.router)
+app.include_router(missions.router)
 
 
 @app.get("/")
 def root():
     return {
         "platform": "TRITON / OceanSentinel",
-        "phase": 3,
-        "name": "Maritime Intelligence & Autonomous Multi-Agent Platform",
+        "phase": 4,
+        "name": "Command Center & Autonomous Multi-Agent Maritime Intelligence Platform",
         "status": "operational",
         "docs_url": "/docs",
         "openapi_url": "/openapi.json",

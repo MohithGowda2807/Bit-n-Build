@@ -62,7 +62,7 @@ services:
       dockerfile: Dockerfile
     container_name: oceansentinel-frontend
     ports:
-      - "5173:5173"
+      - "5173:80"
     environment:
       - VITE_API_URL=http://localhost:8000
     depends_on:

@@ -103,6 +103,38 @@ Start both servers with a fresh database (delete `oceansentinel.db` in the direc
 5. **Roles**: switch to Viewer or Analyst and watch the run, hazard and case actions lock; the API refuses them too.
 
 ---
+## Phase 4: Autonomous Marine Preservation & Command Center Studio
+
+Phase 4 elevates TRITON / OceanSentinel into a presentation-ready, hackathon-winning unified autonomous marine command platform uniting **Logistics**, **Maritime Surveillance**, and **Ecological Preservation**:
+
+- **Unified Multi-Layer Ocean Map**:
+  - Commercial shipping traffic, dark vessels with AIS transponder blackouts, and Marine Protected Areas (MPAs).
+  - Debris clusters with density halos and 12-hour projected leeway drift vectors ($\vec{v}_{drift} = \alpha \vec{v}_{current} + \beta \vec{v}_{wind}$).
+  - Autonomous cleanup fleet positions (ASV skimmers, UAV quad/fixed-wing drones, robotic interceptors) with live battery gauges, speed, and heading indicators.
+  - Active sortie waypoints connected with dynamic animated trajectory corridors.
+  - Granular HUD layer toggle bar allowing live switching between Fleet, Debris, Missions, Vessels, MPAs, and Storms.
+
+- **Autonomous Fleet Simulator & Mission Studio**:
+  - Physics-informed energy kinetics model taking into account hydrodynamic resistance ($P \propto v^3$), hotel load, and collection machinery power draw.
+  - Automatic return-to-base triggers on battery depletion or payload capacity saturation.
+  - Real-time background simulation loop broadcasting coordinates and telemetry via WebSockets (`/ws/telemetry`).
+  - Interactive Mission Planner Modal powered by a multi-target Vehicle Routing Problem (VRP) heuristic and Traveling Salesperson (TSP) 2-opt route solver.
+  - 1-Click Dispatch & Human Approval Gate (Authorize & Dispatch / Replan / Reject).
+
+- **Multi-Agent Orchestration & Explainability Tree**:
+  - Five coordinated specialists (Vessel Watch, Route Planner, Debris Sentinel, Autonomous Cleanup Agent, Compliance Agent) coordinated by the Maritime Commander.
+  - Interactive 7-step visual thought trace tree (`AgentTraceVisualizer`) rendering agent thinking, observations, and tool executions.
+  - Tri-Domain Impact Ticker quantifying fuel saved, CO₂ eliminated, marine debris intercepted, and MPA sanctuaries shielded.
+
+- **3 Turnkey 1-Click Presentation Scenarios (100% Offline Reliable)**:
+  1. **Lakshadweep Ghost Net Crisis (`ghost_net_mpa`)**: 1,450 kg monofilament net drifting toward coral sanctuary; triggers ASV `SeaSweeper-Alpha` intercept.
+  2. **Mumbai Offshore Dark Trawler & Fuel Slick (`dark_vessel_spill`)**: Dark vessel transponder blackout correlated with 1,200 m² SAR slick anomaly.
+  3. **Arabian Sea Eco-Corridor Voyage Optimization (`eco_corridor_voyage`)**: Deep monsoon depression avoidance saving 8.4t bunker fuel.
+  - Accessible directly via the TopBar **Demo Scenarios** 1-click switcher.
+
+- **Executive Intelligence Briefing Export**:
+  - Formatted printable tactical briefing with official sign-off stamps, multi-agent findings, and environmental decarbonization receipts (`ReportExportModal`).
+
 
 ## Getting Started
 

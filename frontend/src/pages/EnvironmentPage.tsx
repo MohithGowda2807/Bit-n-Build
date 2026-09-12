@@ -60,7 +60,7 @@ export const EnvironmentPage: React.FC = () => {
  eta_change_hours: 1.1,
  reasons: [
  'Severe storm system intersects shipping corridor',
-          `Autonomous route recalculation deployed (v${recalc.version})`,
+ `Autonomous route recalculation deployed (v${recalc.version})`,
  'Dynamic detour maintains safe standoff distance from hazard perimeter'
         ],
  tradeoffs: {
@@ -114,14 +114,19 @@ export const EnvironmentPage: React.FC = () => {
           <StormLayer storms={storms} />
 
           {/* Vessel markers */}
-          {vessels.map(v => (
-            <CircleMarker key={v.id} center={[v.latitude, v.longitude]} radius={v.id === selectedId ? 6 : 4.5}
+          {vessels.map(v => {
+ if (v.latitude == null || v.longitude == null || isNaN(v.latitude) || isNaN(v.longitude)) return null;
+ return (
+              <CircleMarker key={v.id} center={[v.latitude, v.longitude]} radius={v.id === selectedId ? 6 : 4.5}
  pathOptions={{ color: '#0e1012', weight: 2, fillColor: '#a0aaba', fillOpacity: 1 }}
  eventHandlers={{ click: () => setSelectedId(v.id) }}>
-              <Tooltip direction="top" offset={[0, -6]}>{v.name}</Tooltip>
-            </CircleMarker>
-          ))}
-          {selected && <CircleMarker center={[selected.latitude, selected.longitude]} radius={12} interactive={false} pathOptions={{ color: '#007afc', weight: 1.5, fill: false }} />}
+                <Tooltip direction="top" offset={[0, -6]}>{v.name}</Tooltip>
+              </CircleMarker>
+            );
+          })}
+          {selected && selected.latitude != null && selected.longitude != null && !isNaN(selected.latitude) && !isNaN(selected.longitude) && (
+            <CircleMarker center={[selected.latitude, selected.longitude]} radius={12} interactive={false} pathOptions={{ color: '#007afc', weight: 1.5, fill: false }} />
+          )}
         </BaseMap>
 
         {/* 3. Left Collapsible Atmospheric Studio */}
@@ -138,7 +143,7 @@ export const EnvironmentPage: React.FC = () => {
                 <button
  onClick={() => setSidebarOpen(false)}
  title="Collapse Panel"
- className="w-7 h-7 rounded-input hover:bg-white/10 text-os-ash hover:text-white flex items-center justify-center transition"
+ className="w-7 h-7 rounded-input hover:bg-os-overlay text-os-ash hover:text-white flex items-center justify-center transition"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
                 </button>

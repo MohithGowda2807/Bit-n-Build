@@ -8,11 +8,16 @@ import {
  Tooltip,
  Polyline,
  Polygon,
+ ZoomControl,
  useMap,
  useMapEvents
 } from 'react-leaflet';
-import { Vessel, Port, MarineZone, RouteDetail, Coordinate, Debris, VesselTrack, Storm } from '../types';
+import { Vessel, Port, MarineZone, RouteDetail, Coordinate, Debris, VesselTrack, Storm, CleanupUnit, DebrisCluster, Mission } from '../types';
 import { StormLayer } from './map/StormLayer';
+import { DebrisLayer } from './map/DebrisLayer';
+import { FleetLayer } from './map/FleetLayer';
+import { MissionPathLayer } from './map/MissionPathLayer';
+
 
 // Custom SVG Icons for high-tech maritime visualization
 const createCustomIcon = (color: string, label: string, size = 28, glowColor?: string) => {
@@ -37,19 +42,19 @@ const createCustomIcon = (color: string, label: string, size = 28, glowColor?: s
  ">
         ${label}
       </div>
-    `,
+ `,
  iconSize: [size, size],
  iconAnchor: [size / 2, size / 2]
   });
 };
 
-const vesselIcon = createCustomIcon('#007afc', '🚢', 26, '#007afc');
+const vesselIcon = createCustomIcon('#3d9bff', '🚢', 26, '#0062ca');
 const underwayVesselIcon = createCustomIcon('#2fae6e', '🚢', 28, '#2fae6e');
 const selectedVesselIcon = createCustomIcon('#e2a33a', '🧭', 32, '#e2a33a');
-const portIcon = createCustomIcon('#007afc', '⚓', 22, '#007afc');
+const portIcon = createCustomIcon('#007afc', '⚓', 22, '#0062ca');
 const originIcon = createCustomIcon('#2fae6e', 'A', 26, '#2fae6e');
 const destIcon = createCustomIcon('#f0483e', 'B', 26, '#f0483e');
-const replayShipIcon = createCustomIcon('#f2643e', '🚢', 32, '#f2643e');
+const replayShipIcon = createCustomIcon('#f2643e', '🚢', 32, '#f0483e');
 
 // Debris icons by severity
 const debrisCriticalIcon = createCustomIcon('#f0483e', '⚠️', 26, '#f0483e');
@@ -108,14 +113,44 @@ const RouteBoundsController: React.FC<{ coords: [number, number][] | null }> = (
  return null;
 };
 
+// Auto-pan to demo scenario location
+const ScenarioFocusController: React.FC = () => {
+ const map = useMap();
+ useEffect(() => {
+ const handleScenario = (e: Event) => {
+ const custom = e as CustomEvent;
+ const focus = custom.detail?.scenario?.focus;
+ if (focus && typeof focus.latitude === 'number' && typeof focus.longitude === 'number') {
+ map.flyTo([focus.latitude, focus.longitude], focus.zoom || 8, {
+ duration: 1.5,
+ easeLinearity: 0.25
+        });
+      }
+    };
+ window.addEventListener('triton:scenario-activated', handleScenario);
+ return () => window.removeEventListener('triton:scenario-activated', handleScenario);
+  }, [map]);
+ return null;
+};
+
 interface OceanMapProps {
  vessels: Vessel[];
  ports: Port[];
  zones: MarineZone[];
  debris?: Debris[];
+ fleetUnits?: CleanupUnit[];
+ missions?: Mission[];
+ debrisClusters?: DebrisCluster[];
  selectedVessel?: Vessel | null;
  selectedVesselTracks?: VesselTrack[];
  onSelectVessel?: (vessel: Vessel) => void;
+ selectedDebris?: Debris | null;
+ onSelectDebris?: (debris: Debris) => void;
+ onOpenPlanner?: (debris: Debris) => void;
+ selectedFleetUnit?: CleanupUnit | null;
+ onSelectFleetUnit?: (unit: CleanupUnit) => void;
+ selectedMission?: Mission | null;
+ onSelectMission?: (mission: Mission) => void;
  origin: Coordinate | null;
  destination: Coordinate | null;
  activeRoute: RouteDetail | null;
@@ -155,9 +190,19 @@ export const OceanMap: React.FC<OceanMapProps> = ({
  ports,
  zones,
  debris = [],
+ fleetUnits = [],
+ missions = [],
+ debrisClusters = [],
  selectedVessel,
  selectedVesselTracks = [],
  onSelectVessel,
+ selectedDebris,
+ onSelectDebris,
+ onOpenPlanner,
+ selectedFleetUnit,
+ onSelectFleetUnit,
+ selectedMission,
+ onSelectMission,
  origin,
  destination,
  activeRoute,
@@ -183,6 +228,8 @@ export const OceanMap: React.FC<OceanMapProps> = ({
   // Layer toggles
  const [showVessels, setShowVessels] = useState(true);
  const [showDebris, setShowDebris] = useState(true);
+ const [showFleet, setShowFleet] = useState(true);
+ const [showMissions, setShowMissions] = useState(true);
  const [showZones, setShowZones] = useState(true);
  const [showPorts, setShowPorts] = useState(true);
  const [showStorms, setShowStorms] = useState(true);
@@ -218,6 +265,30 @@ export const OceanMap: React.FC<OceanMapProps> = ({
         </button>
         <span className="text-os-ash font-semibold px-1">Layers:</span>
         <button
+ onClick={() => setShowFleet(!showFleet)}
+ className={`px-2 py-1 rounded transition-colors ${
+ showFleet ? 'bg-os-signal/30 text-os-signal border border-os-signal' : 'bg-os-raised text-os-slate'
+          }`}
+        >
+          🚤 Fleet ({fleetUnits.length})
+        </button>
+        <button
+ onClick={() => setShowDebris(!showDebris)}
+ className={`px-2 py-1 rounded transition-colors ${
+ showDebris ? 'bg-risk-moderate/30 text-risk-moderate border border-risk-moderate' : 'bg-os-raised text-os-slate'
+          }`}
+        >
+          ♻️ Debris ({debris.length})
+        </button>
+        <button
+ onClick={() => setShowMissions(!showMissions)}
+ className={`px-2 py-1 rounded transition-colors ${
+ showMissions ? 'bg-os-signal/30 text-os-signal border border-os-signal' : 'bg-os-raised text-os-slate'
+          }`}
+        >
+          🎯 Missions ({missions.length})
+        </button>
+        <button
  onClick={() => setShowVessels(!showVessels)}
  className={`px-2 py-1 rounded transition-colors ${
  showVessels ? 'bg-os-signal/30 text-os-signal border border-os-signal' : 'bg-os-raised text-os-slate'
@@ -226,28 +297,12 @@ export const OceanMap: React.FC<OceanMapProps> = ({
           🚢 Vessels ({vessels.length})
         </button>
         <button
- onClick={() => setShowDebris(!showDebris)}
- className={`px-2 py-1 rounded transition-colors ${
- showDebris ? 'bg-os-raised text-risk-moderate border border-risk-moderate' : 'bg-os-raised text-os-slate'
-          }`}
-        >
-          ♻️ Debris ({debris.length})
-        </button>
-        <button
  onClick={() => setShowZones(!showZones)}
  className={`px-2 py-1 rounded transition-colors ${
  showZones ? 'bg-os-clear/30 text-os-clear border border-os-clear' : 'bg-os-raised text-os-slate'
           }`}
         >
           🛡️ MPAs ({zones.length})
-        </button>
-        <button
- onClick={() => setShowPorts(!showPorts)}
- className={`px-2 py-1 rounded transition-colors ${
- showPorts ? 'bg-os-signal/30 text-os-signal border border-os-signal' : 'bg-os-raised text-os-slate'
-          }`}
-        >
-          ⚓ Ports
         </button>
         <button
  onClick={() => setShowStorms(!showStorms)}
@@ -264,9 +319,11 @@ export const OceanMap: React.FC<OceanMapProps> = ({
  center={[15.0, 75.0]}
  zoom={4}
  scrollWheelZoom={true}
+ zoomControl={false}
  className="w-full h-full"
  style={{ background: '#0e1012' }}
       >
+        <ZoomControl position="bottomright" />
         <MapEventsHandler
  mapSelectionMode={mapSelectionMode}
  onSelectCoordinate={onSelectCoordinate}
@@ -274,6 +331,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
  onSelectPort={onSelectPort}
         />
         <RouteBoundsController coords={activeRoute ? activeRoute.geometry.coordinates : null} />
+        <ScenarioFocusController />
 
         {/* Basemap: Chart (OpenStreetMap) or Night (CARTO dark) */}
         <TileLayer
@@ -344,50 +402,47 @@ export const OceanMap: React.FC<OceanMapProps> = ({
             }}
           >
             <Popup className="font-mono text-xs">
-              <div className="p-1">
-                <div className="font-bold text-os-void">{port.name}</div>
-                <div className="text-os-steel">{port.country}</div>
-                <div className="text-os-signal-deep mt-1 font-semibold">Congestion: {port.congestion_level}%</div>
-                <div className="text-os-slate">Capacity: {port.capacity.toLocaleString()} berths</div>
+              <div className="p-3 text-white bg-os-panel border border-os-pewter rounded-row space-y-1">
+                <div className="font-bold text-white text-sm">{port.name}</div>
+                <div className="text-os-fog text-xs">{port.country}</div>
+                <div className="text-risk-moderate mt-1 font-semibold text-xs">Congestion: {port.congestion_level}%</div>
+                <div className="text-os-ash text-xs">Capacity: {port.capacity.toLocaleString()} berths</div>
               </div>
             </Popup>
             <Tooltip direction="top" offset={[0, -10]}>{port.name}</Tooltip>
           </Marker>
         ))}
 
-        {/* Debris Sentinel Markers */}
-        {showDebris && debris.map(item => {
- const icon = item.severity >= 90
-            ? debrisCriticalIcon
-            : item.severity >= 70
-            ? debrisHighIcon
-            : debrisMediumIcon;
+        {/* Autonomous Cleanup Fleet Layer */}
+        {showFleet && (
+          <FleetLayer
+ units={fleetUnits}
+ selectedUnitId={selectedFleetUnit?.id}
+ onSelectUnit={onSelectFleetUnit}
+          />
+        )}
 
- return (
-            <Marker
- key={`debris-${item.id}`}
- position={[item.latitude, item.longitude]}
- icon={icon}
-            >
-              <Popup className="font-mono text-xs">
-                <div className="p-1 space-y-1">
-                  <div className="font-bold text-os-void flex items-center space-x-1">
-                    <span>⚠️ Debris Cluster #{item.id}</span>
-                  </div>
-                  <div className="text-os-void font-semibold uppercase">{item.debris_type.replace('_', ' ')}</div>
-                  <div className="text-os-steel">Severity: <span className="font-bold text-risk-critical">{item.severity}/100</span> ({item.density_category})</div>
-                  <div className="text-os-steel">Area: {item.estimated_size_m2.toLocaleString()} m²</div>
-                  <div className="text-os-steel">Priority: <span className="font-semibold uppercase text-os-void">{item.clean_up_priority}</span></div>
-                  <div className="text-os-slate text-[10px]">Source: {item.source}</div>
-                  {item.description && <div className="text-os-steel italic text-[11px] pt-1">{item.description}</div>}
-                </div>
-              </Popup>
-              <Tooltip direction="top" offset={[0, -10]}>
-                <span>⚠️ {item.debris_type.replace('_', ' ')} ({item.severity}%)</span>
-              </Tooltip>
-            </Marker>
-          );
-        })}
+        {/* Debris Sentinel Clusters & Drift Vectors Layer */}
+        {showDebris && (
+          <DebrisLayer
+ debrisList={debris}
+ clusters={debrisClusters}
+ selectedDebrisId={selectedDebris?.id}
+ onSelectDebris={onSelectDebris}
+ onOpenPlanner={onOpenPlanner}
+ showDriftVectors={true}
+          />
+        )}
+
+        {/* Autonomous Mission Trajectories Layer */}
+        {showMissions && (
+          <MissionPathLayer
+ missions={missions}
+ selectedMissionId={selectedMission?.id}
+ onSelectMission={onSelectMission}
+          />
+        )}
+
 
         {/* Selected Vessel Historical Track Trail */}
         {vesselTrackPolyline && (
@@ -427,27 +482,27 @@ export const OceanMap: React.FC<OceanMapProps> = ({
               }}
             >
               <Popup className="font-mono text-xs">
-                <div className="p-1 space-y-1">
-                  <div className="font-bold text-os-void flex items-center justify-between">
+                <div className="p-3 space-y-2 text-white bg-os-panel border border-os-pewter rounded-row">
+                  <div className="font-bold text-white text-sm flex items-center justify-between border-b border-os-pewter pb-1.5">
                     <span>{vessel.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-os-silver text-os-void">{vessel.vessel_type}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-os-raised text-os-signal border border-os-pewter font-normal">{vessel.vessel_type}</span>
                   </div>
-                  <div className="text-os-steel text-[11px]">ID: {vessel.vessel_identifier} | MMSI: {vessel.mmsi || 'N/A'}</div>
-                  <div className="grid grid-cols-2 gap-1 text-[11px] pt-1 border-t border-os-silver">
+                  <div className="text-os-ash text-[11px]">ID: <span className="text-white font-semibold">{vessel.vessel_identifier}</span> | MMSI: <span className="text-white">{vessel.mmsi || 'N/A'}</span></div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px] pt-1 border-t border-os-pewter text-os-fog">
                     <div>Speed: <span className="font-semibold text-os-clear">{vessel.speed_knots || vessel.cruise_speed_knots} kts</span></div>
-                    <div>Heading: <span className="font-semibold">{vessel.heading}°</span></div>
-                    <div>Draft: <span className="font-semibold">{vessel.draft_m}m</span></div>
-                    <div>Status: <span className="font-semibold uppercase text-os-signal-deep">{vessel.status}</span></div>
+                    <div>Heading: <span className="font-semibold text-white">{vessel.heading}°</span></div>
+                    <div>Draft: <span className="font-semibold text-white">{vessel.draft_m}m</span></div>
+                    <div>Status: <span className="font-semibold uppercase text-os-signal">{vessel.status}</span></div>
                   </div>
                   {vessel.destination && (
-                    <div className="text-[10px] text-os-slate pt-1">
- Destination: <span className="font-semibold text-os-void">{vessel.destination}</span>
+                    <div className="text-[10px] text-os-ash pt-1 border-t border-os-pewter">
+ Destination: <span className="font-semibold text-white">{vessel.destination}</span>
                     </div>
                   )}
                   <div className="pt-1">
                     <button
  onClick={() => onSelectVessel && onSelectVessel(vessel)}
- className="w-full text-center py-1 bg-os-signal hover:bg-os-signal-hover text-white rounded text-[11px] font-semibold"
+ className="w-full text-center py-1.5 bg-os-signal hover:bg-os-signal-hover text-white rounded-input text-xs font-semibold uppercase tracking-wider transition cursor-pointer"
                     >
                       {isSelected ? 'Viewing Track History' : 'Select & View Track'}
                     </button>
@@ -485,7 +540,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
  click: () => onSelectAlternative(isSelected ? null : idx)
               }}
  pathOptions={{
- color: isSelected ? '#ffffff' : '#566171',
+ color: isSelected ? '#3d9bff' : '#566171',
  weight: isSelected ? 5 : 3,
  dashArray: '8, 8',
  opacity: isSelected ? 0.95 : 0.6

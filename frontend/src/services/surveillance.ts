@@ -3,9 +3,8 @@ import {
   ReplayStart, ScenarioInfo, SimulationRunResult, SurveillanceEvent, VesselBaseline, VesselRisk, VesselRiskSummary,
 } from '../types/surveillance';
 
+import { API_BASE } from './api';
 import { session } from './session';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, { headers: session.headers() });

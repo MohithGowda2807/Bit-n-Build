@@ -88,6 +88,13 @@ def get_agents_status():
                 "role": "Marine Sanctuary & Regulatory Compliance Officer",
                 "status": "active",
                 "capabilities": ["mpa_incursion_monitoring", "speed_restriction_enforcement", "imo_compliance", "multi_agent_synthesis"]
+            },
+            {
+                "id": "cleanup_fleet",
+                "name": "Autonomous Cleanup Fleet Agent",
+                "role": "Autonomous Marine Fleet Coordinator",
+                "status": "active",
+                "capabilities": ["asv_dispatch", "vrp_route_optimization", "battery_budgeting", "payload_monitoring"]
             }
         ],
         "crewai_initialized": triton_agents.crewai_initialized

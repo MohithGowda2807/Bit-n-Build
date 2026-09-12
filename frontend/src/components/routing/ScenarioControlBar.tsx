@@ -102,7 +102,7 @@ export const ScenarioControlBar: React.FC<ScenarioControlBarProps> = ({
  className={`px-3 py-1 text-xs font-mono rounded-input transition-all disabled:cursor-not-allowed ${
  operatingMode === m
                   ? 'bg-os-signal text-white font-bold'
-                  : 'text-os-fog hover:text-white hover:bg-white/5'
+                  : 'text-os-fog hover:text-white hover:bg-os-overlay'
               }`}
             >
               {m === 'semi_autonomous' ? 'Semi-Auto' : m.toUpperCase()}

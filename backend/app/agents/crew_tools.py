@@ -7,6 +7,7 @@ from app.agents.toolkit import SurveillanceToolkit
 TOOL_NAMES = [
     "search_vessels", "get_vessel", "get_vessel_track", "get_ais_gaps", "get_zone_events", "get_events",
     "get_risk", "get_evidence", "list_high_risk_vessels", "get_investigation_case", "list_open_cases",
+    "list_debris_hazards", "get_debris_drift_forecast", "list_cleanup_fleet", "plan_cleanup_mission_tool",
 ]
 
 
@@ -15,8 +16,10 @@ def _dump(value) -> str:
 
 
 def build_tools(toolkit: SurveillanceToolkit) -> List:
-    """Build the tool set bound to one toolkit (and therefore one database session)."""
-    from crewai.tools import tool
+    try:
+        from crewai.tools import tool  # type: ignore
+    except ImportError:
+        return []
 
     @tool("search_vessels")
     def search_vessels(query: str) -> str:
@@ -73,7 +76,28 @@ def build_tools(toolkit: SurveillanceToolkit) -> List:
         """List up to `limit` investigation cases that are still open, highest risk first."""
         return _dump(toolkit.list_open_cases(limit))
 
+    @tool("list_debris_hazards")
+    def list_debris_hazards(min_severity: float = 40.0) -> str:
+        """List detected marine debris clusters, ghost nets, and hazards sorted by environmental risk score."""
+        return _dump(toolkit.list_debris_hazards(min_severity))
+
+    @tool("get_debris_drift_forecast")
+    def get_debris_drift_forecast(debris_id: int, hours: int = 24) -> str:
+        """Predict 24h leeway drift trajectory for a debris patch and test against Marine Protected Area collisions."""
+        return _dump(toolkit.get_debris_drift_forecast(debris_id, hours))
+
+    @tool("list_cleanup_fleet")
+    def list_cleanup_fleet(limit: int = 50) -> str:
+        """List all autonomous surface vessels (ASVs) and cleanup drones with live battery, payload, and operational status."""
+        return _dump(toolkit.list_cleanup_fleet()[:limit])
+
+    @tool("plan_cleanup_mission_tool")
+    def plan_cleanup_mission_tool(debris_id: int) -> str:
+        """Generate an optimal autonomous cleanup mission (VRP waypoints, energy budget, and payload yield) targeting a debris hazard."""
+        return _dump(toolkit.plan_cleanup_mission_tool([debris_id]))
+
     return [
         search_vessels, get_vessel, get_vessel_track, get_ais_gaps, get_zone_events, get_events,
         get_risk, get_evidence, list_high_risk_vessels, get_investigation_case, list_open_cases,
+        list_debris_hazards, get_debris_drift_forecast, list_cleanup_fleet, plan_cleanup_mission_tool,
     ]

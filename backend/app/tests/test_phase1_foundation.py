@@ -135,7 +135,7 @@ def test_multi_agent_framework_initialization():
     status_data = res.json()
 
     assert "orchestrator_agent" in status_data
-    assert len(status_data["agents"]) == 4
+    assert len(status_data["agents"]) == 5  # four TRITON specialists plus the Phase 4 cleanup fleet agent
 
     agent_ids = [a["id"] for a in status_data["agents"]]
     assert "vessel_watch" in agent_ids
@@ -169,7 +169,7 @@ def test_orchestrator_calls_all_agents():
 
     # Ensure all four agents contributed findings
     findings = result["agent_findings"]
-    assert len(findings) == 4
+    assert len(findings) == 5
 
     agent_names = [f["agent_name"] for f in findings]
     assert "Vessel Watch Agent" in agent_names

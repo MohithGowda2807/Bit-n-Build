@@ -128,9 +128,12 @@ export interface InvestigationCaseDetail extends InvestigationCase {
 }
 
 export interface ScenarioInfo {
-  name: string;
-  vessel_count: number;
-  duration_minutes: number;
+  name?: string;
+  id?: string;
+  title?: string;
+  description?: string;
+  vessel_count?: number;
+  duration_minutes?: number;
 }
 
 export interface SimulationRunResult {

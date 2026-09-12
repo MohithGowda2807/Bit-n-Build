@@ -15,7 +15,7 @@ export const DynamicRouteDiffModal: React.FC<DynamicRouteDiffModalProps> = ({
  if (!diff) return null;
 
  return (
-    <div className="fixed inset-0 z-[2000] bg-black/80 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[2000] bg-os-void/80 flex items-center justify-center p-4">
       <div className="bg-os-panel border border-os-steel rounded-panel w-full max-w-lg overflow-hidden flex flex-col os-reveal">
         {/* Header */}
         <div className="px-6 py-4 border-b border-os-steel flex items-center justify-between bg-os-raised">
@@ -32,7 +32,7 @@ export const DynamicRouteDiffModal: React.FC<DynamicRouteDiffModalProps> = ({
           </div>
           <button
  onClick={onClose}
- className="w-8 h-8 rounded-input hover:bg-white/10 text-os-ash hover:text-white flex items-center justify-center transition"
+ className="w-8 h-8 rounded-input hover:bg-os-overlay text-os-ash hover:text-white flex items-center justify-center transition"
           >
             ✕
           </button>
@@ -99,7 +99,7 @@ export const DynamicRouteDiffModal: React.FC<DynamicRouteDiffModalProps> = ({
         <div className="px-6 py-4 border-t border-os-steel flex items-center justify-end gap-3 bg-os-raised">
           <button
  onClick={onClose}
- className="px-4 py-2 text-xs font-mono font-medium text-os-fog hover:text-white rounded-input hover:bg-white/5 transition"
+ className="px-4 py-2 text-xs font-mono font-medium text-os-fog hover:text-white rounded-input hover:bg-os-overlay transition"
           >
  Dismiss
           </button>

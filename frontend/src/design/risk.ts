@@ -38,5 +38,6 @@ export function riskTint(value: RiskLevel | number, alpha = 0.12): string {
 }
 
 export function riskLabel(level: RiskLevel): string {
+  if (!level || typeof level !== 'string') return '';
   return level.charAt(0) + level.slice(1).toLowerCase();
 }

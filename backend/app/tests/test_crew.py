@@ -21,6 +21,8 @@ T0 = datetime(2026, 9, 12, 8, 0, tzinfo=timezone.utc)
 EXPECTED_TOOLS = {
     "search_vessels", "get_vessel", "get_vessel_track", "get_ais_gaps", "get_zone_events", "get_events",
     "get_risk", "get_evidence", "list_high_risk_vessels", "get_investigation_case", "list_open_cases",
+    # Phase 4 added the cleanup and debris tools to the same assistant.
+    "list_debris_hazards", "get_debris_drift_forecast", "list_cleanup_fleet", "plan_cleanup_mission_tool",
 }
 
 
