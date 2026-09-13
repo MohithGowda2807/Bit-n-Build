@@ -91,25 +91,25 @@ def build_surveillance_crew(vessel_id: int, llm=None, tools: Optional[List] = No
         "Investigation Lead",
         "Produce a clear, evidence-backed investigation summary and a recommended next action for a human reviewer.",
         "You assemble specialist findings into a case file an operator can act on in under a minute.",
-        pick("get_risk", "get_evidence", "get_investigation_case", "list_open_cases"), llm,
+        pick("get_evidence"), llm,
     )
 
     ais_task = Task(
         description=f"Review AIS reporting for vessel {vessel_id}. Use get_ais_gaps and get_vessel_track. "
                     "List every gap with start, end, duration and where the vessel went dark and reappeared.",
-        expected_output="Bullet list of AIS findings with timestamps and positions, or a statement that reporting was continuous.",
+        expected_output="At most six bullets of AIS findings with timestamps and positions, or one line saying reporting was continuous.",
         agent=ais_agent,
     )
     fishing_task = Task(
         description=f"Assess fishing-like behaviour for vessel {vessel_id}. Use get_events and get_zone_events. "
                     "State which zones were entered, their type, dwell time, and whether fishing patterns or loitering were detected.",
-        expected_output="Bullet list of zone and behaviour findings with scores and zone names.",
+        expected_output="At most six bullets of zone and behaviour findings with scores and zone names.",
         agent=fishing_agent,
     )
     anomaly_task = Task(
         description=f"Identify anomalies for vessel {vessel_id}: rendezvous with other vessels, unusual routes, speed changes. "
                     "Use get_events and get_risk. Explain how the detected factors reinforce or contradict each other.",
-        expected_output="Bullet list of anomalies plus a short paragraph on how the factors combine.",
+        expected_output="At most six bullets of anomalies plus one short paragraph on how the factors combine.",
         agent=anomaly_agent,
     )
     lead_task = Task(
@@ -151,9 +151,9 @@ def build_assistant_crew(question: str, llm=None, tools: Optional[List] = None):
                 max_rpm=settings.GEMINI_MAX_RPM, verbose=False)
 
 
-def run_with_fallback(build_crew: Callable[[object], object]) -> AgentResult:
+def run_with_fallback(build_crew: Callable[[object], object], order: Optional[str] = None) -> AgentResult:
     """Run the crew on each configured provider in order until one succeeds."""
-    providers = configured_providers()
+    providers = configured_providers(order)
     if not providers:
         raise LLMNotConfiguredError("No LLM provider key is set (GEMINI_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY).")
     failures: List[str] = []
@@ -170,7 +170,8 @@ def run_with_fallback(build_crew: Callable[[object], object]) -> AgentResult:
 def investigate_vessel(vessel_id: int) -> AgentResult:
     tools, session = _session_tools()
     try:
-        return run_with_fallback(lambda llm: build_surveillance_crew(vessel_id, llm=llm, tools=tools))
+        return run_with_fallback(lambda llm: build_surveillance_crew(vessel_id, llm=llm, tools=tools),
+                                 order=settings.CREW_PROVIDER_ORDER)
     finally:
         session.close()
 

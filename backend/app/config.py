@@ -47,9 +47,12 @@ class Settings(BaseSettings):
     # Agents (CrewAI + Gemini)
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini/gemini-3.5-flash-lite"
-    GEMINI_MAX_RPM: int = 10  # flash-lite free tier allows more than the 5 RPM of the full flash models
-    # Fallback chain: a provider is used only when its key is set. Models are free-tier, tool-capable choices.
+    GEMINI_MAX_RPM: int = 12  # flash-lite free tier allows about 15 requests a minute (the full flash models allow 5)
+    # Fallback chains: a provider is used only when its key is set. Models are free-tier, tool-capable choices.
+    # The single-agent assistant runs Groq first (seconds). The four-agent crew runs Gemini first: Groq's free tier
+    # allows 8,000 tokens a minute on every model, which a crew exceeds in its first minute.
     LLM_PROVIDER_ORDER: str = "groq,gemini,openrouter"
+    CREW_PROVIDER_ORDER: str = "gemini,groq,openrouter"
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "openai/gpt-oss-120b"
     OPENROUTER_API_KEY: str = ""

@@ -23,7 +23,7 @@ Browser: Landing → Command Center (Logistics · Environment · Surveillance ·
             │ REST /api/v1                                  │ WebSocket /ws/telemetry
             ▼                                               ▼
 FastAPI ─ routing · optimization · storms · commander loop · AIS providers · detection · risk · cases
-        ─ CrewAI crews (Groq → Gemini → OpenRouter fallback) · debris drift · fleet simulator · mission planner
+        ─ CrewAI crews (Groq, Gemini and OpenRouter with fallback) · debris drift · fleet simulator · mission planner
             ▼
 SQLAlchemy ─ SQLite locally, PostgreSQL/PostGIS in Docker
 ```
@@ -53,7 +53,7 @@ Details: [docs/surveillance.md](./docs/surveillance.md), [docs/routing.md](./doc
 Start both servers on a fresh database (delete `oceansentinel.db` in the directory you launch from), then, as the Operator:
 
 1. **Surveillance**: run the *Dark Fishing & Rendezvous* scenario. Two cases open; select FV Night Hauler to see the five risk factors, the baseline block and the Timeline.
-2. **Case 1**: Generate narrative (Groq answers in seconds, the other providers take minutes), then Escalate. The audit log records who did what and in which role.
+2. **Case 1**: Generate narrative (the four-agent crew runs on Gemini and takes 20 to 60 seconds; the Ask TRITON assistant answers in about five seconds on Groq), then Escalate. The audit log records who did what and in which role.
 3. **Replay**: back on Surveillance, press Replay and watch the cursor cross the amber dark window.
 4. **Logistics**: Inject hazard with the *Sumatra Squall* preset. The commander reroutes the live voyage; the map shows the avoidance route and Lineage History gains a HAZARD AVOIDANCE version.
 5. **Autonomous Fleet**: Plan Autonomous Sortie, Generate Optimized Plan, Authorize & Dispatch. The assigned unit leaves port and its position updates on the map.
@@ -91,7 +91,7 @@ npm install
 npm run dev
 ```
 
-Copy `.env.example` to `backend/.env`. Set at least one of `GROQ_API_KEY`, `GEMINI_API_KEY` or `OPENROUTER_API_KEY` to enable the agent layer (tried in that order); everything else works without a key. Set `JWT_SECRET` before deploying. `AIS_PROVIDER=aisstream` with an `AISSTREAM_API_KEY` switches Surveillance to live traffic.
+Copy `.env.example` to `backend/.env`. Set at least one of `GROQ_API_KEY`, `GEMINI_API_KEY` or `OPENROUTER_API_KEY` to enable the agent layer; everything else works without a key. The assistant tries Groq first (fast, but its free tier allows only 8,000 tokens a minute); the investigation crew tries Gemini first because it needs more than that per narrative. Both chains fall through to the remaining providers. Set `JWT_SECRET` before deploying. `AIS_PROVIDER=aisstream` with an `AISSTREAM_API_KEY` switches Surveillance to live traffic.
 
 The database schema is created on startup and there are no migrations: after pulling a change that adds a column, delete the local SQLite file.
 
@@ -100,7 +100,7 @@ The database schema is created on startup and there are no migrations: after pul
 ## Testing
 
 ```bash
-cd backend && uv run pytest -q          # 228 tests, no API key needed (agents use fake providers)
+cd backend && uv run pytest -q          # 231 tests, no API key needed (agents use fake providers)
 cd frontend && npm test                 # vitest: risk bands, formatting, track splitting, replay, heatmap, session
 cd frontend && npm run test:e2e         # Playwright: needs both servers running, ideally on a fresh database
 ```

@@ -104,7 +104,7 @@ GET  /api/v1/assistant/status         POST /api/v1/assistant/ask
 
 ## Agents
 
-Providers are tried in `LLM_PROVIDER_ORDER` (default `groq,gemini,openrouter`; Groq answers in seconds, the others take minutes on free tiers); a provider joins the chain only when its key is set. If one fails (quota, outage, bad output) the same crew is rerun on the next. Responses and case audit entries record which provider answered. With no keys at all, every deterministic feature still works and `/assistant/ask` and `/investigations/{id}/analyze` answer 503 with code `LLM_NOT_CONFIGURED`; when every configured provider fails they answer 502 with code `AGENT_RUN_FAILED`.
+The assistant tries providers in `LLM_PROVIDER_ORDER` (default `groq,gemini,openrouter`) and the investigation crew in `CREW_PROVIDER_ORDER` (default `gemini,groq,openrouter`); a provider joins a chain only when its key is set. The split follows the free tiers: Groq answers a single-agent question in seconds but allows only 8,000 tokens a minute on every model, which a four-agent crew exceeds in its first minute, while Gemini flash-lite allows about 15 requests a minute (`GEMINI_MAX_RPM` throttles the crew to 12) and finishes a narrative in 20 to 60 seconds. If one fails (quota, outage, bad output) the same crew is rerun on the next. Responses and case audit entries record which provider answered. With no keys at all, every deterministic feature still works and `/assistant/ask` and `/investigations/{id}/analyze` answer 503 with code `LLM_NOT_CONFIGURED`; when every configured provider fails they answer 502 with code `AGENT_RUN_FAILED`.
 
 | Provider | Key | Default model (free tier, tool calling) |
 |----------|-----|------------------------------------------|
