@@ -110,7 +110,7 @@ The assistant tries providers in `LLM_PROVIDER_ORDER` (default `groq,gemini,open
 |----------|-----|------------------------------------------|
 | Gemini | `GEMINI_API_KEY` | `gemini/gemini-3.5-flash-lite`, capped by `GEMINI_MAX_RPM` (10; the full flash models only allow 5) |
 | Groq | `GROQ_API_KEY` | `openai/gpt-oss-120b` via Groq's OpenAI-compatible endpoint |
-| OpenRouter | `OPENROUTER_API_KEY` | `nvidia/nemotron-3-ultra-550b-a55b:free` (alternatives: `thinkingmachines/inkling:free`, `nvidia/nemotron-3-super-120b-a12b:free`) |
+| OpenRouter | `OPENROUTER_API_KEY` | `nvidia/nemotron-3-super-120b-a12b:free`: answers a tool call in about a second on the free route. `nvidia/nemotron-3-ultra-550b-a55b:free` is stronger but queues for minutes; `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` is a smaller fast option |
 
 Free lists change often; `GET https://openrouter.ai/api/v1/models` shows current `:free` models and whether they support `tools`.
 

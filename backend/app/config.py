@@ -56,7 +56,8 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "openai/gpt-oss-120b"
     OPENROUTER_API_KEY: str = ""
-    OPENROUTER_MODEL: str = "nvidia/nemotron-3-ultra-550b-a55b:free"
+    # Last resort: the free route with the shortest queue that still calls tools (the 550B ultra model queues for minutes).
+    OPENROUTER_MODEL: str = "nvidia/nemotron-3-super-120b-a12b:free"
 
     @property
     def cors_origins_list(self) -> List[str]:
