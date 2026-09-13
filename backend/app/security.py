@@ -110,12 +110,17 @@ def require(minimum: str):
     """Dependency that admits the caller only at `minimum` role or higher."""
 
     def guard(principal: Principal = Depends(current_principal)) -> Principal:
-        if not principal.at_least(minimum):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={"code": "FORBIDDEN", "message": f"This action requires the {minimum} role or higher.",
-                        "required": minimum, "role": principal.role},
-            )
+        ensure(principal, minimum)
         return principal
 
     return guard
+
+
+def ensure(principal: Principal, minimum: str) -> None:
+    """Raise the standard 403 unless `principal` holds `minimum` or higher; for checks that depend on the request body."""
+    if not principal.at_least(minimum):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "FORBIDDEN", "message": f"This action requires the {minimum} role or higher.",
+                    "required": minimum, "role": principal.role},
+        )

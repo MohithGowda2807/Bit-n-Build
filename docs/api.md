@@ -88,3 +88,7 @@ Calculates multi-objective maritime routes avoiding landmass obstacles.
 - `GET /api/v1/ports/nearest?latitude=X&longitude=Y`: Retrieve nearest port to coordinates.
 - `GET /api/v1/zones`: List marine zones (traffic lanes, sanctuaries, risk zones).
 - `GET /api/v1/analytics/summary`: Aggregate voyage, fuel, and sustainability metrics.
+
+## Authentication and roles
+
+Roles are VIEWER < ANALYST < OPERATOR < ADMIN. Send `Authorization: Bearer <token>` from `POST /api/v1/auth/login`, or, while `AUTH_ALLOW_ROLE_HEADER` is true, the `X-Role` and `X-User` headers. Every write route carries a minimum role and answers 403 with code `FORBIDDEN` below it; the table of what each role unlocks is in [surveillance.md](./surveillance.md#access-control).

@@ -74,10 +74,12 @@ Roles are VIEWER < ANALYST < OPERATOR < ADMIN (spec sections 92-93). The caller 
 
 | Minimum role | Unlocks |
 |--------------|---------|
-| VIEWER | Map data: vessels, tracks, risk, events, zones, baselines |
-| ANALYST | Investigations (read), case narrative, the analyst assistant |
-| OPERATOR | Assign, escalate, resolve, dismiss; run and replay scenarios |
-| ADMIN | Reset the simulation, force a surveillance cycle |
+| VIEWER | Every read: vessels, tracks, risk, events, zones, baselines, routes, storms, debris, fleet, missions, analytics |
+| ANALYST | Investigations (read), case narrative, the analyst assistant and TRITON orchestrator, route previews, raising alerts and incidents, acknowledging alerts, reporting debris and track points |
+| OPERATOR | Assign, escalate, resolve, dismiss; run and replay scenarios; approve agent decisions; plan routes that record a voyage version; inject storms, run the commander loop and load demo scenarios; create or update vessels, voyages and debris; plan, create, approve and command cleanup sorties |
+| ADMIN | Reset the simulation, force a surveillance cycle, switch the operating mode, pull from the live AIS provider, register cleanup units |
+
+Every write route across all four phases carries a guard; `POST /api/v1/auth/login` is the only open write. `POST /api/v1/routes/optimize` is the one nuance: any analyst may preview a corridor, but a request with `record_version` true rewrites the live voyage and needs an operator.
 
 A refused call answers 403 with code `FORBIDDEN`, the required role and the caller's role. Case audit entries record the actor name and role. `GET /api/v1/auth/me` returns the caller's role and a permissions map the UI mirrors.
 

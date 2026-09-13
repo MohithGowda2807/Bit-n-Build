@@ -67,8 +67,6 @@ export const runScenario = (scenario: string, reset = true) =>
 export const startReplay = (scenario: string, stepSeconds = 0.5) =>
   postJson<ReplayStart>('/api/v1/simulation/replay', { scenario, step_seconds: stepSeconds });
 
-export const resetSimulation = () => postJson<{ vessels_removed: number }>('/api/v1/simulation/reset');
-
 export const assignCase = (caseId: number, assignee: string, actor = 'operator') =>
   postJson<InvestigationCaseDetail>(`/api/v1/investigations/${caseId}/assign`, { assignee, actor });
 

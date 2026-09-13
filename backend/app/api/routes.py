@@ -3,7 +3,7 @@ import logging
 import time
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.security import require
+from app.security import Principal, ensure, require
 from sqlalchemy.orm import Session
 
 try:
@@ -33,7 +33,10 @@ def get_redis_client():
 
 
 @router.post("/optimize", response_model=RouteOptimizeResponse)
-def optimize_route(payload: RouteOptimizeRequest, db: Session = Depends(get_db)):
+def optimize_route(payload: RouteOptimizeRequest, db: Session = Depends(get_db),
+                   who: Principal = Depends(require("ANALYST"))):
+    if payload.record_version:
+        ensure(who, "OPERATOR")
     start_time = time.time()
     logger.info(
         f"Route optimization requested: vessel={payload.vessel_id}, "

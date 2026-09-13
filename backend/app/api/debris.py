@@ -16,6 +16,7 @@ from app.schemas.debris import (
 from app.services.debris.drift import predict_drift_trajectory
 from app.services.debris.clustering import cluster_debris_sightings
 from app.services.debris.environmental_risk import evaluate_debris_environmental_risk
+from app.security import require
 
 router = APIRouter(prefix="/api/v1/debris", tags=["Debris Sentinel"])
 
@@ -128,7 +129,7 @@ def get_debris(debris_id: int, db: Session = Depends(get_db)):
     return item
 
 
-@router.post("", response_model=DebrisResponse, status_code=201)
+@router.post("", response_model=DebrisResponse, status_code=201, dependencies=[Depends(require("ANALYST"))])
 def report_debris(debris_in: DebrisCreate, db: Session = Depends(get_db)):
     """Report a new marine debris detection."""
     data = debris_in.model_dump()
@@ -139,7 +140,7 @@ def report_debris(debris_in: DebrisCreate, db: Session = Depends(get_db)):
     return debris
 
 
-@router.patch("/{debris_id}", response_model=DebrisResponse)
+@router.patch("/{debris_id}", response_model=DebrisResponse, dependencies=[Depends(require("OPERATOR"))])
 def update_debris(debris_id: int, debris_update: DebrisUpdate, db: Session = Depends(get_db)):
     """Update status, severity, or priority of a debris cluster."""
     item = db.query(Debris).filter(Debris.id == debris_id).first()

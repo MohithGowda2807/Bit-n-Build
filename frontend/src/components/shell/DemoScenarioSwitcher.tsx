@@ -76,7 +76,6 @@ export const DemoScenarioSwitcher: React.FC<DemoScenarioSwitcherProps> = ({
  className="px-3 py-1.5 rounded-full border border-os-signal hover:border-os-silver text-white font-bold flex items-center space-x-2 transition cursor-pointer"
  title="1-Click Presentation Demo Scenarios"
       >
-        <span className="animate-pulse">🎬</span>
         <span className="tracking-wider uppercase text-[11px] truncate max-w-[150px]" title={activeScenarioId ? activeScenarioId.replace(/_/g, ' ') : undefined}>
           {activeScenarioId ? `Demo: ${activeScenarioId.replace(/_/g, ' ')}` : 'Demo Scenarios'}
         </span>
@@ -93,7 +92,6 @@ export const DemoScenarioSwitcher: React.FC<DemoScenarioSwitcherProps> = ({
  1-Click Presentation
             </span>
           </div>
-
           <div className="space-y-1.5 max-h-72 overflow-y-auto pr-0.5">
             {scenarios.map(s => {
  const isSelected = s.id === activeScenarioId;

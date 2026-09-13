@@ -4,7 +4,7 @@ from app.main import app
 from app.database import SessionLocal
 from app.models import Vessel, Track, Debris, Alert, Mission, Incident, MarineZone
 
-client = TestClient(app)
+client = TestClient(app, headers={"X-Role": "ADMIN", "X-User": "test.admin"})
 
 
 def test_database_connected_and_seeded():

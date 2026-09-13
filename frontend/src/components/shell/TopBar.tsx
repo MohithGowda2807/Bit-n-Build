@@ -103,7 +103,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span className="os-eyebrow text-os-slate truncate max-w-[220px]">{subtitle}</span>
           </div>
         </button>
-
         <nav className="flex items-center gap-1 shrink-0" aria-label="Domains">
           {DOMAINS.map(d => (
             <button
@@ -117,9 +116,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             </button>
           ))}
         </nav>
-
         <ImpactMetricsBar />
-
         <div className="flex items-center gap-3 shrink-0">
           {counters.length > 0 && (
             <div className="os-mono flex items-center gap-4 text-xs text-os-ash">

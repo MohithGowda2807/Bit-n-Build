@@ -9,6 +9,8 @@ import { ScenarioControlBar } from '../components/routing/ScenarioControlBar';
 import { DynamicRouteDiffModal } from '../components/routing/DynamicRouteDiffModal';
 import { VoyageTimeline } from '../components/routing/VoyageTimeline';
 import { ReportExportModal } from '../components/reports/ReportExportModal';
+import { session, useRole } from '../services/session';
+import { atLeast } from '../design/roles';
 
 const MODES: { id: string; label: string; hint: string; weights: OptimizationWeights }[] = [
   { id: 'fuel_efficient', label: 'Fuel efficient', hint: 'Least consumption', weights: { fuel: 0.55, time: 0.15, safety: 0.15, environment: 0.15 } },
@@ -52,6 +54,8 @@ export const LogisticsPage: React.FC = () => {
  const [result, setResult] = useState<RouteOptimizeResponse | null>(null);
  const [altIndex, setAltIndex] = useState<number | null>(null);
  const [loading, setLoading] = useState(false);
+  const role = useRole();
+  const mayPlan = atLeast(role, 'OPERATOR');
  const [error, setError] = useState<string | null>(null);
 
  const [replayPos, setReplayPos] = useState<[number, number] | null>(null);
@@ -82,8 +86,9 @@ export const LogisticsPage: React.FC = () => {
  setDestination(dest);
  setOriginPortId(mumbai.id);
  setDestPortId(singapore.id);
+ // Opening the tab previews the default corridor (analysts and up); only an explicit plan or the commander changes the live voyage.
+ if (!atLeast(session.role, 'ANALYST')) return;
  setLoading(true);
-        // Opening the tab previews the default corridor; only an explicit plan or the commander changes the live voyage.
  optimizeRoute({ vessel_id: v[0]?.id ?? 1, origin: orig, destination: dest, mode: 'fuel_efficient', optimization: MODES[0].weights, record_version: false })
           .then(res => setResult(res))
           .catch(() => {})
@@ -174,11 +179,11 @@ export const LogisticsPage: React.FC = () => {
  if (pickMode === 'origin') {
  setOrigin({ latitude: port.latitude, longitude: port.longitude });
  setOriginPortId(port.id);
- setSnapNotification(`🎯 Snapped Origin: ${port.name} (${port.country})`);
+ setSnapNotification(`Snapped Origin: ${port.name} (${port.country})`);
     } else if (pickMode === 'destination') {
  setDestination({ latitude: port.latitude, longitude: port.longitude });
  setDestPortId(port.id);
- setSnapNotification(`🎯 Snapped Destination: ${port.name} (${port.country})`);
+ setSnapNotification(`Snapped Destination: ${port.name} (${port.country})`);
     }
  setPickMode(null);
  setTimeout(() => setSnapNotification(null), 4500);
@@ -261,7 +266,6 @@ export const LogisticsPage: React.FC = () => {
         {snapNotification && (
           <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1001] os-reveal">
             <div className="bg-os-clear text-white text-xs font-mono font-bold px-5 py-2.5 rounded-full border border-os-clear flex items-center gap-2 animate-bounce">
-              <span>⚓</span>
               <span>{snapNotification}</span>
             </div>
           </div>
@@ -285,7 +289,6 @@ export const LogisticsPage: React.FC = () => {
  className="px-2 py-1 bg-os-raised border border-os-signal hover:border-os-silver text-os-signal hover:text-white rounded text-[10px] font-mono font-bold flex items-center gap-1 transition cursor-pointer"
  title="Generate Stage 1 Voyage Manifest"
                   >
-                    <span>📑</span>
                     <span>Manifest</span>
                   </button>
                   <button
@@ -358,7 +361,6 @@ export const LogisticsPage: React.FC = () => {
                               : 'text-os-signal hover:text-os-signal hover:bg-os-signal-hover'
                           }`}
                         >
-                          <span>📍</span>
                           <span>{pickMode === 'origin' ? 'Click to Snap' : 'Map Snap'}</span>
                         </button>
                       </div>
@@ -394,7 +396,6 @@ export const LogisticsPage: React.FC = () => {
                               : 'text-os-signal hover:text-os-signal hover:bg-os-signal-hover'
                           }`}
                         >
-                          <span>📍</span>
                           <span>{pickMode === 'destination' ? 'Click to Snap' : 'Map Snap'}</span>
                         </button>
                       </div>
@@ -417,7 +418,6 @@ export const LogisticsPage: React.FC = () => {
                         </div>
                       )}
                     </div>
-
                     <div className="flex flex-col gap-1.5">
                       <Eyebrow>Optimization Objective</Eyebrow>
                       <div className="grid grid-cols-2 gap-1.5">
@@ -447,7 +447,8 @@ export const LogisticsPage: React.FC = () => {
                     <div className="flex flex-col gap-2 pt-2">
                       <button
  onClick={generate}
- disabled={loading}
+ disabled={loading || !mayPlan}
+ title={mayPlan ? undefined : 'Requires the Operator role'}
  className="w-full py-2.5 px-4 rounded-input bg-os-signal hover:bg-os-signal-hover text-white text-xs font-bold font-mono tracking-wide transition disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         {loading ? 'Optimizing Corridor…' : 'Calculate Routes'}
@@ -456,10 +457,10 @@ export const LogisticsPage: React.FC = () => {
                       {storms.length > 0 && (
                         <button
  onClick={handleDynamicReroute}
- disabled={isRerouting}
+ disabled={isRerouting || !mayPlan}
+ title={mayPlan ? undefined : 'Requires the Operator role'}
  className="w-full py-2.5 px-4 rounded-input bg-risk-critical hover:bg-risk-high text-white text-xs font-bold font-mono tracking-wide border border-risk-critical transition disabled:opacity-50 flex items-center justify-center gap-2"
                         >
-                          <span>⚡</span>
                           <span>{isRerouting ? 'Computing Safe Detour…' : 'Autonomous Storm Avoidance'}</span>
                         </button>
                       )}
@@ -477,7 +478,6 @@ export const LogisticsPage: React.FC = () => {
  onClick={() => setSidebarOpen(true)}
  className="absolute left-4 top-4 z-[1000] px-4 py-2 rounded-row bg-os-panel border border-os-steel text-white text-xs font-bold font-mono flex items-center gap-2 hover:bg-os-raised transition"
           >
-            <span>🧭</span>
             <span>Route Studio</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
           </button>

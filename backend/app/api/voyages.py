@@ -7,6 +7,7 @@ from app.models.voyage import Voyage
 from app.models.vessel import Vessel
 from app.models.route import Route
 from app.schemas.voyage import VoyageCreate, VoyageUpdate, VoyageResponse
+from app.security import require
 
 router = APIRouter(prefix="/api/v1/voyages", tags=["Voyages"])
 
@@ -30,7 +31,7 @@ def get_voyage(voyage_id: int, db: Session = Depends(get_db)):
     return voyage
 
 
-@router.post("", response_model=VoyageResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=VoyageResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require("OPERATOR"))])
 def create_voyage(payload: VoyageCreate, db: Session = Depends(get_db)):
     vessel = db.query(Vessel).filter(Vessel.id == payload.vessel_id).first()
     if not vessel:
@@ -67,7 +68,7 @@ def create_voyage(payload: VoyageCreate, db: Session = Depends(get_db)):
     return voyage
 
 
-@router.patch("/{voyage_id}", response_model=VoyageResponse)
+@router.patch("/{voyage_id}", response_model=VoyageResponse, dependencies=[Depends(require("OPERATOR"))])
 def update_voyage(voyage_id: int, payload: VoyageUpdate, db: Session = Depends(get_db)):
     voyage = db.query(Voyage).filter(Voyage.id == voyage_id).first()
     if not voyage:

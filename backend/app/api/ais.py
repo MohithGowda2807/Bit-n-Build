@@ -46,7 +46,7 @@ def get_live_ais(db: Session = Depends(get_db)):
     return ais_service.simulate_telemetry_step(db)
 
 
-@router.post("/simulate")
+@router.post("/simulate", dependencies=[Depends(require("OPERATOR"))])
 async def trigger_ais_simulation_step(db: Session = Depends(get_db)):
     """
     Triggers one synthetic AIS kinematic simulation step:

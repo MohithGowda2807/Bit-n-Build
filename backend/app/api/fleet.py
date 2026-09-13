@@ -41,7 +41,7 @@ def get_cleanup_unit(unit_id: int, db: Session = Depends(get_db)):
     return unit
 
 
-@router.post("/units", response_model=CleanupUnitResponse, status_code=201)
+@router.post("/units", response_model=CleanupUnitResponse, status_code=201, dependencies=[Depends(require("ADMIN"))])
 def register_cleanup_unit(unit_in: CleanupUnitCreate, db: Session = Depends(get_db)):
     """Register a new autonomous surface vehicle or marine drone in the fleet."""
     existing = db.query(CleanupUnit).filter(CleanupUnit.unit_name == unit_in.unit_name).first()
@@ -86,7 +86,7 @@ def issue_unit_command(
     return unit
 
 
-@router.post("/units/{unit_id}/step", response_model=CleanupUnitResponse)
+@router.post("/units/{unit_id}/step", response_model=CleanupUnitResponse, dependencies=[Depends(require("OPERATOR"))])
 def step_unit_simulation(
     unit_id: int,
     dt_hours: float = Query(0.25, ge=0.05, le=2.0),

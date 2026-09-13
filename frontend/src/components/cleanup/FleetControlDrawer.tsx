@@ -1,6 +1,8 @@
 import React from 'react';
 import { CleanupUnit } from '../../types';
 import { sendFleetCommand } from '../../services/api';
+import { useRole } from '../../services/session';
+import { atLeast } from '../../design/roles';
 
 interface FleetControlDrawerProps {
  units: CleanupUnit[];
@@ -15,6 +17,8 @@ export const FleetControlDrawer: React.FC<FleetControlDrawerProps> = ({
  onSelectUnit,
  onRefreshFleet
 }) => {
+  const role = useRole();
+  const mayCommand = atLeast(role, 'OPERATOR');
  const handleCommand = async (unitId: number, command: string, e: React.MouseEvent) => {
  e.stopPropagation();
  try {
@@ -43,14 +47,12 @@ export const FleetControlDrawer: React.FC<FleetControlDrawerProps> = ({
     <div className="bg-os-panel border border-os-pewter rounded-panel p-4 font-mono text-xs">
       <div className="flex items-center justify-between pb-3 border-b border-os-pewter mb-3">
         <div className="flex items-center space-x-2">
-          <span className="text-base">🚤</span>
           <span className="font-bold text-white uppercase tracking-wider text-xs">
  Autonomous Fleet Status ({units.length})
           </span>
         </div>
         <span className="text-[10px] text-os-signal font-semibold">LIVE TELEMETRY</span>
       </div>
-
       <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
         {units.map(unit => {
  const isSelected = unit.id === selectedUnitId;
@@ -102,7 +104,6 @@ export const FleetControlDrawer: React.FC<FleetControlDrawerProps> = ({
                     />
                   </div>
                 </div>
-
                 <div>
                   <div className="flex justify-between text-[10px] text-os-ash mb-0.5">
                     <span>Payload</span>
@@ -123,20 +124,23 @@ export const FleetControlDrawer: React.FC<FleetControlDrawerProps> = ({
               <div className="flex items-center space-x-1.5 mt-3 pt-2 border-t border-os-pewter">
                 <button
  onClick={(e) => handleCommand(unit.id, 'hold', e)}
+ disabled={!mayCommand}
  className="px-2 py-1 bg-os-raised hover:bg-os-raised text-[10px] text-risk-moderate rounded border border-os-pewter transition"
  title="Hold Position"
                 >
-                  ⏸ Hold
+                  Hold
                 </button>
                 <button
  onClick={(e) => handleCommand(unit.id, 'return_to_base', e)}
+ disabled={!mayCommand}
  className="px-2 py-1 bg-os-raised hover:bg-os-raised text-[10px] text-os-signal rounded border border-os-pewter transition"
  title="Return to Base"
                 >
-                  ↩ Return
+                  Return
                 </button>
                 <button
  onClick={(e) => handleCommand(unit.id, 'resume', e)}
+ disabled={!mayCommand}
  className="px-2 py-1 bg-os-raised hover:bg-os-raised text-[10px] text-os-signal rounded border border-os-signal transition flex-1 text-center font-bold"
  title="Resume Autonomous Sortie"
                 >

@@ -45,7 +45,7 @@ def get_mission(mission_id: int, db: Session = Depends(get_db)):
     return m
 
 
-@router.post("/plan", response_model=MissionPlanResponse)
+@router.post("/plan", response_model=MissionPlanResponse, dependencies=[Depends(require("OPERATOR"))])
 def plan_cleanup_mission_endpoint(
     req: MissionPlanRequest,
     db: Session = Depends(get_db)

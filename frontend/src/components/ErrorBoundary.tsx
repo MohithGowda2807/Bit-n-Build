@@ -20,7 +20,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
  if (this.state.hasError) {
  return (
         <div style={{ padding: 32, color: '#f2643e', fontFamily: 'monospace', background: '#0a0e17', minHeight: '100vh' }}>
-          <h1 style={{ fontSize: 24, marginBottom: 16 }}>⚠️ Application Error</h1>
+          <h1 style={{ fontSize: 24, marginBottom: 16 }}>Application Error</h1>
           <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#e2a33a', fontSize: 14 }}>
             {this.state.error?.message}
           </pre>

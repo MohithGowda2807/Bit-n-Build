@@ -393,28 +393,3 @@ export interface RecalculateRouteResponse {
   mode: string;
 }
 
-export interface VoyageHealth {
-  voyage_id: number;
-  overall_health: number;
-  safety_score: number;
-  fuel_efficiency_score: number;
-  environmental_score: number;
-  eta_adherence_score: number;
-  current_risk: number;
-  active_storms_count: number;
-  route_status: string;
-  operating_mode: string;
-  alerts: Array<{ severity: string; title: string; message: string }>;
-}
-
-export interface AgentDecision {
-  id: number;
-  agent_name: string;
-  action: string;
-  trigger_event?: string;
-  target_id?: string;
-  reason?: string;
-  confidence: number;
-  mode: string;
-  created_at: string;
-}

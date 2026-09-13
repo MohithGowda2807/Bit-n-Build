@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { CleanupUnit, Debris } from '../../types';
 import { planCleanupMission, approveCleanupMission, createCleanupMission } from '../../services/api';
+import { useRole } from '../../services/session';
+import { atLeast } from '../../design/roles';
 
 interface MissionPlannerModalProps {
  isOpen: boolean;
@@ -19,6 +21,8 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
  initialDebrisId,
  onMissionCreated
 }) => {
+  const role = useRole();
+  const mayPlan = atLeast(role, 'OPERATOR');
  const [selectedDebrisIds, setSelectedDebrisIds] = useState<number[]>([]);
  const [selectedUnitId, setSelectedUnitId] = useState<number>(1);
  const [isSubmitting, setIsSubmitting] = useState(false);
@@ -160,7 +164,6 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
         <div className="p-5 border-b border-os-pewter bg-os-void flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-row bg-os-signal/20 border border-os-signal flex items-center justify-center text-os-signal text-lg">
-              🎯
             </div>
             <div>
               <h2 className="text-lg font-bold text-white tracking-wide flex items-center gap-2">
@@ -214,7 +217,7 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
                     </div>
                     <div className="flex items-center justify-between text-xs text-os-ash mt-1">
                       <span>Type: {unit.unit_type.replace('_', ' ')}</span>
-                      <span>🔋 {Math.round(unit.battery_pct)}%</span>
+                      <span>{Math.round(unit.battery_pct)}%</span>
                     </div>
                     <div className="mt-2 w-full bg-os-raised rounded-full h-1.5 overflow-hidden">
                       <div
@@ -268,7 +271,6 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
  Total Target Payload: {totalTargetMass.toLocaleString()} kg
               </span>
             </div>
-
             <div className="space-y-2 max-h-52 overflow-y-auto pr-1 os-scrollbar">
               {debrisList.map(d => {
  const isChecked = selectedDebrisIds.includes(d.id);
@@ -348,7 +350,7 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
                 <span className="font-semibold text-os-signal">Waypoints:</span>{' '}
                 {planResult.waypoints?.map((w: any, idx: number) => (
                   <span key={idx}>
-                    {idx > 0 ? ' ➔ ' : ''}
+                    {idx > 0 ? ' → ' : ''}
                     <span className="text-white">{w.label || `WP${idx}`}</span>
                   </span>
                 ))}
@@ -368,10 +370,10 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
           {!planResult ? (
             <button
  onClick={handleGeneratePlan}
- disabled={isSubmitting}
- className="px-6 py-2.5 rounded-row hover: hover: disabled:opacity-50 text-white font-bold text-xs tracking-wider uppercase font-mono transition cursor-pointer flex items-center gap-2 active:scale-95"
+ disabled={isSubmitting || !mayPlan}
+ title={mayPlan ? undefined : 'Requires the Operator role'}
+ className="px-6 py-2.5 rounded-row bg-os-signal hover:bg-os-signal-hover disabled:opacity-50 text-white font-bold text-xs tracking-wider uppercase font-mono transition cursor-pointer flex items-center gap-2 active:scale-95"
             >
-              <span>⚡</span>
               <span>{isSubmitting ? 'Optimizing Trajectory...' : 'Generate Optimized Plan'}</span>
             </button>
           ) : (
@@ -384,10 +386,10 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
               </button>
               <button
  onClick={handleAuthorizeAndDispatch}
- disabled={isSubmitting}
- className="px-6 py-2.5 rounded-row hover: hover: disabled:opacity-50 text-white font-bold text-xs tracking-wider uppercase font-mono transition flex items-center gap-2 cursor-pointer active:scale-95"
+ disabled={isSubmitting || !mayPlan}
+ title={mayPlan ? undefined : 'Requires the Operator role'}
+ className="px-6 py-2.5 rounded-row bg-os-signal hover:bg-os-signal-hover disabled:opacity-50 text-white font-bold text-xs tracking-wider uppercase font-mono transition flex items-center gap-2 cursor-pointer active:scale-95"
               >
-                <span>🚀</span>
                 <span>Authorize & Dispatch Fleet</span>
               </button>
             </div>

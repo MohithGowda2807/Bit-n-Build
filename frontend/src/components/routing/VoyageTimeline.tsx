@@ -10,7 +10,6 @@ export const VoyageTimeline: React.FC<VoyageTimelineProps> = ({ versions, onSele
  if (!versions || versions.length === 0) {
  return (
       <div className="flex flex-col items-center justify-center p-6 text-center bg-os-void/60 rounded-row border border-dashed border-os-steel text-os-ash gap-2">
-        <span className="text-2xl">📜</span>
         <span className="text-xs font-mono font-semibold text-os-fog">No Lineage History Yet</span>
         <p className="text-[11px] text-os-ash max-w-[240px] leading-relaxed">
  Calculate a route or trigger Autonomous Storm Avoidance to record immutable route versions.
@@ -27,7 +26,6 @@ export const VoyageTimeline: React.FC<VoyageTimelineProps> = ({ versions, onSele
           {versions.length} Version{versions.length > 1 ? 's' : ''}
         </span>
       </div>
-
       <div className="flex flex-col gap-2 mt-1">
         {versions.map((ver) => {
  const isActive = ver.status === 'active';

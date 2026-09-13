@@ -23,18 +23,18 @@ interface AgentTraceVisualizerProps {
 const getDomainBadge = (domain?: string, agentName?: string) => {
  const name = (agentName || '').toLowerCase();
  if (name.includes('cleanup') || name.includes('debris') || domain === 'preservation') {
- return { label: 'Preservation', bg: 'bg-os-raised', border: 'border-os-clear', text: 'text-os-clear', icon: '🌿' };
+ return { label: 'Preservation', bg: 'bg-os-raised', border: 'border-os-clear', text: 'text-os-clear', icon: '' };
   }
  if (name.includes('surveillance') || name.includes('vessel watch') || name.includes('anomaly') || domain === 'surveillance') {
- return { label: 'Surveillance', bg: 'bg-os-raised', border: 'border-risk-moderate', text: 'text-risk-moderate', icon: '🛰️' };
+ return { label: 'Surveillance', bg: 'bg-os-raised', border: 'border-risk-moderate', text: 'text-risk-moderate', icon: '' };
   }
  if (name.includes('compliance') || name.includes('auditor') || domain === 'compliance') {
- return { label: 'Compliance', bg: 'bg-os-raised', border: 'border-os-signal', text: 'text-os-signal', icon: '⚖️' };
+ return { label: 'Compliance', bg: 'bg-os-raised', border: 'border-os-signal', text: 'text-os-signal', icon: '' };
   }
  if (name.includes('route') || name.includes('logistics') || domain === 'logistics') {
- return { label: 'Logistics', bg: 'bg-os-raised', border: 'border-os-signal', text: 'text-os-signal', icon: '🧭' };
+ return { label: 'Logistics', bg: 'bg-os-raised', border: 'border-os-signal', text: 'text-os-signal', icon: '' };
   }
- return { label: 'Commander', bg: 'bg-os-raised', border: 'border-os-signal', text: 'text-os-signal', icon: '👑' };
+ return { label: 'Commander', bg: 'bg-os-raised', border: 'border-os-signal', text: 'text-os-signal', icon: '' };
 };
 
 export const AgentTraceVisualizer: React.FC<AgentTraceVisualizerProps> = ({
@@ -99,7 +99,7 @@ export const AgentTraceVisualizer: React.FC<AgentTraceVisualizerProps> = ({
         <div className="grid grid-cols-3 gap-2.5 p-3 bg-os-void border border-os-signal rounded-row">
           <div className="p-2 bg-os-panel rounded-input">
             <div className="text-[10px] text-os-signal font-semibold uppercase flex items-center gap-1">
-              <span>🧭</span> Logistics
+              Logistics
             </div>
             <div className="text-white font-bold mt-0.5">
               {domainImpact.logistics?.fuel_saved_liters || 840} L saved
@@ -108,10 +108,9 @@ export const AgentTraceVisualizer: React.FC<AgentTraceVisualizerProps> = ({
  Safety Score: {domainImpact.logistics?.safety_score || 94}/100
             </div>
           </div>
-
           <div className="p-2 bg-os-panel rounded-input">
             <div className="text-[10px] text-os-clear font-semibold uppercase flex items-center gap-1">
-              <span>🌿</span> Preservation
+              Preservation
             </div>
             <div className="text-white font-bold mt-0.5">
               {domainImpact.preservation?.debris_intercepted_kg || 1450} kg target
@@ -120,10 +119,9 @@ export const AgentTraceVisualizer: React.FC<AgentTraceVisualizerProps> = ({
  MPA: {domainImpact.preservation?.mpa_shielded || 'Lakshadweep Reserve'}
             </div>
           </div>
-
           <div className="p-2 bg-os-panel rounded-input">
             <div className="text-[10px] text-risk-moderate font-semibold uppercase flex items-center gap-1">
-              <span>🛰️</span> Surveillance
+              Surveillance
             </div>
             <div className="text-white font-bold mt-0.5">
  Level: {domainImpact.surveillance?.threat_level || 'ELEVATED'}
@@ -141,7 +139,6 @@ export const AgentTraceVisualizer: React.FC<AgentTraceVisualizerProps> = ({
           <span>Multi-Agent Thought & Execution Tree</span>
           <span className="text-os-signal">{activeTraces.length} Agent Steps</span>
         </div>
-
         <div className="space-y-2 pt-1">
           {activeTraces.map((trace, idx) => {
  const isExpanded = expandedIndex === idx;
@@ -167,7 +164,6 @@ export const AgentTraceVisualizer: React.FC<AgentTraceVisualizerProps> = ({
                     </span>
                     <span className="font-bold text-white truncate">{trace.agent_name}</span>
                   </div>
-
                   <div className="flex items-center space-x-2 shrink-0 text-[10px] text-os-ash">
                     <span className="font-mono text-os-signal font-semibold">{trace.action}</span>
                     {trace.duration_ms && <span>{trace.duration_ms}ms</span>}

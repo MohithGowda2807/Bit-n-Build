@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 /** Who the operator is for this browser: a signed-in account's bearer token, or a dev role and audit name. */
 import { ROLES, Role } from '../design/roles';
 
@@ -75,3 +76,10 @@ export const session = {
     return token ? { ...base, Authorization: `Bearer ${token}` } : base;
   },
 };
+
+/** The current role, re-rendering when the picker or a sign-in changes it. */
+export function useRole(): Role {
+  const [role, setRole] = useState<Role>(session.role);
+  useEffect(() => session.subscribe(setRole), []);
+  return role;
+}

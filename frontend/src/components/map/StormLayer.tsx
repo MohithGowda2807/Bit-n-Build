@@ -69,13 +69,13 @@ export const StormLayer: React.FC<StormLayerProps> = ({ storms }) => {
             >
               <Tooltip direction="top" offset={[0, -8]} permanent={false}>
                 <div className="text-xs font-mono font-bold">
-                  🌀 {storm.name} ({storm.severity.toUpperCase()})
+                  {storm.name} ({storm.severity.toUpperCase()})
                 </div>
               </Tooltip>
               <Popup>
                 <div className="p-3 font-mono text-xs flex flex-col gap-1.5 text-white bg-os-panel border border-os-pewter rounded-row">
                   <div className="font-bold text-sm text-risk-critical flex items-center gap-1.5 border-b border-os-pewter pb-1.5">
-                    <span>🌀</span> {storm.name}
+                    {storm.name}
                   </div>
                   <div className="mt-1 text-[11px]"><span className="text-os-ash font-semibold">Type:</span> <span className="text-white font-semibold">{storm.storm_type.toUpperCase()}</span></div>
                   <div className="text-[11px]"><span className="text-os-ash font-semibold">Severity:</span> <span className="uppercase font-bold text-risk-critical">{storm.severity}</span></div>

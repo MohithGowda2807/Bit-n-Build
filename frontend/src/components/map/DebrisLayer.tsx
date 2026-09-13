@@ -41,11 +41,6 @@ const createDebrisIcon = (type: string, severity: number, isSelected: boolean) =
  const border = isSelected ? '3px solid #3d9bff' : '2px solid rgba(255,255,255,0.9)';
  const size = isSelected ? 34 : 26;
 
- let emoji = '♻️';
- if (type === 'ghost_net') emoji = '🕸️';
- else if (type === 'chemical_slick') emoji = '🛢️';
- else if (type === 'container_hazard') emoji = '📦';
-
  return L.divIcon({
  className: 'custom-debris-icon',
  html: `
@@ -63,7 +58,6 @@ const createDebrisIcon = (type: string, severity: number, isSelected: boolean) =
  cursor: pointer;
  transition: transform 0.2s ease;
  ">
-        ${emoji}
       </div>
  `,
  iconSize: [size, size],
@@ -103,7 +97,7 @@ export const DebrisLayer: React.FC<DebrisLayerProps> = ({
           >
             <Tooltip direction="top" offset={[0, -10]}>
               <div className="font-mono text-xs font-bold text-risk-moderate">
-                ⚠️ {cluster.cluster_id} ({(cluster.total_mass_kg || 0).toLocaleString()} kg, {cluster.member_count} patches)
+                {cluster.cluster_id} ({(cluster.total_mass_kg || 0).toLocaleString()} kg, {cluster.member_count} patches)
               </div>
             </Tooltip>
           </Circle>
@@ -183,7 +177,7 @@ export const DebrisLayer: React.FC<DebrisLayerProps> = ({
                 <div className="p-3.5 font-mono text-xs max-w-[280px] text-white bg-os-panel border border-os-signal rounded-row space-y-2">
                   <div className="font-bold text-sm text-risk-moderate uppercase flex items-center justify-between border-b border-os-pewter pb-2">
                     <span className="flex items-center gap-1.5">
-                      <span>⚠️</span> {debris.debris_type.replace(/_/g, ' ')}
+                      {debris.debris_type.replace(/_/g, ' ')}
                     </span>
                     <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border ${
  debris.clean_up_priority === 'urgent'
@@ -195,7 +189,6 @@ export const DebrisLayer: React.FC<DebrisLayerProps> = ({
                       {debris.clean_up_priority}
                     </span>
                   </div>
-
                   <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] pt-1">
                     <div>
                       <span className="text-os-ash">ID:</span>{' '}
@@ -223,7 +216,6 @@ export const DebrisLayer: React.FC<DebrisLayerProps> = ({
 
                   {debris.target_species_threatened && (
                     <div className="text-risk-critical text-[11px] font-medium bg-os-raised p-2 rounded-input border border-risk-critical flex items-start gap-1.5">
-                      <span>🚨</span>
                       <div>
                         <span className="font-bold text-risk-critical">Threat:</span> {debris.target_species_threatened}
                       </div>
@@ -232,7 +224,6 @@ export const DebrisLayer: React.FC<DebrisLayerProps> = ({
 
                   {debris.nearest_mpa_distance_nm && (
                     <div className="text-os-clear text-[11px] bg-os-raised p-1.5 rounded-input border border-os-clear flex items-center gap-1.5">
-                      <span>🛡️</span>
                       <div>
                         <span className="font-semibold text-os-clear">Nearest MPA:</span> {debris.nearest_mpa_distance_nm} NM
                       </div>
@@ -257,9 +248,8 @@ export const DebrisLayer: React.FC<DebrisLayerProps> = ({
  window.dispatchEvent(new CustomEvent('triton:open-mission-planner', { detail: debris }));
                       }
                     }}
- className="mt-3 w-full hover: hover: text-white py-2 px-3 rounded-input text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+ className="mt-3 w-full bg-os-signal hover:bg-os-signal-hover text-white py-2 px-3 rounded-input text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                   >
-                    <span>⚡</span>
                     <span>Open Mission Studio</span>
                   </button>
                 </div>

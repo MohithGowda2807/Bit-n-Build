@@ -8,7 +8,7 @@ db = SessionLocal()
 seed_database(db)
 db.close()
 
-client = TestClient(app)
+client = TestClient(app, headers={"X-Role": "ADMIN", "X-User": "test.admin"})
 
 
 def test_health_check_endpoint():

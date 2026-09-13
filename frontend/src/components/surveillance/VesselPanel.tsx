@@ -81,7 +81,6 @@ export const VesselPanel: React.FC<Props> = ({ vessel, risk, baseline, canViewCa
           </span>
         )}
       </div>
-
       <div className="flex flex-col gap-3">
         <div className="flex gap-2">
           <PrimaryPill className="flex-1" onClick={onOpenCase} disabled={!canViewCases || (!openCase && !(risk && risk.score > 80))}

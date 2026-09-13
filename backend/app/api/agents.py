@@ -10,11 +10,12 @@ from app.schemas.agent import (
     HumanApprovalRequest,
     HumanApprovalResponse
 )
+from app.security import require
 
 router = APIRouter(prefix="/api/v1/agents", tags=["TRITON Multi-Agent Framework"])
 
 
-@router.post("/orchestrate", response_model=OrchestratorResponse)
+@router.post("/orchestrate", response_model=OrchestratorResponse, dependencies=[Depends(require("ANALYST"))])
 def orchestrate_mission(request: OrchestratorRequest, db: Session = Depends(get_db)):
     """
     Primary multi-agent entry point:
@@ -25,7 +26,7 @@ def orchestrate_mission(request: OrchestratorRequest, db: Session = Depends(get_
     return triton_agents.orchestrate(request, db)
 
 
-@router.post("/decision", response_model=HumanApprovalResponse)
+@router.post("/decision", response_model=HumanApprovalResponse, dependencies=[Depends(require("OPERATOR"))])
 def operator_decision(request: HumanApprovalRequest, db: Session = Depends(get_db)):
     """
     Human Approval Gate:
@@ -35,7 +36,7 @@ def operator_decision(request: HumanApprovalRequest, db: Session = Depends(get_d
     return triton_agents.handle_human_decision(request, db)
 
 
-@router.post("/approve", response_model=HumanApprovalResponse)
+@router.post("/approve", response_model=HumanApprovalResponse, dependencies=[Depends(require("OPERATOR"))])
 def operator_approve(request: HumanApprovalRequest, db: Session = Depends(get_db)):
     """Convenience alias for approving an operational mission directive."""
     request.decision = "approve"

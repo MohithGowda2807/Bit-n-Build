@@ -98,13 +98,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
               <span className="w-2 h-2 rounded-full bg-os-raised animate-pulse" />
               <span>KERNEL v4.2 ONLINE</span>
             </div>
-
             <button
  onClick={() => onLaunchApp('logistics')}
- className="px-4 py-2 rounded-row hover: hover: text-white font-mono font-bold text-xs uppercase tracking-wider border border-os-signal flex items-center space-x-2 transition cursor-pointer active:scale-95"
+ className="px-4 py-2 rounded-row bg-os-signal hover:bg-os-signal-hover text-white font-mono font-bold text-xs uppercase tracking-wider border border-os-signal flex items-center space-x-2 transition cursor-pointer active:scale-95"
             >
               <span>Launch Command Center</span>
-              <span>➔</span>
+              <span>→</span>
             </button>
           </div>
         </div>
@@ -138,17 +137,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <button
  onClick={() => onLaunchApp('logistics')}
- className="px-7 py-3.5 rounded-row hover: hover: text-white font-mono font-bold text-sm uppercase tracking-wider border border-os-signal flex items-center space-x-3 transition cursor-pointer active:scale-95"
+ className="px-7 py-3.5 rounded-row bg-os-signal hover:bg-os-signal-hover text-white font-mono font-bold text-sm uppercase tracking-wider border border-os-signal flex items-center space-x-3 transition cursor-pointer active:scale-95"
           >
             <span>Enter Tactical Command Center</span>
-            <span className="text-lg">➔</span>
+            <span className="text-lg">→</span>
           </button>
-
           <a
  href="#simulator"
  className="px-6 py-3.5 rounded-row bg-os-panel hover:bg-os-raised text-white hover:text-white font-mono font-semibold text-sm border border-os-pewter hover:border-os-silver transition flex items-center space-x-2 cursor-pointer"
           >
-            <span>⚡ Test Live Simulator</span>
+            <span>Test Live Simulator</span>
           </a>
         </div>
 
@@ -159,25 +157,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
  onClick={() => onLaunchApp('logistics')}
  className="px-2.5 py-1 rounded-input bg-os-panel border border-os-pewter hover:border-os-silver text-os-signal hover:text-white transition cursor-pointer"
           >
-            🚢 Eco-Route Logistics
+            Eco-Route Logistics
           </button>
           <button
  onClick={() => onLaunchApp('cleanup')}
  className="px-2.5 py-1 rounded-input bg-os-panel border border-os-pewter hover:border-os-clear text-os-clear hover:text-white transition cursor-pointer"
           >
-            🎯 Autonomous Sortie Studio
+            Autonomous Sortie Studio
           </button>
           <button
  onClick={() => onLaunchApp('surveillance')}
  className="px-2.5 py-1 rounded-input bg-os-panel border border-os-pewter hover:border-risk-moderate text-risk-moderate hover:text-white transition cursor-pointer"
           >
-            🛰️ Sentinel Radar Surveillance
+            Sentinel Radar Surveillance
           </button>
           <button
  onClick={() => onLaunchApp('agents')}
  className="px-2.5 py-1 rounded-input bg-os-panel border border-os-pewter hover:border-os-silver text-os-signal hover:text-white transition cursor-pointer"
           >
-            💬 Ask TRITON Copilot
+            Ask TRITON Copilot
           </button>
         </div>
 
@@ -243,10 +241,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
             {/* Simulation Action button */}
             <button
  onClick={() => onLaunchApp('logistics')}
- className="px-5 py-2.5 rounded-row hover: hover: text-white font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shrink-0 transition cursor-pointer active:scale-95"
+ className="px-5 py-2.5 rounded-row bg-os-signal hover:bg-os-signal-hover text-white font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shrink-0 transition cursor-pointer active:scale-95"
             >
               <span>Launch This Mission in Console</span>
-              <span>➔</span>
+              <span>→</span>
             </button>
           </div>
 
@@ -268,7 +266,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
                         : 'bg-os-void border-os-pewter text-os-ash hover:border-os-pewter hover:text-white'
                     }`}
                   >
-                    <div>{sc === 'cyclone' ? '🌀 Cyclone' : sc === 'squall' ? '⛈️ Squall' : '🌊 Monsoon'}</div>
+                    <div>{sc === 'cyclone' ? 'Cyclone' : sc === 'squall' ? 'Squall' : 'Monsoon'}</div>
                     <div className="text-[10px] text-os-ash mt-0.5 truncate">
                       {sc === 'cyclone' ? 'Bay of Bengal' : sc === 'squall' ? 'Malacca Strait' : 'Arabian Sea'}
                     </div>
@@ -293,7 +291,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
                         : 'bg-os-void border-os-pewter text-os-ash hover:border-os-pewter hover:text-white'
                     }`}
                   >
-                    <div>{m === 'advisory' ? '🛡️ Advisory' : m === 'semi' ? '⚙️ Semi-Auto' : '⚡ Autonomous'}</div>
+                    <div>{m === 'advisory' ? 'Advisory' : m === 'semi' ? 'Semi-Auto' : 'Autonomous'}</div>
                     <div className="text-[10px] text-os-ash mt-0.5">
                       {m === 'advisory' ? 'Human in Loop' : m === 'semi' ? 'Operator Signoff' : 'Auto Dispatch'}
                     </div>
@@ -326,7 +324,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
                   <div className="h-full rounded-full w-4/5 animate-pulse" />
                 </div>
                 <div className="text-[11px] text-risk-moderate italic">
-                  💡 Tactical Evasion Rationale: {currentSim.evasion}
+                  Tactical Evasion Rationale: {currentSim.evasion}
                 </div>
               </div>
 
@@ -365,7 +363,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
  1,420 kg of drifting polymer fishing nets before entry into Lakshadweep MPA.
                 </div>
               </div>
-
               <div className="space-y-2 font-mono text-xs">
                 <div className="flex justify-between text-os-ash">
                   <span>Assigned Unit:</span>
@@ -380,12 +377,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
                   <span className="text-os-signal font-bold">1,800 kg Max</span>
                 </div>
               </div>
-
               <button
  onClick={() => onLaunchApp('cleanup')}
  className="w-full py-2 rounded-row bg-os-signal hover:bg-os-signal-hover text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer text-center"
               >
- Inspect ASV Sortie Studio ➔
+ Inspect ASV Sortie Studio →
               </button>
             </div>
           </div>
@@ -408,7 +404,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
  defense-grade surveillance, and autonomous ocean plastic restoration.
           </p>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Card 1: Logistics */}
           <div
@@ -417,7 +412,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
           >
             <div>
               <div className="w-12 h-12 rounded-panel bg-os-signal/10 border border-os-signal flex items-center justify-center text-2xl text-os-signal mb-6 group-hover:scale-110 transition">
-                🚢
               </div>
               <span className="text-[10px] font-mono font-bold text-os-signal uppercase tracking-widest">01 · LOGISTICS & DECARBONIZATION</span>
               <h3 className="text-2xl font-bold text-white mt-1 group-hover:text-os-signal transition">
@@ -428,10 +422,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
  and port congestion. Averts high-risk storm cells and Marine Protected Areas dynamically.
               </p>
             </div>
-
             <div className="mt-8 pt-6 border-t border-os-pewter flex items-center justify-between text-xs font-mono text-os-signal font-bold">
               <span>EXPLORE LOGISTICS CONSOLE</span>
-              <span className="group-hover:translate-x-1 transition">➔</span>
+              <span className="group-hover:translate-x-1 transition">→</span>
             </div>
           </div>
 
@@ -442,7 +435,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
           >
             <div>
               <div className="w-12 h-12 rounded-panel bg-os-clear/10 border border-os-clear flex items-center justify-center text-2xl text-os-clear mb-6 group-hover:scale-110 transition">
-                🎯
               </div>
               <span className="text-[10px] font-mono font-bold text-os-clear uppercase tracking-widest">02 · RESTORATION ROBOTICS</span>
               <h3 className="text-2xl font-bold text-white mt-1 group-hover:text-os-clear transition">
@@ -453,10 +445,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
  ocean drone swarms, and robotic booms to intercept ghost nets and polymer slick hazards.
               </p>
             </div>
-
             <div className="mt-8 pt-6 border-t border-os-pewter flex items-center justify-between text-xs font-mono text-os-clear font-bold">
               <span>LAUNCH SORTIE STUDIO</span>
-              <span className="group-hover:translate-x-1 transition">➔</span>
+              <span className="group-hover:translate-x-1 transition">→</span>
             </div>
           </div>
 
@@ -467,7 +458,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
           >
             <div>
               <div className="w-12 h-12 rounded-panel bg-risk-moderate/10 border border-risk-moderate flex items-center justify-center text-2xl text-risk-moderate mb-6 group-hover:scale-110 transition">
-                🛰️
               </div>
               <span className="text-[10px] font-mono font-bold text-risk-moderate uppercase tracking-widest">03 · SATELLITE SENTINEL</span>
               <h3 className="text-2xl font-bold text-white mt-1 group-hover:text-risk-moderate transition">
@@ -478,10 +468,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
  Detects dark vessels running without transponders, IUU fishing infractions, and oil spills.
               </p>
             </div>
-
             <div className="mt-8 pt-6 border-t border-os-pewter flex items-center justify-between text-xs font-mono text-risk-moderate font-bold">
               <span>OPEN SURVEILLANCE RADAR</span>
-              <span className="group-hover:translate-x-1 transition">➔</span>
+              <span className="group-hover:translate-x-1 transition">→</span>
             </div>
           </div>
 
@@ -492,7 +481,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
           >
             <div>
               <div className="w-12 h-12 rounded-panel bg-os-signal/10 border border-os-signal flex items-center justify-center text-2xl text-os-signal mb-6 group-hover:scale-110 transition">
-                💬
               </div>
               <span className="text-[10px] font-mono font-bold text-os-signal uppercase tracking-widest">04 · MULTI-AGENT ORCHESTRATOR</span>
               <h3 className="text-2xl font-bold text-white mt-1 group-hover:text-os-signal transition">
@@ -503,10 +491,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
  and regulatory corpus to draft legal sorties, incident dossiers, and port compliance briefs.
               </p>
             </div>
-
             <div className="mt-8 pt-6 border-t border-os-pewter flex items-center justify-between text-xs font-mono text-os-signal font-bold">
               <span>CHAT WITH TRITON ORCHESTRATOR</span>
-              <span className="group-hover:translate-x-1 transition">➔</span>
+              <span className="group-hover:translate-x-1 transition">→</span>
             </div>
           </div>
         </div>
@@ -525,7 +512,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
  From Spaceborne Ingestion to Robotic Actuation
             </h2>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
             <div className="p-5 rounded-panel bg-os-void border border-os-pewter relative space-y-3">
               <div className="text-os-signal font-mono font-bold text-xs">STAGE 01</div>
@@ -534,7 +520,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
  Continuous ingestion of global AIS telemetry, Copernicus Sentinel-2 multi-spectral passes, and NOAA/IMD weather streams.
               </p>
             </div>
-
             <div className="p-5 rounded-panel bg-os-void border border-os-pewter relative space-y-3">
               <div className="text-os-signal font-mono font-bold text-xs">STAGE 02</div>
               <h4 className="text-lg font-bold text-white">Hydrodynamic Drift</h4>
@@ -542,7 +527,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
  Lagrangian particle advection simulates 12h/24h drift projection for microplastics, ghost nets, and chemical slicks.
               </p>
             </div>
-
             <div className="p-5 rounded-panel bg-os-void border border-os-pewter relative space-y-3">
               <div className="text-os-signal font-mono font-bold text-xs">STAGE 03</div>
               <h4 className="text-lg font-bold text-white">Swarm Optimization</h4>
@@ -550,7 +534,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
  VRP + 2-Opt heuristic solver calculates optimal trajectories for autonomous surface vessels and commercial container corridors.
               </p>
             </div>
-
             <div className="p-5 rounded-panel bg-os-void border border-os-pewter relative space-y-3">
               <div className="text-os-signal font-mono font-bold text-xs">STAGE 04</div>
               <h4 className="text-lg font-bold text-white">Autonomous Actuation</h4>
@@ -578,7 +561,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
  TRITON's autonomous architecture is engineered from the ground up to fulfill United Nations Sustainable Development Goals
               (SDG 14: Life Below Water) and strict international maritime environmental treaties.
             </p>
-
             <div className="mt-6 space-y-3 font-mono text-xs">
               <div className="flex items-center gap-3 p-3 rounded-row bg-os-panel border border-os-pewter">
                 <span className="text-os-clear font-bold">✓</span>
@@ -594,13 +576,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
               </div>
             </div>
           </div>
-
           <div className="p-8 rounded-panel border border-os-signal space-y-6">
             <div className="flex items-center justify-between border-b border-os-pewter pb-4">
               <span className="font-mono text-xs font-bold text-os-signal uppercase">Live Sustainability Ledger</span>
               <span className="font-mono text-[10px] text-os-ash">CYCLE ID: #7829-TRITON</span>
             </div>
-
             <div className="space-y-4 font-mono">
               <div>
                 <div className="flex justify-between text-xs mb-1">
@@ -611,7 +591,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
                   <div className="h-full bg-os-clear rounded-full w-[78.4%]" />
                 </div>
               </div>
-
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-os-ash">Coral Reef MPA Safety Buffer:</span>
@@ -621,7 +600,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
                   <div className="h-full bg-os-signal rounded-full w-full" />
                 </div>
               </div>
-
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-os-ash">Plastic Interception Efficiency:</span>
@@ -632,13 +610,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
                 </div>
               </div>
             </div>
-
             <div className="pt-2">
               <button
  onClick={() => onLaunchApp('logistics')}
  className="w-full py-3 rounded-row bg-os-signal hover:bg-os-signal-hover text-white font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer text-center"
               >
- Inspect Environmental Impact Analytics ➔
+ Inspect Environmental Impact Analytics →
               </button>
             </div>
           </div>
@@ -659,14 +636,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
           <p className="text-os-fog font-sans text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
  Launch the TRITON Command Center now to run real-time route optimizations, inspect satellite dark vessel surveillance, and command autonomous drone sortie missions.
           </p>
-
           <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
             <button
  onClick={() => onLaunchApp('logistics')}
- className="px-8 py-4 rounded-row hover: hover: text-white font-mono font-bold text-sm uppercase tracking-wider border border-os-signal transition cursor-pointer active:scale-95 flex items-center space-x-2"
+ className="px-8 py-4 rounded-row bg-os-signal hover:bg-os-signal-hover text-white font-mono font-bold text-sm uppercase tracking-wider border border-os-signal transition cursor-pointer active:scale-95 flex items-center space-x-2"
             >
               <span>Launch Command Center</span>
-              <span>➔</span>
+              <span>→</span>
             </button>
           </div>
         </div>
@@ -684,14 +660,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
             <span className="text-os-fog font-bold">TRITON OceanSentinel OS</span>
             <span>· Bit n' Build Hackathon</span>
           </div>
-
           <div className="flex flex-wrap items-center gap-6 text-os-ash">
             <button onClick={() => onLaunchApp('logistics')} className="hover:text-os-signal transition">Logistics</button>
             <button onClick={() => onLaunchApp('cleanup')} className="hover:text-os-signal transition">Fleet Studio</button>
             <button onClick={() => onLaunchApp('surveillance')} className="hover:text-os-signal transition">Surveillance</button>
             <button onClick={() => onLaunchApp('agents')} className="hover:text-os-signal transition">Ask TRITON</button>
           </div>
-
           <div className="flex items-center space-x-2 text-[11px]">
             <span className="w-2 h-2 rounded-full bg-os-raised" />
             <span className="text-os-ash">All Systems Nominal</span>

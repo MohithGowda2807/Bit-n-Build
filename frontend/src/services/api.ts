@@ -68,12 +68,6 @@ async function failure(res: Response, fallback: string): Promise<Error> {
   return new Error((typeof detail === 'string' ? detail : detail?.message) || fallback);
 }
 
-export async function fetchHealth(): Promise<any> {
-  const res = await fetch(`${API_BASE}/health`);
-  if (!res.ok) throw new Error('Failed to fetch health');
-  return res.json();
-}
-
 export async function fetchVessels(): Promise<Vessel[]> {
   try {
     const res = await fetch(`${API_BASE}/api/v1/vessels`);
@@ -82,16 +76,6 @@ export async function fetchVessels(): Promise<Vessel[]> {
     console.warn('Live API unavailable; utilizing seed vessel catalog:', err);
   }
   return FALLBACK_VESSELS;
-}
-
-export async function fetchVesselTracks(vesselId: number): Promise<VesselTrack[]> {
-  try {
-    const res = await fetch(`${API_BASE}/api/v1/vessels/${vesselId}/tracks`);
-    if (res.ok) return await res.json();
-  } catch (err) {
-    console.warn(`Tracks for vessel ${vesselId} fallback:`, err);
-  }
-  return [];
 }
 
 export async function fetchDebris(): Promise<Debris[]> {
@@ -152,12 +136,6 @@ export async function fetchMissions(): Promise<Mission[]> {
   return FALLBACK_MISSIONS;
 }
 
-export async function fetchIncidents(): Promise<Incident[]> {
-  const res = await fetch(`${API_BASE}/api/v1/incidents`);
-  if (!res.ok) throw new Error('Failed to fetch incidents');
-  return res.json();
-}
-
 export async function fetchAgentStatus(): Promise<any> {
   const res = await fetch(`${API_BASE}/api/v1/agents/status`);
   if (!res.ok) throw new Error('Failed to fetch agent status');
@@ -196,18 +174,6 @@ export async function submitHumanDecision(payload: HumanApprovalRequest): Promis
   return res.json();
 }
 
-
-export async function triggerAisSimulation(): Promise<any> {
-  const res = await fetch(`${API_BASE}/api/v1/ais/simulate`, { method: 'POST' });
-  if (!res.ok) throw new Error('Failed to trigger AIS simulation');
-  return res.json();
-}
-
-export async function fetchAnalytics(): Promise<AnalyticsSummary> {
-  const res = await fetch(`${API_BASE}/api/v1/analytics/summary`);
-  if (!res.ok) throw new Error('Failed to fetch analytics');
-  return res.json();
-}
 
 export interface OptimizePayload {
   vessel_id: number;
@@ -314,16 +280,6 @@ export async function optimizeRoute(payload: OptimizePayload): Promise<RouteOpti
   };
 }
 
-export async function createVoyage(vessel_id: number, route_id: number): Promise<any> {
-  const res = await fetch(`${API_BASE}/api/v1/voyages`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ vessel_id, route_id })
-  });
-  if (!res.ok) throw new Error('Failed to create voyage');
-  return res.json();
-}
-
 // --- Phase 2 Environmental Intelligence & Dynamic Routing APIs ---
 
 /** One stored route as the map draws it; metrics the optimizer response carries but a stored row lacks default to zero. */
@@ -396,12 +352,6 @@ export async function triggerCommandCycle(): Promise<any> {
   return res.json();
 }
 
-export async function fetchAgentDecisions(limit: number = 20): Promise<import('../types').AgentDecision[]> {
-  const res = await fetch(`${API_BASE}/api/v1/simulation/decisions?limit=${limit}`);
-  if (!res.ok) return [];
-  return res.json();
-}
-
 export async function recalculateVoyageRoute(
   voyage_id: number,
   reason: string = 'ENVIRONMENTAL_HAZARD',
@@ -423,18 +373,6 @@ export async function recalculateVoyageRoute(
 export async function fetchVoyageRouteVersions(voyage_id: number): Promise<import('../types').RouteVersion[]> {
   const res = await fetch(`${API_BASE}/api/v1/routes/voyages/${voyage_id}/versions`);
   if (!res.ok) return [];
-  return res.json();
-}
-
-export async function fetchVoyageHealth(voyage_id: number): Promise<import('../types').VoyageHealth> {
-  const res = await fetch(`${API_BASE}/api/v1/risk/voyage/${voyage_id}`);
-  if (!res.ok) throw new Error('Failed to fetch voyage health');
-  return res.json();
-}
-
-export async function fetchRouteWeather(route_id: number): Promise<any> {
-  const res = await fetch(`${API_BASE}/api/v1/weather/route/${route_id}`);
-  if (!res.ok) throw new Error('Failed to fetch route weather');
   return res.json();
 }
 
