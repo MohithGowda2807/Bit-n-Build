@@ -74,3 +74,19 @@ def test_no_providers_configured_raises_not_configured(keys):
     keys()
     with pytest.raises(crew.LLMNotConfiguredError):
         crew.run_with_fallback(lambda llm: None)
+
+
+def test_groq_llm_keeps_the_full_model_id(monkeypatch):
+    """Groq's ids carry a vendor prefix (openai/gpt-oss-120b). CrewAI strips one 'openai/' as its routing
+    prefix, so the LLM must be built with the full id behind it or Groq answers 404 model_not_found."""
+    from app.agents.providers import ProviderSpec, build_llm_for
+    llm = build_llm_for(ProviderSpec("groq", "openai/gpt-oss-120b", "key"))
+    assert llm.model == "openai/gpt-oss-120b"  # what is sent to Groq after CrewAI removes its routing prefix
+
+
+def test_an_explicit_order_overrides_the_default_chain(keys):
+    """The investigation crew needs more tokens per minute than Groq's free tier allows, so it runs Gemini first
+    while the single-agent assistant keeps Groq first."""
+    keys(gemini="g", groq="q", openrouter="o", order="groq,gemini,openrouter")
+    assert [p.name for p in configured_providers(order="gemini,groq")] == ["gemini", "groq"]
+    assert settings.CREW_PROVIDER_ORDER.split(",")[0] == "gemini"

@@ -5,7 +5,7 @@ team can move to newer free models without a code change.
 """
 import os
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Optional, Dict, List
 
 from app.config import settings
 
@@ -27,13 +27,14 @@ def _specs() -> Dict[str, ProviderSpec]:
     }
 
 
-def _order() -> List[str]:
-    return [name.strip().lower() for name in settings.LLM_PROVIDER_ORDER.split(",") if name.strip()]
+def _order(order: Optional[str] = None) -> List[str]:
+    return [name.strip().lower() for name in (order or settings.LLM_PROVIDER_ORDER).split(",") if name.strip()]
 
 
-def configured_providers() -> List[ProviderSpec]:
+def configured_providers(order: Optional[str] = None) -> List[ProviderSpec]:
+    """Providers with a key, in `order` (a comma list; defaults to LLM_PROVIDER_ORDER)."""
     specs = _specs()
-    return [specs[name] for name in _order() if name in specs and specs[name].api_key]
+    return [specs[name] for name in _order(order) if name in specs and specs[name].api_key]
 
 
 def provider_catalogue() -> List[Dict]:
@@ -50,9 +51,9 @@ def build_llm_for(spec: ProviderSpec):
         os.environ["GEMINI_API_KEY"] = spec.api_key
         return LLM(model=spec.model, temperature=0.2)
     if spec.name == "groq":
-        # Groq speaks the OpenAI protocol; CrewAI's native OpenAI provider handles tool calling.
-        model = spec.model[7:] if spec.model.startswith("openai/") else spec.model
-        return LLM(model=f"openai/{model}", api_key=spec.api_key, base_url=GROQ_BASE_URL, temperature=0.2)
+        # Groq speaks the OpenAI protocol; CrewAI's native OpenAI provider handles tool calling. It strips the
+        # leading "openai/" as a routing prefix, so the full Groq id (itself "openai/gpt-oss-120b") stays behind it.
+        return LLM(model=f"openai/{spec.model}", api_key=spec.api_key, base_url=GROQ_BASE_URL, temperature=0.2)
     if spec.name == "openrouter":
         os.environ["OPENROUTER_API_KEY"] = spec.api_key
         return LLM(model=f"openrouter/{spec.model}", api_key=spec.api_key, temperature=0.2)

@@ -112,3 +112,11 @@ def test_every_tool_schema_declares_properties_for_strict_providers(db):
     for tool in build_tools(SurveillanceToolkit(lambda: db)):
         schema = tool.args_schema.model_json_schema()
         assert schema.get("properties"), f"{tool.name} has no parameters in its schema"
+
+
+def test_lead_carries_only_the_evidence_tool(offline_llm):
+    """The lead synthesises the specialists' findings. Extra tool schemas pushed its request past Groq's free-tier
+    8k tokens-per-minute cap, which silently sent every narrative to the slower fallback provider."""
+    crew = build_surveillance_crew(1, llm=offline_llm)
+    lead = crew.agents[-1]
+    assert {t.name for t in lead.tools} == {"get_evidence"}
