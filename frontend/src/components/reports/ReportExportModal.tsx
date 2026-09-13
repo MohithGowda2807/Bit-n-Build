@@ -23,15 +23,15 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
   };
 
  const STAGES: { id: ReportStage; label: string; icon: string }[] = [
-    { id: 'executive', label: 'Executive Briefing', icon: '📑' },
-    { id: 'logistics', label: 'Stage 1: Logistics Manifest', icon: '🚢' },
-    { id: 'environment', label: 'Stage 2: Storm Advisory', icon: '🌀' },
-    { id: 'surveillance', label: 'Stage 3: Surveillance Dossier', icon: '🛡️' },
-    { id: 'cleanup', label: 'Stage 4: Autonomous Sortie', icon: '🚤' }
+    { id: 'executive', label: 'Executive Briefing', icon: '' },
+    { id: 'logistics', label: 'Stage 1: Logistics Manifest', icon: '' },
+    { id: 'environment', label: 'Stage 2: Storm Advisory', icon: '' },
+    { id: 'surveillance', label: 'Stage 3: Surveillance Dossier', icon: '' },
+    { id: 'cleanup', label: 'Stage 4: Autonomous Sortie', icon: '' }
   ];
 
  return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-os-void p-2 sm:p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-os-void/80 p-2 sm:p-4 overflow-y-auto">
       {/* Print CSS Injection */}
       <style>{`
         @media print {
@@ -60,24 +60,20 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
           }
         }
  `}</style>
-
       <div className="bg-os-panel border border-os-pewter rounded-panel w-full max-w-4xl max-h-[94vh] flex flex-col overflow-hidden no-print">
         {/* Modal Header & Stage Switcher */}
         <div className="bg-os-void p-3.5 border-b border-os-pewter flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-base">📑</span>
             <div>
               <div className="font-bold text-white text-xs font-mono">TRITON MARITIME INTELLIGENCE DOSSIER</div>
               <div className="text-[10px] text-os-ash font-sans">Multi-Stage Regulatory & Tactical Report Generator</div>
             </div>
           </div>
-
           <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
             <button
  onClick={handlePrint}
- className="px-3.5 py-1.5 hover: hover: text-white rounded-input text-xs font-bold font-mono flex items-center gap-1.5 transition cursor-pointer"
+ className="px-3.5 py-1.5 bg-os-signal hover:bg-os-signal-hover text-white rounded-input text-xs font-bold font-mono flex items-center gap-1.5 transition cursor-pointer"
             >
-              <span>🖨️</span>
               <span>Print / Save PDF</span>
             </button>
             <button
@@ -212,7 +208,6 @@ const LogisticsManifestView: React.FC = () => (
     {/* Route Corridor Waypoint Table */}
     <div>
       <h2 className="text-sm font-bold text-os-void uppercase tracking-wider mb-2 font-mono flex items-center gap-2">
-        <span>📍</span>
         <span>Optimized Navigation Corridor Waypoints</span>
       </h2>
       <div className="overflow-x-auto border border-os-silver rounded-row">
@@ -269,7 +264,6 @@ const LogisticsManifestView: React.FC = () => (
     <div className="border border-os-silver bg-os-silver p-4 rounded-row flex items-center justify-between">
       <div className="text-xs space-y-1">
         <div className="font-bold text-os-void flex items-center gap-1.5">
-          <span>🛡️</span>
           <span>Automated Verification & Master Mariner Authorization</span>
         </div>
         <p className="text-os-slate text-[11px]">
@@ -314,7 +308,6 @@ const EnvironmentAdvisoryView: React.FC = () => (
     {/* Cyclone Warning Banner */}
     <div className="bg-os-raised border-l-4 border-risk-critical p-4 rounded-r-xl">
       <div className="flex items-center gap-2">
-        <span className="text-lg">🌀</span>
         <h3 className="text-sm font-bold text-risk-critical">ACTIVE HAZARD: Severe Cyclonic Storm 'Vardah' (Bay of Bengal / Sri Lanka Basin)</h3>
       </div>
       <p className="text-xs text-risk-critical mt-1 leading-relaxed">
@@ -349,7 +342,6 @@ const EnvironmentAdvisoryView: React.FC = () => (
     {/* Divergence Lineage Log */}
     <div>
       <h2 className="text-sm font-bold text-os-void uppercase tracking-wider mb-2 font-mono flex items-center gap-2">
-        <span>🔄</span>
         <span>Automated Route Re-calculation Lineage</span>
       </h2>
       <div className="p-4 bg-os-silver border border-os-silver rounded-row text-xs space-y-3 font-mono">
@@ -423,7 +415,6 @@ const SurveillanceDossierView: React.FC = () => (
     {/* Sensor Corroboration Logs */}
     <div>
       <h2 className="text-sm font-bold text-os-void uppercase tracking-wider mb-2 font-mono flex items-center gap-2">
-        <span>🛰️</span>
         <span>Multi-Sensor Sensor Fusion Evidence Chain</span>
       </h2>
       <div className="space-y-2 text-xs">
@@ -448,7 +439,6 @@ const SurveillanceDossierView: React.FC = () => (
     <div className="p-4 bg-os-raised border border-risk-critical rounded-row flex items-center justify-between text-xs">
       <div>
         <div className="font-bold text-risk-critical flex items-center gap-1.5">
-          <span>🚨</span>
           <span>Interception & Boarding Tasking Order</span>
         </div>
         <p className="text-risk-critical text-[11px] mt-0.5">

@@ -19,18 +19,18 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const getUnitEmoji = (type: string) => {
+const unitGlyph = (type: string) => {
  switch (type) {
- case 'autonomous_drone': return '🛸';
- case 'robotic_interceptor': return '⚡';
- case 'collection_boom': return '⚓';
- default: return '🚤';
+ case 'autonomous_drone': return 'D';
+ case 'robotic_interceptor': return 'I';
+ case 'collection_boom': return 'B';
+ default: return 'S';
   }
 };
 
 const createFleetIcon = (unit: CleanupUnit, isSelected: boolean) => {
  const color = getStatusColor(unit.status);
- const emoji = getUnitEmoji(unit.unit_type);
+ const emoji = unitGlyph(unit.unit_type);
  const size = isSelected ? 38 : 30;
  const border = isSelected ? '3px solid #3d9bff' : '2px solid rgba(255,255,255,0.9)';
 
@@ -121,15 +121,14 @@ export const FleetLayer: React.FC<FleetLayerProps> = ({
                 <div className="font-mono text-xs">
                   <div className="font-bold text-os-signal">{unit.unit_name}</div>
                   <div className="text-os-fog uppercase">
-                    {unit.status} | {unit.speed_knots} kn | 🔋 {Math.round(unit.battery_pct)}%
+                    {unit.status} | {unit.speed_knots} kn | battery {Math.round(unit.battery_pct)}%
                   </div>
                 </div>
               </Tooltip>
-
               <Popup>
                 <div className="p-3 font-mono text-xs max-w-xs text-white bg-os-panel border border-os-pewter rounded-row space-y-2">
                   <div className="font-bold text-sm text-os-signal uppercase flex items-center justify-between border-b border-os-pewter pb-1.5">
-                    <span>{getUnitEmoji(unit.unit_type)} {unit.unit_name}</span>
+                    <span>{unitGlyph(unit.unit_type)} {unit.unit_name}</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-os-raised text-os-signal border border-os-signal">
                       {unit.unit_type.replace('_', ' ')}
                     </span>
@@ -146,7 +145,6 @@ export const FleetLayer: React.FC<FleetLayerProps> = ({
                     <div><span className="text-os-ash font-semibold">Velocity:</span> <span className="text-white font-bold">{unit.speed_knots} kn @ {unit.heading_deg}°</span></div>
                     <div><span className="text-os-ash font-semibold">Coordinates:</span> <span className="text-os-fog">{unit.latitude.toFixed(3)}°N, {unit.longitude.toFixed(3)}°E</span></div>
                   </div>
-
                   <button
  onClick={() => onSelectUnit?.(unit)}
  className="mt-3 w-full bg-os-raised hover:bg-os-raised text-os-signal py-1.5 px-2 rounded-input text-xs font-semibold uppercase tracking-wider border border-os-pewter cursor-pointer transition"

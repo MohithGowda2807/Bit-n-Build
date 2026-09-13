@@ -17,6 +17,7 @@ dependencies = [
     "alembic>=1.13.1",
     "websockets>=12.0",
     "crewai[google-genai]>=1.15.21",
+    "pyjwt>=2.14.0",
 ]
 
 [dependency-groups]

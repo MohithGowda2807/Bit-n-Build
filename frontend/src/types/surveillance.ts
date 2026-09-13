@@ -206,3 +206,18 @@ export interface VesselBaseline {
   profile: BehaviorProfile;
   deviation: BehaviorDeviation | null;
 }
+
+export interface HeatCell {
+  lat: number;
+  lon: number;
+  positions: number;
+  events: number;
+  max_risk: number;
+  intensity: number;
+}
+
+export interface Heatmap {
+  cell_degrees: number;
+  hours: number | null;
+  cells: HeatCell[];
+}

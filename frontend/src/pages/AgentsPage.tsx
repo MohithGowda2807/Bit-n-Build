@@ -5,6 +5,8 @@ import { HumanApprovalResponse, OrchestratorResponse, Vessel } from '../types';
 import { RiskLevel } from '../design/risk';
 import { renderMarkdownLite } from '../design/markdownLite';
 import { AgentTraceVisualizer } from '../components/agents/AgentTraceVisualizer';
+import { useRole } from '../services/session';
+import { atLeast } from '../design/roles';
 
 const PRESETS = [
   'Assess navigation safety and MPA compliance for the active vessel',
@@ -57,6 +59,10 @@ export const AgentsPage: React.FC = () => {
   };
 
   const pending = result?.requires_human_approval && !receipt;
+  const role = useRole();
+  const mayAsk = atLeast(role, 'ANALYST');
+  const mayDecide = atLeast(role, 'OPERATOR');
+  const decideHint = mayDecide ? undefined : 'Requires the Operator role';
 
   return (
     <div className="flex-1 min-h-0 grid grid-cols-12 gap-4 p-4">
@@ -111,10 +117,10 @@ export const AgentsPage: React.FC = () => {
               <option value="">Fleet wide</option>
               {vessels.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
             </select>
-            <PrimaryPill type="submit" disabled={busy}>{busy ? 'Running…' : 'Run'}</PrimaryPill>
+            <PrimaryPill type="submit" disabled={busy || !mayAsk} title={mayAsk ? undefined : 'Requires the Analyst role'}>{busy ? 'Running…' : 'Run'}</PrimaryPill>
           </form>
           <div className="flex flex-wrap gap-1.5">
-            {PRESETS.map(p => <FilterPill key={p} size="sm" active={query === p} onClick={() => { setQuery(p); run(p); }}>{p}</FilterPill>)}
+            {PRESETS.map(p => <FilterPill key={p} size="sm" active={query === p} onClick={() => { setQuery(p); if (mayAsk) run(p); }}>{p}</FilterPill>)}
           </div>
           {error && <span className="text-xs" style={{ color: '#f0483e' }}>{error}</span>}
         </Panel>
@@ -130,7 +136,6 @@ export const AgentsPage: React.FC = () => {
                 <Mono className="text-xs text-os-slate">{result.execution_time_ms.toFixed(0)} ms</Mono>
               </div>
               <span className="text-[15px] leading-relaxed text-white font-medium">{result.orchestrator_decision}</span>
-
               <Eyebrow>Findings</Eyebrow>
               <div className="flex flex-col">
                 {result.agent_findings.map((f, i) => (
@@ -183,9 +188,9 @@ export const AgentsPage: React.FC = () => {
               )}
               {pending && (
                 <div className="flex gap-2 mt-auto">
-                  <PrimaryPill className="flex-1" disabled={busy} onClick={() => decide('approve')}>Approve</PrimaryPill>
-                  <OutlinePill className="flex-1" disabled={busy} onClick={() => decide('replan')}>Replan</OutlinePill>
-                  <OutlinePill className="flex-1" disabled={busy} onClick={() => decide('reject')}>Reject</OutlinePill>
+                  <PrimaryPill className="flex-1" disabled={busy || !mayDecide} title={decideHint} onClick={() => decide('approve')}>Approve</PrimaryPill>
+                  <OutlinePill className="flex-1" disabled={busy || !mayDecide} title={decideHint} onClick={() => decide('replan')}>Replan</OutlinePill>
+                  <OutlinePill className="flex-1" disabled={busy || !mayDecide} title={decideHint} onClick={() => decide('reject')}>Reject</OutlinePill>
                 </div>
               )}
               {receipt && (

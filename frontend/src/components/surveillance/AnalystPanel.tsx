@@ -70,7 +70,6 @@ export const AnalystPanel: React.FC<Props> = ({ initialQuestion, onClose }) => {
           <svg width="20" height="20" viewBox="0 0 20 20" stroke="currentColor" strokeWidth="1.5" fill="none"><path d="M5 5l10 10M15 5L5 15" /></svg>
         </button>
       </div>
-
       <div className="flex-1 px-6 flex flex-col gap-5 overflow-auto">
         {configured === false && (
           <span className="text-sm text-os-fog">No LLM provider is configured on the backend. Set GEMINI_API_KEY, GROQ_API_KEY or OPENROUTER_API_KEY to enable the analyst.</span>
@@ -98,7 +97,6 @@ export const AnalystPanel: React.FC<Props> = ({ initialQuestion, onClose }) => {
         )}
         <div ref={bottomRef} />
       </div>
-
       <div className="px-6 pt-4 pb-6 flex flex-col gap-3">
         {turns.length === 0 && (
           <div className="flex gap-1.5 flex-wrap">

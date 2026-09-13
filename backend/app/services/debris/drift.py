@@ -42,6 +42,11 @@ def calculate_leeway_drift_vector(
     }
 
 
+UNCERTAINTY_BASE_NM = 0.2            # position fix error at t=0
+UNCERTAINTY_GROWTH_NM_PER_HOUR = 0.1  # unresolved current and wind variability
+UNCERTAINTY_DRIFT_FRACTION = 0.1      # share of the distance drifted
+
+
 def predict_drift_trajectory(
     start_lat: float,
     start_lon: float,
@@ -81,6 +86,12 @@ def predict_drift_trajectory(
     curr_lon = start_lon
     start_time = datetime.utcnow()
 
+    drift_speed = vector["drift_speed_knots"]
+
+    def uncertainty_radius_nm(hour: int) -> float:
+        """Search radius around the forecast point: a fix error plus a share of the distance drifted."""
+        return round(UNCERTAINTY_BASE_NM + UNCERTAINTY_GROWTH_NM_PER_HOUR * hour + UNCERTAINTY_DRIFT_FRACTION * drift_speed * hour, 2)
+
     # Initial t=0 waypoint
     trajectory.append({
         "hour": 0,
@@ -88,10 +99,10 @@ def predict_drift_trajectory(
         "longitude": round(curr_lon, 5),
         "timestamp": start_time.isoformat() + "Z",
         "current_speed_knots": current_speed_knots,
-        "wind_speed_knots": wind_speed_knots
+        "wind_speed_knots": wind_speed_knots,
+        "uncertainty_radius_nm": uncertainty_radius_nm(0),
     })
 
-    drift_speed = vector["drift_speed_knots"]
     heading_deg = vector["drift_heading_deg"]
     heading_rad = math.radians(heading_deg)
 
@@ -116,7 +127,8 @@ def predict_drift_trajectory(
             "longitude": round(curr_lon, 5),
             "timestamp": t.isoformat() + "Z",
             "current_speed_knots": current_speed_knots,
-            "wind_speed_knots": wind_speed_knots
+            "wind_speed_knots": wind_speed_knots,
+            "uncertainty_radius_nm": uncertainty_radius_nm(h),
         })
 
     return trajectory

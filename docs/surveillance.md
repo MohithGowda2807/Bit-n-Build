@@ -64,28 +64,37 @@ Every tracked vessel gets one `vessel_behavior_profiles` row: average speed, spe
 
 The last `BASELINE_CURRENT_HOURS` (6) of the track are scored against the profile: speed z-score (full 60 points at 3 sd, with a 1 kn floor on the spread), turning rate against the usual rate (20 points at 3x) and new AIS gaps for a vessel with none in its history (20 points). A score above 40 emits a `BEHAVIOR_DEVIATION` event with a plain-language explanation; the latest comparison is always kept on the profile and served by `GET /api/v1/vessels/{id}/baseline`.
 
+## AIS sources
+
+`AIS_PROVIDER` selects where ingestion pulls from. `simulation` (default) replays the scripted scenarios. `aisstream` connects to the free aisstream.io websocket with `AISSTREAM_API_KEY`, listens for `AIS_COLLECT_SECONDS` inside `AIS_BOUNDING_BOX` (min_lat,min_lon,max_lat,max_lon), and normalises position reports and static data onto the same `AISReport` and `AISVesselInfo` shapes; ship-type codes collapse onto FISHING, CARGO, TANKER and the other types the risk engine knows. `POST /api/v1/ais/ingest` (ADMIN) pulls one batch from the configured provider and runs detection and risk on it; `GET /api/v1/ais/provider` reports which source is active and whether it is configured. With a live source the behavior baseline learns from stored history once at least `BASELINE_MIN_HISTORY_HOURS` exist; until then vessels have no baseline factor, which is honest rather than invented.
+
 ## Access control
 
 Roles are VIEWER < ANALYST < OPERATOR < ADMIN (spec sections 92-93). The caller sends `X-Role` and `X-User` headers; a missing role means VIEWER and an unknown one is a 400. Guards live in `backend/app/security.py` and every guarded route declares its minimum:
 
 | Minimum role | Unlocks |
 |--------------|---------|
-| VIEWER | Map data: vessels, tracks, risk, events, zones, baselines |
-| ANALYST | Investigations (read), case narrative, the analyst assistant |
-| OPERATOR | Assign, escalate, resolve, dismiss; run and replay scenarios |
-| ADMIN | Reset the simulation, force a surveillance cycle |
+| VIEWER | Every read: vessels, tracks, risk, events, zones, baselines, routes, storms, debris, fleet, missions, analytics |
+| ANALYST | Investigations (read), case narrative, the analyst assistant and TRITON orchestrator, route previews, raising alerts and incidents, acknowledging alerts, reporting debris and track points |
+| OPERATOR | Assign, escalate, resolve, dismiss; run and replay scenarios; approve agent decisions; plan routes that record a voyage version; inject storms, run the commander loop and load demo scenarios; create or update vessels, voyages and debris; plan, create, approve and command cleanup sorties |
+| ADMIN | Reset the simulation, force a surveillance cycle, switch the operating mode, pull from the live AIS provider, register cleanup units |
 
-A refused call answers 403 with code `FORBIDDEN`, the required role and the caller's role. Case audit entries record the actor name and role. `GET /api/v1/auth/me` returns the caller's role and a permissions map the UI mirrors; the top bar's role picker sets the headers for the browser. Token-based authentication replaces the header at the same seam.
+Every write route across all four phases carries a guard; `POST /api/v1/auth/login` is the only open write. `POST /api/v1/routes/optimize` is the one nuance: any analyst may preview a corridor, but a request with `record_version` true rewrites the live voyage and needs an operator.
+
+A refused call answers 403 with code `FORBIDDEN`, the required role and the caller's role. Case audit entries record the actor name and role. `GET /api/v1/auth/me` returns the caller's role and a permissions map the UI mirrors.
+
+**Sign-in.** `POST /api/v1/auth/login` with a configured account (`AUTH_USERS`, `name:password:ROLE` entries; demo accounts admin, operator, analyst and viewer ship by default) returns a bearer token signed with `JWT_SECRET`, valid for `JWT_TTL_MINUTES`. A bearer token always wins. The `X-Role` and `X-User` headers remain a development convenience while `AUTH_ALLOW_ROLE_HEADER` is true; set it false in production and a token becomes the only way to hold a role. The top bar offers Sign in; the role picker is a dev shortcut that disappears when the header is not honoured.
 
 ## API
 
 ```
-GET  /api/v1/auth/roles               GET /api/v1/auth/me
+GET  /api/v1/auth/roles               GET /api/v1/auth/me                     POST /api/v1/auth/login   GET /api/v1/auth/session-policy
 GET  /api/v1/vessels?mmsi=            GET /api/v1/vessels/{id}/track?hours=   GET /api/v1/vessels/{id}/risk
 GET  /api/v1/vessels/{id}/baseline
-GET  /api/v1/ais/gaps                 GET /api/v1/ais/gaps/{id}
+GET  /api/v1/ais/gaps                 GET /api/v1/ais/gaps/{id}               GET /api/v1/ais/provider   POST /api/v1/ais/ingest
 GET  /api/v1/fishing/zones            GET /api/v1/fishing/protected-areas     GET /api/v1/fishing/events
 GET  /api/v1/surveillance/events      GET /api/v1/surveillance/risk           POST /api/v1/surveillance/run-cycle
+GET  /api/v1/surveillance/heatmap?cell_degrees=0.25&hours=   (positions, detections, max risk per grid cell)
 GET  /api/v1/investigations           GET /api/v1/investigations/{id}         GET /api/v1/investigations/dismiss-reasons
 POST /api/v1/investigations/{id}/assign|escalate|resolve|dismiss|analyze
 GET  /api/v1/simulation/scenarios     POST /api/v1/simulation/run             POST /api/v1/simulation/reset

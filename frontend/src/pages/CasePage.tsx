@@ -114,7 +114,6 @@ export const CasePage: React.FC<Props> = ({ caseId, role, onBack, onShowOnMap })
           <PrimaryPill className="!py-2 !px-[18px]" disabled={closed || !!busy || !mayAct} onClick={() => act('resolve', () => resolveCase(detail.id))}>Resolve case</PrimaryPill>
         </div>
       </div>
-
       <div className="flex-1 min-h-0 grid grid-cols-12 gap-4 px-4 pb-4">
         <Panel className="col-span-4 p-6 flex flex-col gap-[22px] overflow-auto">
           <div className="flex flex-col gap-2">
@@ -127,7 +126,6 @@ export const CasePage: React.FC<Props> = ({ caseId, role, onBack, onShowOnMap })
               {detail.vessel.vessel_type} · MMSI {detail.vessel.mmsi ?? '—'} · flag {detail.vessel.flag ?? '—'}
             </Mono>
           </div>
-
           <div className="flex flex-col gap-2.5">
             <div className="flex items-baseline gap-3">
               <RiskNumber score={detail.risk_score} size="display" />
@@ -138,7 +136,6 @@ export const CasePage: React.FC<Props> = ({ caseId, role, onBack, onShowOnMap })
               {factors.map(f => <span key={f.type}>{f.type.split('_')[0].toLowerCase()} {f.score}</span>)}
             </div>
           </div>
-
           <div className="flex flex-col gap-2.5">
             <Eyebrow>Assigned to</Eyebrow>
             <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-input bg-os-raised border border-os-pewter">
@@ -151,7 +148,6 @@ export const CasePage: React.FC<Props> = ({ caseId, role, onBack, onShowOnMap })
               )}
             </div>
           </div>
-
           <div className="flex flex-col gap-2.5">
             <Eyebrow>Summary</Eyebrow>
             <span className="text-[15px] leading-relaxed text-os-fog">{detail.summary}</span>
@@ -176,7 +172,6 @@ export const CasePage: React.FC<Props> = ({ caseId, role, onBack, onShowOnMap })
           )}
           {error && <span className="text-xs" style={{ color: '#f0483e' }}>{error}</span>}
         </Panel>
-
         <div className="col-span-5 flex flex-col gap-4 min-h-0">
           <Panel className="p-6 flex flex-col gap-4 flex-1 min-h-0 overflow-auto">
             <div className="flex items-center justify-between">
@@ -198,7 +193,6 @@ export const CasePage: React.FC<Props> = ({ caseId, role, onBack, onShowOnMap })
               {evidence.length === 0 && <span className="text-sm text-os-fog py-2">No evidence was frozen for this case.</span>}
             </div>
           </Panel>
-
           <Panel className="p-6 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-lg font-medium text-white">Analyst narrative</span>
@@ -215,7 +209,6 @@ export const CasePage: React.FC<Props> = ({ caseId, role, onBack, onShowOnMap })
             )}
           </Panel>
         </div>
-
         <div className="col-span-3 flex flex-col gap-4 min-h-0">
           <Panel className="overflow-hidden flex flex-col">
             <div className="relative bg-[#10141a]">

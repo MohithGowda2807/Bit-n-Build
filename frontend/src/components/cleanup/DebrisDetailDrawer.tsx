@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Debris, DebrisDriftForecast } from '../../types';
 import { fetchDebrisDrift } from '../../services/api';
+import { useRole } from '../../services/session';
+import { atLeast } from '../../design/roles';
 
 interface DebrisDetailDrawerProps {
  debris: Debris | null;
@@ -13,6 +15,8 @@ export const DebrisDetailDrawer: React.FC<DebrisDetailDrawerProps> = ({
  onClose,
  onPlanMission
 }) => {
+  const role = useRole();
+  const mayPlan = atLeast(role, 'OPERATOR');
  const [driftForecast, setDriftForecast] = useState<DebrisDriftForecast | null>(null);
  const [loadingDrift, setLoadingDrift] = useState(false);
 
@@ -82,7 +86,7 @@ export const DebrisDetailDrawer: React.FC<DebrisDetailDrawerProps> = ({
         {debris.target_species_threatened && (
           <div className="p-3 bg-os-raised border border-risk-critical rounded-row">
             <div className="text-[10px] text-risk-critical font-bold uppercase flex items-center gap-1">
-              <span>⚠️</span> Threatened Marine Life
+              Threatened Marine Life
             </div>
             <div className="text-risk-critical mt-1 text-[11px] font-sans leading-tight">
               {debris.target_species_threatened}
@@ -147,9 +151,10 @@ export const DebrisDetailDrawer: React.FC<DebrisDetailDrawerProps> = ({
       <div className="pt-3 border-t border-os-pewter">
         <button
  onClick={() => onPlanMission(debris)}
- className="w-full bg-os-signal hover:bg-os-signal-hover text-white font-bold py-2.5 px-4 rounded-row text-xs tracking-wider uppercase transition flex items-center justify-center gap-2"
+ disabled={!mayPlan}
+ title={mayPlan ? undefined : 'Requires the Operator role'}
+ className="w-full bg-os-signal hover:bg-os-signal-hover disabled:opacity-50 text-white font-bold py-2.5 px-4 rounded-row text-xs tracking-wider uppercase transition flex items-center justify-center gap-2"
         >
-          <span>🎯</span>
           <span>Plan Intercept Sortie</span>
         </button>
       </div>

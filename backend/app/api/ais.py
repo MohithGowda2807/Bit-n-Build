@@ -7,8 +7,37 @@ from app.services.ais.service import ais_service
 from app.services.websocket.hub import ws_hub
 from app.models.dark_period import DarkPeriod
 from app.schemas.surveillance import DarkPeriodResponse
+from app.config import settings
+from app.security import require
+from app.services.ais.factory import ProviderNotConfigured, build_provider, provider_status
+from app.services.surveillance.ingestion import AISIngestor
+from app.services.surveillance.pipeline import SurveillancePipeline
+from app.services.surveillance.risk_service import RiskService
+from app.utils_time import utcnow
 
 router = APIRouter(prefix="/api/v1/ais", tags=["AIS & Kinematic Simulation"])
+
+
+@router.get("/provider")
+def ais_provider_status():
+    """Which AIS source ingestion uses and whether it is ready."""
+    return provider_status()
+
+
+@router.post("/ingest", dependencies=[Depends(require("ADMIN"))])
+def ingest_from_provider(db: Session = Depends(get_db)):
+    """Pull one batch from the configured AIS provider, then run detection and risk on what arrived."""
+    try:
+        provider = build_provider()
+    except ProviderNotConfigured as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                            detail={"code": "AIS_PROVIDER_NOT_CONFIGURED", "message": str(exc)})
+    summary = AISIngestor(db, settings.AIS_GAP_THRESHOLD_SECONDS).ingest(provider, now=utcnow().replace(tzinfo=None))
+    analysis = SurveillancePipeline(db).run()
+    assessment = RiskService(db).assess_all()
+    return {"provider": type(provider).__name__, "vessels_created": summary.vessels_created,
+            "positions_added": summary.positions_added, "dark_periods_added": summary.dark_periods_added,
+            "events_added": analysis.events_added, "cases_opened": assessment.cases_opened}
 
 
 @router.get("/live")
@@ -17,7 +46,7 @@ def get_live_ais(db: Session = Depends(get_db)):
     return ais_service.simulate_telemetry_step(db)
 
 
-@router.post("/simulate")
+@router.post("/simulate", dependencies=[Depends(require("OPERATOR"))])
 async def trigger_ais_simulation_step(db: Session = Depends(get_db)):
     """
     Triggers one synthetic AIS kinematic simulation step:

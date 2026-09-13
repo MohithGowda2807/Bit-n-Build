@@ -5,6 +5,8 @@ import { BaseMap, BasemapToggle } from '../components/map/BaseMap';
 import { Eyebrow, GhostLink, Mono, Panel, RiskBadge } from '../components/ui/primitives';
 import { fetchAlerts, fetchOceanCurrents, fetchVessels, fetchWeather, fetchActiveStorms, getOperatingMode, recalculateVoyageRoute } from '../services/api';
 import { acknowledgeAlert } from '../services/surveillance';
+import { useRole } from '../services/session';
+import { atLeast } from '../design/roles';
 import { Alert, OceanCurrentData, Vessel, WeatherData, Storm, RecalculateRouteResponse } from '../types';
 import { formatClock } from '../design/format';
 import { RiskLevel } from '../design/risk';
@@ -24,6 +26,9 @@ export const EnvironmentPage: React.FC = () => {
  const [mode, setMode] = useState<string>('autonomous');
  const [recalcDiff, setRecalcDiff] = useState<RecalculateRouteResponse | null>(null);
  const [isRerouting, setIsRerouting] = useState<boolean>(false);
+  const role = useRole();
+  const mayAck = atLeast(role, 'ANALYST');
+  const mayReroute = atLeast(role, 'OPERATOR');
  const [basemap, setBasemap] = useState<Basemap>('night');
  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
@@ -148,7 +153,6 @@ export const EnvironmentPage: React.FC = () => {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
                 </button>
               </div>
-
               <div className="flex-1 overflow-y-auto os-scrollbar p-5 flex flex-col gap-4">
                 <label className="flex flex-col gap-1.5">
                   <Eyebrow>Selected Target</Eyebrow>
@@ -192,7 +196,7 @@ export const EnvironmentPage: React.FC = () => {
                 {storms.length > 0 && (
                   <div className="flex flex-col gap-2.5 p-3.5 rounded-row bg-os-raised border border-risk-critical">
                     <div className="flex items-center justify-between text-xs font-mono text-risk-critical font-semibold">
-                      <span>🌀 ACTIVE DISTURBANCE</span>
+                      <span>ACTIVE DISTURBANCE</span>
                       <span className="uppercase text-[10px] px-1.5 py-0.5 rounded bg-risk-critical border border-risk-critical font-bold">
                         {storms[0].severity}
                       </span>
@@ -205,10 +209,10 @@ export const EnvironmentPage: React.FC = () => {
                     </div>
                     <button
  onClick={handleTriggerReroute}
- disabled={isRerouting}
+ disabled={isRerouting || !mayReroute}
+ title={mayReroute ? undefined : 'Requires the Operator role'}
  className="mt-1 w-full bg-risk-critical hover:bg-risk-high text-white text-xs font-mono py-2 px-3 rounded-input font-bold transition disabled:opacity-50 flex items-center justify-center gap-1.5"
                     >
-                      <span>⚡</span>
                       <span>{isRerouting ? 'Recalculating Detour…' : 'Trigger Dynamic Reroute'}</span>
                     </button>
                   </div>
@@ -221,7 +225,6 @@ export const EnvironmentPage: React.FC = () => {
  onClick={() => setSidebarOpen(true)}
  className="absolute left-4 top-4 z-[1000] px-4 py-2 rounded-row bg-os-panel border border-os-steel text-white text-xs font-bold font-mono flex items-center gap-2 hover:bg-os-raised transition"
           >
-            <span>🌊</span>
             <span>Atmospheric Feed</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
           </button>
@@ -243,7 +246,7 @@ export const EnvironmentPage: React.FC = () => {
                     <Mono className="text-[10px] text-os-ash truncate max-w-[120px]">{a.alert_type.replace(/_/g, ' ')}</Mono>
                     {a.acknowledged
                       ? <span className="text-[10px] font-mono text-os-slate ml-auto">ack</span>
-                      : <button className="text-xs text-os-signal hover:text-os-signal ml-auto font-mono font-semibold" onClick={() => ack(a.id)}>Acknowledge</button>}
+                      : <button className="text-xs text-os-signal hover:text-os-signal-hover disabled:opacity-40 ml-auto font-mono font-semibold" disabled={!mayAck} title={mayAck ? undefined : 'Requires the Analyst role'} onClick={() => ack(a.id)}>Acknowledge</button>}
                   </div>
                   <span className="text-xs text-os-fog leading-relaxed break-words whitespace-normal">{a.message}</span>
                   {a.details && <span className="text-[11px] text-os-ash leading-relaxed break-words whitespace-normal">{a.details}</span>}

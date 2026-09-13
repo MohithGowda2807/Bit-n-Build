@@ -48,18 +48,18 @@ const createCustomIcon = (color: string, label: string, size = 28, glowColor?: s
   });
 };
 
-const vesselIcon = createCustomIcon('#3d9bff', '🚢', 26, '#0062ca');
-const underwayVesselIcon = createCustomIcon('#2fae6e', '🚢', 28, '#2fae6e');
-const selectedVesselIcon = createCustomIcon('#e2a33a', '🧭', 32, '#e2a33a');
-const portIcon = createCustomIcon('#007afc', '⚓', 22, '#0062ca');
+const vesselIcon = createCustomIcon('#3d9bff', '', 26, '#0062ca');
+const underwayVesselIcon = createCustomIcon('#2fae6e', '', 28, '#2fae6e');
+const selectedVesselIcon = createCustomIcon('#e2a33a', '', 32, '#e2a33a');
+const portIcon = createCustomIcon('#007afc', '', 22, '#0062ca');
 const originIcon = createCustomIcon('#2fae6e', 'A', 26, '#2fae6e');
 const destIcon = createCustomIcon('#f0483e', 'B', 26, '#f0483e');
-const replayShipIcon = createCustomIcon('#f2643e', '🚢', 32, '#f0483e');
+const replayShipIcon = createCustomIcon('#f2643e', '', 32, '#f0483e');
 
 // Debris icons by severity
-const debrisCriticalIcon = createCustomIcon('#f0483e', '⚠️', 26, '#f0483e');
-const debrisHighIcon = createCustomIcon('#f0873a', '♻️', 24, '#f0873a');
-const debrisMediumIcon = createCustomIcon('#e2a33a', '♻️', 22, '#e2a33a');
+const debrisCriticalIcon = createCustomIcon('#f0483e', '', 26, '#f0483e');
+const debrisHighIcon = createCustomIcon('#f0873a', '', 24, '#f0873a');
+const debrisMediumIcon = createCustomIcon('#e2a33a', '', 22, '#e2a33a');
 
 interface MapEventsHandlerProps {
  mapSelectionMode: 'origin' | 'destination' | null;
@@ -270,7 +270,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
  showFleet ? 'bg-os-signal/30 text-os-signal border border-os-signal' : 'bg-os-raised text-os-slate'
           }`}
         >
-          🚤 Fleet ({fleetUnits.length})
+          Fleet ({fleetUnits.length})
         </button>
         <button
  onClick={() => setShowDebris(!showDebris)}
@@ -278,7 +278,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
  showDebris ? 'bg-risk-moderate/30 text-risk-moderate border border-risk-moderate' : 'bg-os-raised text-os-slate'
           }`}
         >
-          ♻️ Debris ({debris.length})
+          Debris ({debris.length})
         </button>
         <button
  onClick={() => setShowMissions(!showMissions)}
@@ -286,7 +286,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
  showMissions ? 'bg-os-signal/30 text-os-signal border border-os-signal' : 'bg-os-raised text-os-slate'
           }`}
         >
-          🎯 Missions ({missions.length})
+          Missions ({missions.length})
         </button>
         <button
  onClick={() => setShowVessels(!showVessels)}
@@ -294,7 +294,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
  showVessels ? 'bg-os-signal/30 text-os-signal border border-os-signal' : 'bg-os-raised text-os-slate'
           }`}
         >
-          🚢 Vessels ({vessels.length})
+          Vessels ({vessels.length})
         </button>
         <button
  onClick={() => setShowZones(!showZones)}
@@ -302,7 +302,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
  showZones ? 'bg-os-clear/30 text-os-clear border border-os-clear' : 'bg-os-raised text-os-slate'
           }`}
         >
-          🛡️ MPAs ({zones.length})
+          MPAs ({zones.length})
         </button>
         <button
  onClick={() => setShowStorms(!showStorms)}
@@ -310,7 +310,7 @@ export const OceanMap: React.FC<OceanMapProps> = ({
  showStorms ? 'bg-risk-critical/30 text-risk-critical border border-risk-critical' : 'bg-os-raised text-os-slate'
           }`}
         >
-          🌀 Storms ({storms.length})
+          Storms ({storms.length})
         </button>
       </div>
       )}
@@ -368,7 +368,6 @@ export const OceanMap: React.FC<OceanMapProps> = ({
                 <Tooltip sticky className="font-mono text-xs">
                   <div>
                     <div className="font-bold flex items-center space-x-1">
-                      <span>{isRestricted ? '⛔' : '🛡️'}</span>
                       <span>{zone.name}</span>
                     </div>
                     <div>Type: {zone.zone_type} | Risk Level: {zone.risk_level}%</div>

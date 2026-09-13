@@ -21,7 +21,6 @@ export const DynamicRouteDiffModal: React.FC<DynamicRouteDiffModalProps> = ({
         <div className="px-6 py-4 border-b border-os-steel flex items-center justify-between bg-os-raised">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-input bg-risk-critical/20 border border-risk-critical flex items-center justify-center text-risk-critical">
-              ⚡
             </div>
             <div>
               <h3 className="text-base font-bold text-white tracking-tight">Dynamic Route Recalculation</h3>
@@ -63,7 +62,6 @@ export const DynamicRouteDiffModal: React.FC<DynamicRouteDiffModalProps> = ({
               </span>
               <span className="text-[11px] text-os-slate mt-0.5">Hazard Clearance</span>
             </div>
-
             <div className="p-3.5 rounded-row bg-os-void/80 border border-os-steel flex flex-col">
               <span className="text-[10px] font-mono text-os-ash uppercase font-semibold">Fuel Delta</span>
               <span className="text-2xl font-bold text-risk-moderate font-mono mt-1">
@@ -71,7 +69,6 @@ export const DynamicRouteDiffModal: React.FC<DynamicRouteDiffModalProps> = ({
               </span>
               <span className="text-[11px] text-os-slate mt-0.5">Avoidance Penalty</span>
             </div>
-
             <div className="p-3.5 rounded-row bg-os-void/80 border border-os-steel flex flex-col">
               <span className="text-[10px] font-mono text-os-ash uppercase font-semibold">ETA Impact</span>
               <span className="text-2xl font-bold text-os-signal font-mono mt-1">

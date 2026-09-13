@@ -7,7 +7,8 @@ from app.agents.commander_hook import run_surveillance_cycle
 from app.database import get_db
 from app.models.surveillance_event import SurveillanceEvent
 from app.models.vessel_risk_score import VesselRiskScore
-from app.schemas.surveillance import SurveillanceEventResponse, VesselRiskSummary
+from app.schemas.surveillance import HeatmapResponse, SurveillanceEventResponse, VesselRiskSummary
+from app.services.surveillance.heatmap import build_heatmap
 
 from app.security import require
 
@@ -44,6 +45,14 @@ def list_vessel_risk(min_score: float = 0.0, level: Optional[str] = None, db: Se
         )
         for r in rows
     ]
+
+
+@router.get("/heatmap", response_model=HeatmapResponse)
+def activity_heatmap(cell_degrees: float = Query(0.25, gt=0.0, le=5.0),
+                     hours: Optional[float] = Query(None, gt=0.0), db: Session = Depends(get_db)):
+    """AIS positions, detections and the riskiest vessel seen, aggregated per grid cell; intensity is relative to the hottest cell."""
+    cells = build_heatmap(db, cell_degrees=cell_degrees, hours=hours)
+    return HeatmapResponse(cell_degrees=cell_degrees, hours=hours, cells=[c.as_dict() for c in cells])
 
 
 @router.post("/run-cycle", dependencies=[Depends(require("ADMIN"))])

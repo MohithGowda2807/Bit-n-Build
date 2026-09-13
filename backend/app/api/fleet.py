@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.security import require
 from app.models.cleanup_unit import CleanupUnit
 from app.models.mission import Mission
 from app.schemas.cleanup_unit import (
@@ -40,7 +41,7 @@ def get_cleanup_unit(unit_id: int, db: Session = Depends(get_db)):
     return unit
 
 
-@router.post("/units", response_model=CleanupUnitResponse, status_code=201)
+@router.post("/units", response_model=CleanupUnitResponse, status_code=201, dependencies=[Depends(require("ADMIN"))])
 def register_cleanup_unit(unit_in: CleanupUnitCreate, db: Session = Depends(get_db)):
     """Register a new autonomous surface vehicle or marine drone in the fleet."""
     existing = db.query(CleanupUnit).filter(CleanupUnit.unit_name == unit_in.unit_name).first()
@@ -55,7 +56,7 @@ def register_cleanup_unit(unit_in: CleanupUnitCreate, db: Session = Depends(get_
     return unit
 
 
-@router.post("/units/{unit_id}/command", response_model=CleanupUnitResponse)
+@router.post("/units/{unit_id}/command", response_model=CleanupUnitResponse, dependencies=[Depends(require("OPERATOR"))])
 def issue_unit_command(
     unit_id: int,
     command_req: CleanupUnitCommandRequest,
@@ -85,7 +86,7 @@ def issue_unit_command(
     return unit
 
 
-@router.post("/units/{unit_id}/step", response_model=CleanupUnitResponse)
+@router.post("/units/{unit_id}/step", response_model=CleanupUnitResponse, dependencies=[Depends(require("OPERATOR"))])
 def step_unit_simulation(
     unit_id: int,
     dt_hours: float = Query(0.25, ge=0.05, le=2.0),
@@ -118,7 +119,9 @@ def step_unit_simulation(
         speed_knots=unit.speed_knots,
         status=unit.status,
         waypoints=waypoints,
-        home_port_coords=(unit.latitude, unit.longitude)
+        home_port_coords=(unit.latitude, unit.longitude),
+        current_waypoint_index=unit.current_waypoint_index or 0,
+        collection_timer_hours=unit.collection_timer_hours or 0.0,
     )
 
     new_state = sim.step(dt_hours=dt_hours)
@@ -128,6 +131,8 @@ def step_unit_simulation(
     unit.battery_pct = new_state["battery_pct"]
     unit.current_load_kg = new_state["current_load_kg"]
     unit.status = new_state["status"]
+    unit.current_waypoint_index = new_state["current_waypoint_index"]
+    unit.collection_timer_hours = sim.collection_timer_hours
 
     db.commit()
     db.refresh(unit)

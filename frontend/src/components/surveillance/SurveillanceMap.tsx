@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Polyline, Polygon, Tooltip, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Polyline, Polygon, Rectangle, Tooltip, useMap } from 'react-leaflet';
 import { Basemap, BASEMAPS } from '../OceanMap';
 import { Vessel } from '../../types';
-import { DarkPeriod, FishingZone, ProtectedArea, VesselRiskSummary } from '../../types/surveillance';
+import { DarkPeriod, FishingZone, Heatmap, ProtectedArea, VesselRiskSummary } from '../../types/surveillance';
+import { cellBounds, heatStyle } from '../../design/heatmap';
 import { TrackSegment } from '../../design/track';
 import { riskColor, CLEAR_GREEN } from '../../design/risk';
 
@@ -11,6 +12,7 @@ export interface LayerState {
   trails: boolean;
   zones: boolean;
   gaps: boolean;
+  heat: boolean;
 }
 
 interface Props {
@@ -26,6 +28,7 @@ interface Props {
   layers: LayerState;
   /** Positions pushed by replay, keyed by vessel id; override live markers while set. */
   replayPositions?: Map<number, [number, number]>;
+  heatmap?: Heatmap | null;
 }
 
 const ZONE_STYLE: Record<string, string> = {
@@ -68,7 +71,7 @@ const ScenarioFocusController: React.FC = () => {
 };
 
 export const SurveillanceMap: React.FC<Props> = ({
-  basemap, vessels, riskByVessel, fishingZones, protectedAreas, selectedId, onSelect, segments, gaps, layers, replayPositions,
+  basemap, vessels, riskByVessel, fishingZones, protectedAreas, selectedId, onSelect, segments, gaps, layers, replayPositions, heatmap,
 }) => {
   const tiles = BASEMAPS[basemap];
   const selected = useMemo(() => vessels.find(v => v.id === selectedId) ?? null, [vessels, selectedId]);
@@ -81,6 +84,10 @@ export const SurveillanceMap: React.FC<Props> = ({
       <TileLayer key={basemap} attribution={tiles.attribution} url={tiles.url} opacity={tiles.opacity} />
       <FitToSegments segments={segments} />
       <ScenarioFocusController />
+
+      {layers.heat && heatmap?.cells.map(c => (
+        <Rectangle key={`heat-${c.lat}-${c.lon}`} bounds={cellBounds(c, heatmap.cell_degrees)} pathOptions={heatStyle(c)} interactive={false} />
+      ))}
 
       {layers.zones && protectedAreas.map(a => (
         <Polygon key={`mpa-${a.id}`} positions={ring(a.geometry)}

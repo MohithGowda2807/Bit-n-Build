@@ -59,3 +59,13 @@ def test_clustering():
     assert c1["total_mass_kg"] == 1200.0
     assert c1["predominant_type"] == "ghost_net"
     assert c1["max_severity"] == 85.0
+
+
+def test_drift_trajectory_carries_a_growing_uncertainty_radius():
+    trajectory = predict_drift_trajectory(
+        start_lat=10.0, start_lon=72.0, forecast_hours=6,
+        current_speed_knots=1.5, current_heading_deg=90.0, wind_speed_knots=10.0, wind_direction_deg=90.0,
+    )
+    radii = [pt["uncertainty_radius_nm"] for pt in trajectory]
+    assert radii[0] > 0
+    assert radii == sorted(radii) and radii[-1] > radii[0]

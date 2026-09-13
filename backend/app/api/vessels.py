@@ -10,6 +10,7 @@ from app.schemas.surveillance import AISPositionResponse, VesselBaselineResponse
 from app.models.evidence import Evidence
 from app.services.surveillance.risk_service import RiskService
 from app.services.surveillance.baseline_service import BaselineService
+from app.security import require
 
 router = APIRouter(prefix="/api/v1/vessels", tags=["Vessels"])
 
@@ -42,7 +43,7 @@ def get_vessel(vessel_id: int, db: Session = Depends(get_db)):
     return vessel
 
 
-@router.post("", response_model=VesselResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=VesselResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require("OPERATOR"))])
 def create_vessel(payload: VesselCreate, db: Session = Depends(get_db)):
     existing = db.query(Vessel).filter(Vessel.vessel_identifier == payload.vessel_identifier).first()
     if existing:
@@ -57,7 +58,7 @@ def create_vessel(payload: VesselCreate, db: Session = Depends(get_db)):
     return vessel
 
 
-@router.patch("/{vessel_id}", response_model=VesselResponse)
+@router.patch("/{vessel_id}", response_model=VesselResponse, dependencies=[Depends(require("OPERATOR"))])
 def update_vessel(vessel_id: int, payload: VesselUpdate, db: Session = Depends(get_db)):
     vessel = db.query(Vessel).filter(Vessel.id == vessel_id).first()
     if not vessel:

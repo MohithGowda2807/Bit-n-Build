@@ -1,14 +1,19 @@
-"""Role-based access (spec sections 92-93).
+"""Role-based access and sign-in (spec sections 92-93).
 
-The caller's identity arrives in two headers: `X-Role` (VIEWER, ANALYST,
-OPERATOR or ADMIN; missing means VIEWER) and `X-User` (a display name for the
-audit log). Authentication proper (JWT) is a later step; this fixes the seam
-every guarded route uses, so swapping the header for a token touches one place.
+A caller holds a role in one of two ways. A bearer token from `POST /auth/login`
+carries the name and role of a configured account. Without a token, and only
+while `AUTH_ALLOW_ROLE_HEADER` is on, the `X-Role` and `X-User` headers stand
+in for it so demos and tests need no sign-in. Missing both means VIEWER.
 """
+import hmac
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
 
+import jwt
 from fastapi import Depends, Header, HTTPException, status
+
+from app.config import settings
 
 ROLES = ("VIEWER", "ANALYST", "OPERATOR", "ADMIN")
 
@@ -39,10 +44,58 @@ class Principal:
         return {action: self.at_least(minimum) for action, minimum in PERMISSIONS.items()}
 
 
+@dataclass(frozen=True)
+class Account:
+    name: str
+    password: str
+    role: str
+
+
+def configured_accounts() -> Dict[str, Account]:
+    accounts: Dict[str, Account] = {}
+    for entry in settings.AUTH_USERS.split(";"):
+        parts = entry.strip().split(":")
+        if len(parts) == 3 and parts[2].upper() in ROLES:
+            accounts[parts[0]] = Account(parts[0], parts[1], parts[2].upper())
+    return accounts
+
+
+def authenticate(username: str, password: str) -> Optional[Account]:
+    account = configured_accounts().get(username)
+    if account is None or not hmac.compare_digest(account.password, password):
+        return None
+    return account
+
+
+def issue_token(account: Account) -> Dict[str, object]:
+    expires = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_TTL_MINUTES)
+    token = jwt.encode({"sub": account.name, "role": account.role, "exp": expires}, settings.JWT_SECRET, algorithm="HS256")
+    return {"access_token": token, "token_type": "bearer", "role": account.role, "name": account.name,
+            "expires_at": expires.isoformat()}
+
+
+def principal_from_token(token: str) -> Principal:
+    try:
+        claims = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+    except jwt.PyJWTError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail={"code": "INVALID_TOKEN", "message": f"Bearer token rejected: {exc}"})
+    role = str(claims.get("role", "")).upper()
+    if role not in ROLES:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail={"code": "INVALID_TOKEN", "message": "Bearer token carries no known role."})
+    return Principal(role=role, name=str(claims.get("sub")) or None)
+
+
 def current_principal(
+    authorization: Optional[str] = Header(None, alias="Authorization"),
     x_role: Optional[str] = Header(None, alias="X-Role"),
     x_user: Optional[str] = Header(None, alias="X-User"),
 ) -> Principal:
+    if authorization and authorization.lower().startswith("bearer "):
+        return principal_from_token(authorization[7:].strip())
+    if not settings.AUTH_ALLOW_ROLE_HEADER:
+        return Principal(role="VIEWER")
     role = (x_role or "VIEWER").strip().upper()
     if role not in ROLES:
         raise HTTPException(
@@ -57,12 +110,17 @@ def require(minimum: str):
     """Dependency that admits the caller only at `minimum` role or higher."""
 
     def guard(principal: Principal = Depends(current_principal)) -> Principal:
-        if not principal.at_least(minimum):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={"code": "FORBIDDEN", "message": f"This action requires the {minimum} role or higher.",
-                        "required": minimum, "role": principal.role},
-            )
+        ensure(principal, minimum)
         return principal
 
     return guard
+
+
+def ensure(principal: Principal, minimum: str) -> None:
+    """Raise the standard 403 unless `principal` holds `minimum` or higher; for checks that depend on the request body."""
+    if not principal.at_least(minimum):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "FORBIDDEN", "message": f"This action requires the {minimum} role or higher.",
+                    "required": minimum, "role": principal.role},
+        )

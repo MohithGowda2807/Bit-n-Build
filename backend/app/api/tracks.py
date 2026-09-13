@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models.track import Track
 from app.models.vessel import Vessel
 from app.schemas.track import TrackResponse, TrackCreate
+from app.security import require
 
 router = APIRouter(prefix="/api/v1", tags=["Tracks & AIS Telemetry"])
 
@@ -38,7 +39,7 @@ def get_vessel_tracks(
     return list(reversed(tracks))
 
 
-@router.post("/tracks", response_model=TrackResponse, status_code=201)
+@router.post("/tracks", response_model=TrackResponse, status_code=201, dependencies=[Depends(require("ANALYST"))])
 def create_track_point(track_in: TrackCreate, db: Session = Depends(get_db)):
     """Record a new AIS telemetry breadcrumb."""
     vessel = db.query(Vessel).filter(Vessel.id == track_in.vessel_id).first()

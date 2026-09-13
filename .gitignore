@@ -72,3 +72,7 @@ maritime-hackathon-guide.pdf
 *_extracted.txt
 phase2_*.txt
 *.clean.txt
+
+# Playwright output
+frontend/test-results/
+frontend/playwright-report/

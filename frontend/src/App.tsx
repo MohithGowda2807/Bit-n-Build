@@ -58,10 +58,13 @@ export function App() {
   const live = useTelemetryLive();
 
   const changeRole = (next: Role) => {
-    session.setRole(next);
+    if (!session.signedIn) session.setRole(next);
     setRole(next);
     if (!can(next, 'view_cases')) setCaseId(null);
   };
+
+  // Signing in or out changes the role the API sees; keep the UI on the same role.
+  useEffect(() => session.subscribe(r => { setRole(r); if (!can(r, 'view_cases')) setCaseId(null); }), []);
 
   // If user is on landing page view, render full animated landing page
   if (view === 'landing') {

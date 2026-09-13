@@ -12,6 +12,8 @@ class Mission(Base):
     mission_type = Column(String(50), nullable=False)  # patrol, debris_cleanup, escort, inspection, survey, rescue
     status = Column(String(50), nullable=False, default="pending")  # pending, active, completed, cancelled, aborted
     assigned_vessel_id = Column(Integer, ForeignKey("vessels.id", ondelete="SET NULL"), nullable=True, index=True)
+    # Phase 4: an autonomous cleanup unit can carry the mission instead of a crewed vessel.
+    assigned_unit_id = Column(Integer, ForeignKey("cleanup_units.id", ondelete="SET NULL"), nullable=True, index=True)
     priority = Column(String(50), nullable=False, default="medium")  # low, medium, high, urgent
     target_lat = Column(Float, nullable=True)
     target_lon = Column(Float, nullable=True)

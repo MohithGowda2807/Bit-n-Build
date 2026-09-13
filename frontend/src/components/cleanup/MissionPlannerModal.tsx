@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { CleanupUnit, Debris } from '../../types';
-import { planCleanupMission, approveCleanupMission } from '../../services/api';
+import { planCleanupMission, approveCleanupMission, createCleanupMission } from '../../services/api';
+import { useRole } from '../../services/session';
+import { atLeast } from '../../design/roles';
 
 interface MissionPlannerModalProps {
  isOpen: boolean;
@@ -19,13 +21,16 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
  initialDebrisId,
  onMissionCreated
 }) => {
+  const role = useRole();
+  const mayPlan = atLeast(role, 'OPERATOR');
  const [selectedDebrisIds, setSelectedDebrisIds] = useState<number[]>([]);
  const [selectedUnitId, setSelectedUnitId] = useState<number>(1);
  const [isSubmitting, setIsSubmitting] = useState(false);
  const [planResult, setPlanResult] = useState<any | null>(null);
  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Synchronize selection whenever the modal opens or props change
+  // Synchronize selection when the modal opens. The page refreshes debris and fleet every 10 s; reacting to
+  // those refreshes here would wipe a generated plan before the operator can dispatch it.
  useEffect(() => {
  if (isOpen) {
  setErrorMsg(null);
@@ -48,7 +53,8 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
  setSelectedUnitId(availableUnit.id);
       }
     }
-  }, [isOpen, initialDebrisId, debrisList, fleetUnits]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialDebrisId]);
 
  if (!isOpen) return null;
 
@@ -113,32 +119,51 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
     }
   };
 
+ // The planner returns a plan, not a mission. Dispatch persists it, then the operator's approval activates it
+ // and sends the unit to sea; the fleet loop moves it from there.
  const handleAuthorizeAndDispatch = async () => {
  if (!planResult) return;
  setIsSubmitting(true);
+ setErrorMsg(null);
  try {
- if (planResult.id) {
- await approveCleanupMission(planResult.id, 'approved');
-      }
- onMissionCreated?.(planResult);
+ const waypoints = planResult.waypoints ?? [];
+ const targets = waypoints.filter((w: any) => w.action === 'collect');
+ const first = waypoints[0];
+ const target = targets[targets.length - 1] ?? waypoints[waypoints.length - 1];
+ const created = planResult.id ? planResult : await createCleanupMission({
+ mission_name: planResult.mission_name,
+ mission_type: 'debris_cleanup',
+ status: 'pending',
+ approval_status: 'pending_approval',
+ priority: 'high',
+ assigned_unit_id: planResult.assigned_unit_id ?? selectedUnitId,
+ origin_lat: first?.latitude ?? null,
+ origin_lon: first?.longitude ?? null,
+ target_lat: target?.latitude ?? null,
+ target_lon: target?.longitude ?? null,
+ waypoints_json: JSON.stringify(waypoints),
+ target_debris_ids: JSON.stringify(selectedDebrisIds),
+ estimated_duration_hours: planResult.estimated_duration_hours ?? null,
+ estimated_energy_kwh: planResult.estimated_energy_kwh ?? null,
+ target_kg: planResult.estimated_yield_kg ?? planResult.target_kg ?? 500,
+      });
+ const mission = await approveCleanupMission(created.id, 'approve');
+ onMissionCreated?.(mission);
  onClose();
     } catch (err: any) {
- console.warn('Dispatch fallback:', err);
- onMissionCreated?.(planResult);
- onClose();
+ setErrorMsg(err.message || 'Dispatch failed');
     } finally {
  setIsSubmitting(false);
     }
   };
 
  return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-os-void p-4">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-os-void/80 p-4">
       <div className="bg-os-panel border border-os-signal rounded-panel w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="p-5 border-b border-os-pewter bg-os-void flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-row bg-os-signal/20 border border-os-signal flex items-center justify-center text-os-signal text-lg">
-              🎯
             </div>
             <div>
               <h2 className="text-lg font-bold text-white tracking-wide flex items-center gap-2">
@@ -192,7 +217,7 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
                     </div>
                     <div className="flex items-center justify-between text-xs text-os-ash mt-1">
                       <span>Type: {unit.unit_type.replace('_', ' ')}</span>
-                      <span>🔋 {Math.round(unit.battery_pct)}%</span>
+                      <span>{Math.round(unit.battery_pct)}%</span>
                     </div>
                     <div className="mt-2 w-full bg-os-raised rounded-full h-1.5 overflow-hidden">
                       <div
@@ -246,7 +271,6 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
  Total Target Payload: {totalTargetMass.toLocaleString()} kg
               </span>
             </div>
-
             <div className="space-y-2 max-h-52 overflow-y-auto pr-1 os-scrollbar">
               {debrisList.map(d => {
  const isChecked = selectedDebrisIds.includes(d.id);
@@ -326,7 +350,7 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
                 <span className="font-semibold text-os-signal">Waypoints:</span>{' '}
                 {planResult.waypoints?.map((w: any, idx: number) => (
                   <span key={idx}>
-                    {idx > 0 ? ' ➔ ' : ''}
+                    {idx > 0 ? ' → ' : ''}
                     <span className="text-white">{w.label || `WP${idx}`}</span>
                   </span>
                 ))}
@@ -346,10 +370,10 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
           {!planResult ? (
             <button
  onClick={handleGeneratePlan}
- disabled={isSubmitting}
- className="px-6 py-2.5 rounded-row hover: hover: disabled:opacity-50 text-white font-bold text-xs tracking-wider uppercase font-mono transition cursor-pointer flex items-center gap-2 active:scale-95"
+ disabled={isSubmitting || !mayPlan}
+ title={mayPlan ? undefined : 'Requires the Operator role'}
+ className="px-6 py-2.5 rounded-row bg-os-signal hover:bg-os-signal-hover disabled:opacity-50 text-white font-bold text-xs tracking-wider uppercase font-mono transition cursor-pointer flex items-center gap-2 active:scale-95"
             >
-              <span>⚡</span>
               <span>{isSubmitting ? 'Optimizing Trajectory...' : 'Generate Optimized Plan'}</span>
             </button>
           ) : (
@@ -362,10 +386,10 @@ export const MissionPlannerModal: React.FC<MissionPlannerModalProps> = ({
               </button>
               <button
  onClick={handleAuthorizeAndDispatch}
- disabled={isSubmitting}
- className="px-6 py-2.5 rounded-row hover: hover: disabled:opacity-50 text-white font-bold text-xs tracking-wider uppercase font-mono transition flex items-center gap-2 cursor-pointer active:scale-95"
+ disabled={isSubmitting || !mayPlan}
+ title={mayPlan ? undefined : 'Requires the Operator role'}
+ className="px-6 py-2.5 rounded-row bg-os-signal hover:bg-os-signal-hover disabled:opacity-50 text-white font-bold text-xs tracking-wider uppercase font-mono transition flex items-center gap-2 cursor-pointer active:scale-95"
               >
-                <span>🚀</span>
                 <span>Authorize & Dispatch Fleet</span>
               </button>
             </div>

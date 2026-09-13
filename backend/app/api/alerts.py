@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.security import require
 from app.models.alert import Alert
 from app.models.mission import Mission
 from app.models.incident import Incident
@@ -29,7 +30,7 @@ def list_alerts(
     return q.order_by(Alert.timestamp.desc()).all()
 
 
-@router.post("/alerts", response_model=AlertResponse, status_code=201)
+@router.post("/alerts", response_model=AlertResponse, status_code=201, dependencies=[Depends(require("ANALYST"))])
 def create_alert(alert_in: AlertCreate, db: Session = Depends(get_db)):
     """Create a new alert."""
     alert = Alert(**alert_in.model_dump())
@@ -39,7 +40,7 @@ def create_alert(alert_in: AlertCreate, db: Session = Depends(get_db)):
     return alert
 
 
-@router.patch("/alerts/{alert_id}/ack", response_model=AlertResponse)
+@router.patch("/alerts/{alert_id}/ack", response_model=AlertResponse, dependencies=[Depends(require("ANALYST"))])
 def acknowledge_alert(alert_id: int, db: Session = Depends(get_db)):
     """Acknowledge an active alert."""
     alert = db.query(Alert).filter(Alert.id == alert_id).first()
@@ -68,7 +69,7 @@ def list_missions(
     return q.order_by(Mission.created_at.desc()).all()
 
 
-@router.post("/missions", response_model=MissionResponse, status_code=201)
+@router.post("/missions", response_model=MissionResponse, status_code=201, dependencies=[Depends(require("OPERATOR"))])
 def create_mission(mission_in: MissionCreate, db: Session = Depends(get_db)):
     """Dispatch or queue a new mission."""
     mission = Mission(**mission_in.model_dump())
@@ -91,7 +92,7 @@ def list_incidents(
     return q.order_by(Incident.reported_at.desc()).all()
 
 
-@router.post("/incidents", response_model=IncidentResponse, status_code=201)
+@router.post("/incidents", response_model=IncidentResponse, status_code=201, dependencies=[Depends(require("ANALYST"))])
 def report_incident(incident_in: IncidentCreate, db: Session = Depends(get_db)):
     """Log a new maritime incident."""
     incident = Incident(**incident_in.model_dump())

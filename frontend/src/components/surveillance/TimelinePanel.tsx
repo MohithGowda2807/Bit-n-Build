@@ -55,7 +55,6 @@ export const TimelinePanel: React.FC<Props> = ({ vessel, vessels, liveEvents, on
           {entries.length} detections{first && last ? ` · ${formatClock(first)} to ${formatClock(last)}` : ''}
         </Mono>
       </div>
-
       <div className="flex-1 min-h-0 overflow-auto pr-1">
         {loading && entries.length === 0 && <span className="text-sm text-os-fog">Loading history…</span>}
         {!loading && entries.length === 0 && <span className="text-sm text-os-fog">Nothing has been detected for this vessel.</span>}
@@ -81,7 +80,6 @@ export const TimelinePanel: React.FC<Props> = ({ vessel, vessels, liveEvents, on
           })}
         </ol>
       </div>
-
       <span className="text-[13px] leading-normal text-os-slate">
         Detections in the order they happened. Hour marks are in white; the map trail and dashed gaps show the same story in space.
       </span>

@@ -15,8 +15,12 @@ import { DebrisDetailDrawer } from '../components/cleanup/DebrisDetailDrawer';
 import { FleetControlDrawer } from '../components/cleanup/FleetControlDrawer';
 import { MissionPlannerModal } from '../components/cleanup/MissionPlannerModal';
 import { ReportExportModal } from '../components/reports/ReportExportModal';
+import { useRole } from '../services/session';
+import { atLeast } from '../design/roles';
 
 export const CleanupPage: React.FC = () => {
+  const role = useRole();
+  const mayPlan = atLeast(role, 'OPERATOR');
  const [isReportOpen, setIsReportOpen] = useState(false);
  const [debris, setDebris] = useState<Debris[]>([]);
  const [fleetUnits, setFleetUnits] = useState<CleanupUnit[]>([]);
@@ -126,21 +130,19 @@ export const CleanupPage: React.FC = () => {
             <span>{sidebarOpen ? '◀' : '▶'}</span>
             <span className="font-bold">{sidebarOpen ? 'Collapse Studio' : 'Open Studio'}</span>
           </button>
-
           <button
  onClick={() => setIsPlannerOpen(true)}
- className=" hover: hover: text-white font-mono font-bold text-xs px-4 py-2 rounded-row border border-os-signal flex items-center gap-2 transition cursor-pointer"
+ disabled={!mayPlan}
+ title={mayPlan ? undefined : 'Requires the Operator role'}
+ className="bg-os-signal hover:bg-os-signal-hover disabled:opacity-50 text-white font-mono font-bold text-xs px-4 py-2 rounded-row border border-os-signal flex items-center gap-2 transition cursor-pointer"
           >
-            <span>⚡</span>
             <span>Plan Autonomous Sortie</span>
           </button>
-
           <button
  onClick={() => setIsReportOpen(true)}
  className="bg-os-panel border border-os-pewter hover:border-os-clear rounded-row px-3 py-2 text-xs font-mono text-white hover:text-white transition flex items-center gap-1.5 cursor-pointer"
  title="Generate Stage 4 Autonomous Sortie Order"
           >
-            <span>📑</span>
             <span className="font-bold">Sortie Order</span>
           </button>
         </div>
@@ -159,7 +161,7 @@ export const CleanupPage: React.FC = () => {
                       : 'text-os-ash hover:text-white'
                   }`}
                 >
-                  ⚠️ Debris ({debris.length})
+                  Debris ({debris.length})
                 </button>
                 <button
  onClick={() => setSidebarTab('fleet')}
@@ -169,7 +171,7 @@ export const CleanupPage: React.FC = () => {
                       : 'text-os-ash hover:text-white'
                   }`}
                 >
-                  🚤 Fleet ({fleetUnits.length})
+                  Fleet ({fleetUnits.length})
                 </button>
               </div>
 
@@ -208,7 +210,7 @@ export const CleanupPage: React.FC = () => {
                         </div>
                         {d.nearest_mpa_distance_nm && (
                           <div className="text-[10px] text-os-clear mt-1">
-                            🛡️ {d.nearest_mpa_distance_nm} NM from MPA
+                            {d.nearest_mpa_distance_nm} NM from MPA
                           </div>
                         )}
                       </div>

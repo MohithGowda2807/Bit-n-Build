@@ -22,6 +22,9 @@ class CleanupUnit(Base):
     assigned_mission_id = Column(Integer, ForeignKey("missions.id", ondelete="SET NULL"), nullable=True)
     home_port_id = Column(Integer, ForeignKey("ports.id", ondelete="SET NULL"), nullable=True)
     operator_override = Column(String(50), nullable=True)  # hold, return_home, manual
+    # Simulation progress that must survive between ticks (the simulator is rebuilt from this row each tick).
+    current_waypoint_index = Column(Integer, nullable=False, default=0)
+    collection_timer_hours = Column(Float, nullable=False, default=0.0)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 

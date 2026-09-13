@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ROLES, ROLE_LABEL, Role } from '../../design/roles';
 import { ImpactMetricsBar } from './ImpactMetricsBar';
 import { DemoScenarioSwitcher } from './DemoScenarioSwitcher';
 import { ReportExportModal } from '../reports/ReportExportModal';
 import { API_BASE } from '../../services/api';
+import { fetchSessionPolicy } from '../../services/surveillance';
+import { session } from '../../services/session';
+import { SignInDialog } from './SignInDialog';
 import { Eyebrow, GhostLink, Mono, OutlinePill, Panel, PrimaryPill } from '../ui/primitives';
 
 export type Domain = 'logistics' | 'environment' | 'surveillance' | 'cleanup' | 'agents';
@@ -75,6 +78,16 @@ export const TopBar: React.FC<TopBarProps> = ({
 }) => {
   const [reportOpen, setReportOpen] = useState(false);
   const [connectionOpen, setConnectionOpen] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
+  const [signedIn, setSignedIn] = useState(session.signedIn);
+  const [headerAllowed, setHeaderAllowed] = useState(true);
+
+  useEffect(() => {
+    fetchSessionPolicy().then(p => setHeaderAllowed(p.role_header_allowed)).catch(() => {});
+    return session.subscribe(() => setSignedIn(session.signedIn));
+  }, []);
+
+  const signOut = () => { session.signOut(); onRoleChange(session.role); };
 
   return (
     <>
@@ -90,7 +103,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span className="os-eyebrow text-os-slate truncate max-w-[220px]">{subtitle}</span>
           </div>
         </button>
-
         <nav className="flex items-center gap-1 shrink-0" aria-label="Domains">
           {DOMAINS.map(d => (
             <button
@@ -104,9 +116,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             </button>
           ))}
         </nav>
-
         <ImpactMetricsBar />
-
         <div className="flex items-center gap-3 shrink-0">
           {counters.length > 0 && (
             <div className="os-mono flex items-center gap-4 text-xs text-os-ash">
@@ -119,22 +129,27 @@ export const TopBar: React.FC<TopBarProps> = ({
           )}
           <DemoScenarioSwitcher onNavigateDomain={dom => onDomainChange(dom as Domain)} />
           <GhostLink className="text-[13px]" onClick={() => setReportOpen(true)} title="Generate the executive briefing">Briefing</GhostLink>
-          {onGoToLanding && (
-            <GhostLink className="text-[13px] flex items-center gap-1" onClick={onGoToLanding} title="Return to TRITON Public Landing Page & Simulator">
-              <span>🌐</span>
-              <span>Portal</span>
-            </GhostLink>
+          {onGoToLanding && <GhostLink className="text-[13px]" onClick={onGoToLanding} title="Back to the landing page">Portal</GhostLink>}
+          {(headerAllowed || signedIn) && (
+            <label className="flex items-center gap-2" title={signedIn ? 'Role comes from your account' : 'Dev shortcut: role sent with every request; the API enforces it'}>
+              <span className="os-eyebrow text-os-slate">Role</span>
+              <select
+                value={role}
+                disabled={signedIn}
+                onChange={e => onRoleChange(e.target.value as Role)}
+                className="os-mono text-xs bg-os-raised text-os-fog border border-os-pewter rounded-input px-2 py-1 focus:outline-none focus:border-os-silver disabled:opacity-70"
+              >
+                {ROLES.map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
+              </select>
+            </label>
           )}
-          <label className="flex items-center gap-2" title="Role sent with every request; the API enforces it">
-            <span className="os-eyebrow text-os-slate">Role</span>
-            <select
-              value={role}
-              onChange={e => onRoleChange(e.target.value as Role)}
-              className="os-mono text-xs bg-os-raised text-os-fog border border-os-pewter rounded-input px-2 py-1 focus:outline-none focus:border-os-silver"
-            >
-              {ROLES.map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
-            </select>
-          </label>
+          {signedIn ? (
+            <button onClick={signOut} className="os-mono text-xs text-os-fog hover:text-white" title="Sign out">
+              {session.user} · <span className="text-os-signal">Sign out</span>
+            </button>
+          ) : (
+            <GhostLink className="text-[13px]" onClick={() => setSignInOpen(true)}>Sign in</GhostLink>
+          )}
           <button
             onClick={() => setConnectionOpen(true)}
             title="Backend connection"
@@ -148,6 +163,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       </header>
 
       {connectionOpen && <ConnectionDialog live={live} onClose={() => setConnectionOpen(false)} />}
+      {signInOpen && <SignInDialog onClose={() => setSignInOpen(false)} onSignedIn={onRoleChange} />}
       <ReportExportModal isOpen={reportOpen} onClose={() => setReportOpen(false)} />
     </>
   );

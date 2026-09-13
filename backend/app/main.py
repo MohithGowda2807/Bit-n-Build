@@ -102,49 +102,14 @@ async def lifespan(app: FastAPI):
 
 async def fleet_simulation_loop(interval_seconds: int = 10):
     """Background autonomous mode: advance active cleanup units and broadcast live telemetry."""
-    from app.services.debris.fleet_simulator import AutonomousUnitState
-    import json
+    from app.services.debris.fleet_service import advance_fleet
     while True:
         await asyncio.sleep(interval_seconds)
         try:
             with SessionLocal() as db:
-                from app.models.cleanup_unit import CleanupUnit
-                from app.models.mission import Mission
-                active_units = db.query(CleanupUnit).filter(CleanupUnit.status.in_(["transit", "collecting", "returning"])).all()
-                if active_units:
-                    telemetry_payload = []
-                    for unit in active_units:
-                        waypoints = []
-                        if unit.assigned_mission_id:
-                            m = db.query(Mission).filter(Mission.id == unit.assigned_mission_id).first()
-                            if m and m.waypoints_json:
-                                try:
-                                    waypoints = json.loads(m.waypoints_json)
-                                except Exception:
-                                    pass
-                        sim = AutonomousUnitState(
-                            unit_id=unit.id,
-                            unit_name=unit.unit_name,
-                            unit_type=unit.unit_type,
-                            latitude=unit.latitude,
-                            longitude=unit.longitude,
-                            battery_pct=unit.battery_pct,
-                            capacity_kg=unit.capacity_kg,
-                            current_load_kg=unit.current_load_kg,
-                            speed_knots=unit.speed_knots,
-                            status=unit.status,
-                            waypoints=waypoints
-                        )
-                        new_state = sim.step(dt_hours=0.05)
-                        unit.latitude = new_state["latitude"]
-                        unit.longitude = new_state["longitude"]
-                        unit.heading_deg = new_state["heading_deg"]
-                        unit.battery_pct = new_state["battery_pct"]
-                        unit.current_load_kg = new_state["current_load_kg"]
-                        unit.status = new_state["status"]
-                        telemetry_payload.append(new_state)
-                    db.commit()
-                    await ws_hub.broadcast("cleanup_telemetry", {"units": telemetry_payload})
+                telemetry = await asyncio.to_thread(advance_fleet, db, 0.05)
+            if telemetry:
+                await ws_hub.broadcast("cleanup_telemetry", {"units": telemetry})
         except Exception as exc:
             logger.debug("Fleet simulation step notice: %s", exc)
 
@@ -226,6 +191,8 @@ app.include_router(ais.router)
 app.include_router(debris.router)
 app.include_router(weather.router)
 app.include_router(agents.router)
+# Phase 4 missions before the Phase 1 operations router: both serve /api/v1/missions and the first match wins.
+app.include_router(missions.router)
 app.include_router(alerts.router)
 app.include_router(ports.router)
 app.include_router(zones.router)
@@ -244,7 +211,6 @@ app.include_router(assistant.router)
 app.include_router(auth.router)
 # Phase 4: autonomous cleanup fleet & missions
 app.include_router(fleet.router)
-app.include_router(missions.router)
 
 
 @app.get("/")

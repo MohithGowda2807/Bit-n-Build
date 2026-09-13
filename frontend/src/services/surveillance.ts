@@ -1,10 +1,12 @@
 import {
   AISPosition, DarkPeriod, Evidence, FishingZone, InvestigationCase, InvestigationCaseDetail, ProtectedArea,
-  ReplayStart, ScenarioInfo, SimulationRunResult, SurveillanceEvent, VesselBaseline, VesselRisk, VesselRiskSummary,
+  Heatmap, ReplayStart, ScenarioInfo, SimulationRunResult, SurveillanceEvent, VesselBaseline, VesselRisk, VesselRiskSummary,
 } from '../types/surveillance';
 
 import { API_BASE } from './api';
+import { Vessel } from '../types';
 import { session } from './session';
+import { Role } from '../design/roles';
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, { headers: session.headers() });
@@ -28,6 +30,9 @@ async function postJson<T>(path: string, body?: unknown): Promise<T> {
   return res.json();
 }
 
+/** Unlike the shared api module's fetchVessels, this one throws when the API is down so the page can say so. */
+export const fetchVessels = () => getJson<Vessel[]>('/api/v1/vessels');
+
 export const fetchRiskList = (minScore = 0) =>
   getJson<VesselRiskSummary[]>(`/api/v1/surveillance/risk?min_score=${minScore}`);
 
@@ -42,6 +47,8 @@ export const fetchAisGaps = (vesselId?: number) =>
 
 export const fetchSurveillanceEvents = (limit = 40, vesselId?: number) =>
   getJson<SurveillanceEvent[]>(`/api/v1/surveillance/events?limit=${limit}${vesselId ? `&vessel_id=${vesselId}` : ''}`);
+
+export const fetchHeatmap = (cellDegrees = 0.25) => getJson<Heatmap>(`/api/v1/surveillance/heatmap?cell_degrees=${cellDegrees}`);
 
 export const fetchFishingZones = () => getJson<FishingZone[]>('/api/v1/fishing/zones');
 
@@ -60,8 +67,6 @@ export const runScenario = (scenario: string, reset = true) =>
 export const startReplay = (scenario: string, stepSeconds = 0.5) =>
   postJson<ReplayStart>('/api/v1/simulation/replay', { scenario, step_seconds: stepSeconds });
 
-export const resetSimulation = () => postJson<{ vessels_removed: number }>('/api/v1/simulation/reset');
-
 export const assignCase = (caseId: number, assignee: string, actor = 'operator') =>
   postJson<InvestigationCaseDetail>(`/api/v1/investigations/${caseId}/assign`, { assignee, actor });
 
@@ -78,6 +83,11 @@ export const analyzeCase = (caseId: number) => postJson<InvestigationCaseDetail>
 
 export const askAnalyst = (question: string) =>
   postJson<{ question: string; answer: string; provider: string; model: string }>('/api/v1/assistant/ask', { question });
+
+export const login = (username: string, password: string) =>
+  postJson<{ access_token: string; token_type: string; role: Role; name: string; expires_at: string }>('/api/v1/auth/login', { username, password });
+
+export const fetchSessionPolicy = () => getJson<{ role_header_allowed: boolean; token_ttl_minutes: number }>('/api/v1/auth/session-policy');
 
 export const fetchAssistantStatus = () =>
   getJson<{ llm_configured: boolean; model: string; providers: { name: string; model: string; configured: boolean }[] }>(

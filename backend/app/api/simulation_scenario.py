@@ -102,7 +102,7 @@ def get_available_scenarios():
     ]
 
 
-@router.post("/load-scenario/{scenario_id}")
+@router.post("/load-scenario/{scenario_id}", dependencies=[Depends(require("OPERATOR"))])
 def load_scenario(scenario_id: str, db: Session = Depends(get_db)):
     """
     Loads and activates a turnkey demo scenario with pre-configured telemetry,
