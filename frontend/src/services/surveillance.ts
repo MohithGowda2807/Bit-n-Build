@@ -4,6 +4,7 @@ import {
 } from '../types/surveillance';
 
 import { API_BASE } from './api';
+import { Vessel } from '../types';
 import { session } from './session';
 import { Role } from '../design/roles';
 
@@ -28,6 +29,9 @@ async function postJson<T>(path: string, body?: unknown): Promise<T> {
   }
   return res.json();
 }
+
+/** Unlike the shared api module's fetchVessels, this one throws when the API is down so the page can say so. */
+export const fetchVessels = () => getJson<Vessel[]>('/api/v1/vessels');
 
 export const fetchRiskList = (minScore = 0) =>
   getJson<VesselRiskSummary[]>(`/api/v1/surveillance/risk?min_score=${minScore}`);

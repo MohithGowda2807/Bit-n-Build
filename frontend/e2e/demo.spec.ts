@@ -65,6 +65,13 @@ test.describe('demo path', () => {
     expect((await me.json()).role).toBe('OPERATOR');
   });
 
+  test('surveillance: an unreachable backend shows labelled sample data, never a blank map', async ({ page }) => {
+    await page.route('**/api/v1/**', route => route.abort());
+    await openApp(page, 'surveillance');
+    await expect(page.getByText('Backend unreachable. Showing sample data, not live traffic.')).toBeVisible();
+    await expect(page.getByText('FV Sagar Kanya').first()).toBeVisible();
+  });
+
   test('logistics: injecting the default hazard reroutes the live voyage', async ({ page }) => {
     await page.request.post(`${API}/api/v1/simulation/scenarios/reset-environment`, { headers: OPERATOR });
     await openApp(page, 'logistics');

@@ -132,6 +132,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           )}
           <DemoScenarioSwitcher onNavigateDomain={dom => onDomainChange(dom as Domain)} />
           <GhostLink className="text-[13px]" onClick={() => setReportOpen(true)} title="Generate the executive briefing">Briefing</GhostLink>
+          {onGoToLanding && <GhostLink className="text-[13px]" onClick={onGoToLanding} title="Back to the landing page">Portal</GhostLink>}
           {(headerAllowed || signedIn) && (
             <label className="flex items-center gap-2" title={signedIn ? 'Role comes from your account' : 'Dev shortcut: role sent with every request; the API enforces it'}>
               <span className="os-eyebrow text-os-slate">Role</span>

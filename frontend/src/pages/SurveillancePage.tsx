@@ -8,10 +8,10 @@ import { AnalystPanel } from '../components/surveillance/AnalystPanel';
 import { TimelinePanel } from '../components/surveillance/TimelinePanel';
 import { ReplayBar, ReplayState } from '../components/surveillance/ReplayBar';
 import { FilterPill, Mono, OutlinePill, PrimaryPill } from '../components/ui/primitives';
-import { fetchVessels } from '../services/api';
 import {
   fetchAisGaps, fetchFishingZones, fetchHeatmap, fetchInvestigations, fetchProtectedAreas, fetchRiskList, fetchScenarios,
   fetchSurveillanceEvents, fetchVesselAisTrack, fetchVesselBaseline, fetchVesselRisk, runScenario, startReplay,
+  fetchVessels,
 } from '../services/surveillance';
 import { telemetry } from '../services/telemetry';
 import { session } from '../services/session';
@@ -23,11 +23,15 @@ import { splitTrackAtGaps, TrackSegment } from '../design/track';
 import { darkSpans, timeProgress } from '../design/replay';
 import { formatClock } from '../design/format';
 import { Role, can, requiredRole, ROLE_LABEL } from '../design/roles';
+import {
+  DEFAULT_SURVEILLANCE_SCENARIOS, FALLBACK_CASES, FALLBACK_EVENTS, FALLBACK_FISHING_ZONES, FALLBACK_GAPS_101,
+  FALLBACK_PROTECTED_AREAS, FALLBACK_RISK_DETAIL_101, FALLBACK_RISKS, FALLBACK_TRACK_101, FALLBACK_VESSELS, SCENARIO_LABELS,
+} from '../data/surveillanceSample';
 
 const OPEN_STATUSES = new Set(['OPEN', 'UNDER_REVIEW', 'ESCALATED']);
 
 function prettyScenario(name: string): string {
-  return name.toLowerCase().replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
+  return SCENARIO_LABELS[name] ?? name.toLowerCase().replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
 }
 
 interface Props {
@@ -54,6 +58,8 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
   const [feedsOpen, setFeedsOpen] = useState(true);
   const [layers, setLayers] = useState<LayerState>({ vessels: true, trails: true, zones: true, gaps: true, heat: false });
   const [heatmap, setHeatmap] = useState<Heatmap | null>(null);
+  // True only while the API cannot be reached at all; the page then shows clearly labelled sample data instead of a blank map.
+  const [sampleMode, setSampleMode] = useState(false);
 
   const [selectedId, setSelectedId] = useState<number | null>(initialSelectedId);
   const [panel, setPanel] = useState<'vessel' | 'analyst' | 'timeline'>('vessel');
@@ -70,22 +76,50 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
   const openCases = useMemo(() => cases.filter(c => OPEN_STATUSES.has(c.status)), [cases]);
   const selected = useMemo(() => vessels.find(v => v.id === selectedId) ?? null, [vessels, selectedId]);
 
+  const showSampleData = useCallback(() => {
+    setSampleMode(true);
+    setVessels(FALLBACK_VESSELS);
+    setRisks(FALLBACK_RISKS);
+    setCases(FALLBACK_CASES);
+    setEvents(FALLBACK_EVENTS);
+    setFishingZones(FALLBACK_FISHING_ZONES);
+    setProtectedAreas(FALLBACK_PROTECTED_AREAS);
+    setScenarios(DEFAULT_SURVEILLANCE_SCENARIOS);
+    setHeatmap(null);
+  }, []);
+
   const loadFleet = useCallback(async () => {
     const [v, r, c, e] = await Promise.all([
-      fetchVessels(), fetchRiskList(), fetchInvestigations().catch(() => [] as InvestigationCase[]), fetchSurveillanceEvents(40),
+      fetchVessels().catch(() => null),
+      fetchRiskList().catch(() => null),
+      fetchInvestigations().catch(() => [] as InvestigationCase[]),
+      fetchSurveillanceEvents(40).catch(() => null),
     ]);
-    setVessels(v);
-    setRisks(r);
+    if (v === null && r === null) {
+      showSampleData();
+      return [];
+    }
+    setSampleMode(false);
+    setVessels(v ?? []);
+    setRisks(r ?? []);
     setCases(c);
     fetchHeatmap().then(setHeatmap).catch(() => setHeatmap(null));
-    setEvents(e.map(ev => ({
+    setEvents((e ?? []).map(ev => ({
       key: `db-${ev.id}`, event_type: ev.event_type, vessel_id: ev.vessel_id, timestamp: ev.timestamp,
       payload: { ...ev.payload, score: ev.score, other_vessel_id: ev.other_vessel_id }, zone_name: ev.zone_name,
     })));
-    return r;
-  }, []);
+    return r ?? [];
+  }, [showSampleData]);
 
   const loadDetail = useCallback(async (vesselId: number) => {
+    if (sampleMode) {
+      const isSample = vesselId === FALLBACK_RISK_DETAIL_101.vessel_id;
+      setRisk(isSample ? FALLBACK_RISK_DETAIL_101 : null);
+      setBaseline(null);
+      setGaps(isSample ? FALLBACK_GAPS_101 : []);
+      setSegments(isSample ? FALLBACK_TRACK_101 : []);
+      return;
+    }
     setDetailLoading(true);
     try {
       const [riskDetail, track, vesselGaps, vesselBaseline] = await Promise.all([
@@ -101,12 +135,12 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
     } finally {
       setDetailLoading(false);
     }
-  }, []);
+  }, [sampleMode]);
 
   useEffect(() => {
     fetchFishingZones().then(setFishingZones).catch(() => {});
     fetchProtectedAreas().then(setProtectedAreas).catch(() => {});
-    fetchScenarios().then(setScenarios).catch(() => {});
+    fetchScenarios().then(setScenarios).catch(() => setScenarios(DEFAULT_SURVEILLANCE_SCENARIOS));
   }, []);
 
   // Reload on a role change too: what the API returns (cases especially) depends on it.
@@ -121,7 +155,8 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
 
   useEffect(() => {
     telemetry.start();
-    const offOpen = telemetry.subscribe('$open', () => setStreaming(true));
+    // The API answering again (Render waking up) replaces any sample data with live data.
+    const offOpen = telemetry.subscribe('$open', () => { setStreaming(true); loadFleet().catch(() => {}); });
     const offClose = telemetry.subscribe('$close', () => setStreaming(false));
     const offEvent = telemetry.subscribe('surveillance_event', (live: LiveSurveillanceEvent) => {
       setEvents(prev => [{
@@ -298,6 +333,15 @@ export const SurveillancePage: React.FC<Props> = ({ initialSelectedId = null, ro
       {replay && (
         <div className="absolute bottom-4 z-[1000]" style={{ left: leftInset, right: rightInset }}>
           <ReplayBar replay={replay} startLabel={replay.startTime ? formatClock(replay.startTime) : "start"} endLabel={replay.endTime ? formatClock(replay.endTime) : "end"} onClose={exitReplay} />
+        </div>
+      )}
+
+      {sampleMode && (
+        <div className="absolute inset-x-0 top-16 z-[1001] flex justify-center pointer-events-none">
+          <div className="pointer-events-auto flex items-center gap-3 px-4 py-2 rounded-input bg-os-panel border border-risk-moderate">
+            <Mono className="text-xs text-risk-moderate">Backend unreachable. Showing sample data, not live traffic.</Mono>
+            <button onClick={() => loadFleet().catch(() => {})} className="text-xs font-medium text-os-signal hover:text-os-signal-hover">Retry</button>
+          </div>
         </div>
       )}
 
